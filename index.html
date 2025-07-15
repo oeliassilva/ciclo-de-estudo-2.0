@@ -246,6 +246,7 @@
         .time-input-separator { font-size: 1.5em; color: #999; padding-bottom: 10px; }
 
         /* Media queries para responsividade */
+        /* Media queries para responsividade */
         @media (max-width: 600px) {
             .add-discipline-form .input-row { flex-wrap: wrap; gap: 15px; }
             .add-discipline-form .input-group { width: 100%; min-width: 100%; }
@@ -255,10 +256,33 @@
             .app-shell { padding: 10px; }
             .content-wrapper, #current-view .container, .fullscreen-view { padding: 15px; }
             .page-header { font-size: 1.5em; }
-             .stats, #historyStats {
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 10px; 
-        }
+
+            .stats, #historyStats {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+                gap: 10px; 
+            }
+
+            .main-navigation {
+                gap: 15px;
+                padding: 0 10px;
+                overflow-x: auto;
+                white-space: nowrap;
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+            .main-navigation::-webkit-scrollbar {
+                display: none;
+            }
+            .nav-tab {
+                font-size: 16px;
+                flex-shrink: 0;
+            }
+            .calendar-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+            }
         }
     </style>
 </head>
