@@ -215,17 +215,18 @@
 
     <div class="tooltip" id="tooltip"></div>
     
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
         // --- Configuração do Firebase ---
+        // IMPORTANTE: Substitua com as suas próprias credenciais do Firebase.
+        // Vá em seu projeto no Firebase -> Configurações do Projeto -> Geral -> Seus apps -> SDK setup and configuration
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY", // Substitua pela sua chave de API
-            authDomain: "YOUR_AUTH_DOMAIN", // Substitua pelo seu Auth Domain
-            projectId: "YOUR_PROJECT_ID", // Substitua pelo seu Project ID
+            apiKey: "AIzaSyDMB_Pv8gFfsFh5ijVc9M-sSbPEkO2sIHs",
+            authDomain: "rastreador-de-estudo.firebaseapp.com",
+            projectId: "rastreador-de-estudo",
         };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
@@ -239,7 +240,7 @@
         let timers = {};
         let currentCalendarDate = new Date();
         let selectedDate = null;
-        let unsubscribe; // Para o listener do Firestore
+        let unsubscribe;
 
         // --- Lógica de Autenticação ---
         auth.onAuthStateChanged(user => {
@@ -252,7 +253,8 @@
         });
 
         function signInWithGoogle() {
-            auth.signInWithPopup(provider).catch(error => console.error("Erro no login:", error));
+            // Usa o método de redirecionamento, mais robusto que o popup.
+            auth.signInWithRedirect(provider);
         }
 
         function signOutUser() {
@@ -261,7 +263,7 @@
 
         // --- Lógica de Dados com Firestore ---
         async function loadUserData(userId) {
-            if (unsubscribe) unsubscribe(); // Cancela o listener anterior
+            if (unsubscribe) unsubscribe();
             
             const userDocRef = db.collection('users').doc(userId);
             
@@ -269,7 +271,6 @@
                 if (doc.exists) {
                     appData = doc.data();
                 } else {
-                    // Cria um documento inicial para o novo usuário
                     appData = { cycles: {}, activeCycleId: null };
                     db.collection('users').doc(userId).set(appData);
                 }
@@ -293,7 +294,6 @@
         function saveData() {
             if (auth.currentUser) {
                 const userId = auth.currentUser.uid;
-                // Clona o objeto para não salvar o estado 'isRunning'
                 const dataToSave = JSON.parse(JSON.stringify(appData));
                 if(dataToSave.activeCycleId && dataToSave.cycles[dataToSave.activeCycleId]) {
                     dataToSave.cycles[dataToSave.activeCycleId].disciplines.forEach(d => d.isRunning = false);
