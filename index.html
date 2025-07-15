@@ -221,12 +221,10 @@
 
     <script>
         // --- Configuração do Firebase ---
-        // IMPORTANTE: Substitua com as suas próprias credenciais do Firebase.
-        // Vá em seu projeto no Firebase -> Configurações do Projeto -> Geral -> Seus apps -> SDK setup and configuration
         const firebaseConfig = {
-            apiKey: "AIzaSyDMB_Pv8gFfsFh5ijVc9M-sSbPEkO2sIHs",
-            authDomain: "rastreador-de-estudo.firebaseapp.com",
-            projectId: "rastreador-de-estudo",
+            apiKey: "SUA_API_KEY",
+            authDomain: "SEU_AUTH_DOMAIN",
+            projectId: "SEU_PROJECT_ID",
         };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
@@ -243,23 +241,40 @@
         let unsubscribe;
 
         // --- Lógica de Autenticação ---
+        
+        // Listener principal que reage a mudanças de login/logout
         auth.onAuthStateChanged(user => {
             if (user) {
+                // Se o usuário está logado, carrega seus dados.
                 loadUserData(user.uid);
             } else {
+                // Se não há usuário, mostra a tela de login.
                 switchView('login');
-                if(unsubscribe) unsubscribe();
+                if(unsubscribe) unsubscribe(); // Para o listener antigo para evitar erros.
             }
         });
 
+        // Função para iniciar o processo de login
         function signInWithGoogle() {
-            // Usa o método de redirecionamento, mais robusto que o popup.
             auth.signInWithRedirect(provider);
         }
 
+        // Função para fazer logout
         function signOutUser() {
             auth.signOut();
         }
+        
+        // Função para "pegar" o resultado do login após o redirecionamento
+        auth.getRedirectResult()
+            .then((result) => {
+                if (result.user) {
+                    // Login bem-sucedido, o onAuthStateChanged vai cuidar do resto.
+                    console.log("Login via redirect bem-sucedido:", result.user.displayName);
+                }
+            }).catch((error) => {
+                console.error("Erro no getRedirectResult:", error);
+                alert("Ocorreu um erro durante o login. Verifique se os pop-ups não estão bloqueados e tente novamente.");
+            });
 
         // --- Lógica de Dados com Firestore ---
         async function loadUserData(userId) {
@@ -569,7 +584,7 @@
                 path.setAttribute("fill", COLORS[i % COLORS.length]);
                 
                 path.addEventListener('mouseover', () => {
-                    tooltip.innerHTML = `<strong>${d.name}</strong><br>Estudado: ${formatTime(d.currentHours)}<br>Meta: ${formatTime(d.targetHours)}`;
+                    tooltip.innerHTML = `<strong>${d.name}</strong>Estudado: ${formatTime(d.currentHours)}Meta: ${formatTime(d.targetHours)}`;
                     tooltip.style.display = 'block';
                 });
                 path.addEventListener('mousemove', (e) => {
