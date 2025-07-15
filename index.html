@@ -20,10 +20,10 @@
         .view { display: none; }
         .view.active { display: block; }
         
-        /* --- Tela de Login --- */
-        #login-view { text-align: center; padding: 60px 20px; background: white; border-radius: 20px; max-width: 500px; margin: 80px auto; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
-        #login-view h2 { margin-bottom: 15px; font-size: 2em; color: #333; }
-        #login-view p { margin-bottom: 30px; color: #666; }
+        /* --- Telas de Carregando e Login --- */
+        .fullscreen-view { text-align: center; padding: 60px 20px; background: white; border-radius: 20px; max-width: 500px; margin: 80px auto; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+        .fullscreen-view h2 { margin-bottom: 15px; font-size: 2em; color: #333; }
+        .fullscreen-view p { margin-bottom: 30px; color: #666; }
         #login-button { display: inline-flex; align-items: center; gap: 15px; padding: 15px 30px; font-size: 18px; background: #4285F4; border-radius: 50px; }
         #login-button svg { width: 24px; height: 24px; }
 
@@ -114,7 +114,12 @@
             <button class="nav-tab" onclick="switchView('history')">Histórico</button>
         </nav>
 
-        <div id="login-view" class="view active">
+        <div id="loading-view" class="view active fullscreen-view">
+            <h2>Carregando...</h2>
+            <p>Verificando sua autenticação.</p>
+        </div>
+
+        <div id="login-view" class="view fullscreen-view">
             <h2>Bem-vindo ao seu Rastreador de Estudos</h2>
             <p>Faça login com sua conta Google para salvar e sincronizar seus ciclos de estudo em todos os seus dispositivos.</p>
             <button id="login-button" onclick="signInWithGoogle()">
@@ -220,22 +225,20 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
-        // --- Configuração do Firebase ---
         const firebaseConfig = {
-        apiKey: "AIzaSyDMB_Pv8gFfsFh5ijVc9M-sSbPEkO2sIHs",
-        authDomain: "rastreador-de-estudo.firebaseapp.com",
-        projectId: "rastreador-de-estudo",
-        storageBucket: "rastreador-de-estudo.firebasestorage.app",
-        messagingSenderId: "1087370673426",
-        appId: "1:1087370673426:web:6443fc0a61dd3814b307cb",
-        measurementId: "G-JCRS3ES397"
+            apiKey: "AIzaSyDU50I5YKjP-pH8NfCuc59N5_U0rzbeac4",
+            authDomain: "ciclo-de-estudo-elias.firebaseapp.com",
+            projectId: "ciclo-de-estudo-elias",
+            storageBucket: "ciclo-de-estudo-elias.appspot.com",
+            messagingSenderId: "1065929930079",
+            appId: "1:1065929930079:web:28eaffabc8daeb7ff732ea",
+            measurementId: "G-KX8EJZD2CQ"
         };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
         const provider = new firebase.auth.GoogleAuthProvider();
 
-        // --- Variáveis Globais ---
         const COLORS = ['#3498DB', '#E74C3C', '#27AE60', '#F1C40F', '#9B59B6', '#E67E22', '#2ECC71', '#D35400', '#8E44AD', '#16A085'];
         let appData = { cycles: {}, activeCycleId: null };
         let activeCycle = null;
@@ -244,55 +247,47 @@
         let selectedDate = null;
         let unsubscribe;
 
-        // --- Lógica de Autenticação ---
-        
-        // Listener principal que reage a mudanças de login/logout
         auth.onAuthStateChanged(user => {
             if (user) {
-                // Se o usuário está logado, carrega seus dados.
                 loadUserData(user.uid);
             } else {
-                // Se não há usuário, mostra a tela de login.
                 switchView('login');
-                if(unsubscribe) unsubscribe(); // Para o listener antigo para evitar erros.
+                if(unsubscribe) unsubscribe();
             }
         });
 
-        // Função para iniciar o processo de login
         function signInWithGoogle() {
             auth.signInWithRedirect(provider);
         }
 
-        // Função para fazer logout
         function signOutUser() {
             auth.signOut();
         }
         
-        // Função para "pegar" o resultado do login após o redirecionamento
         auth.getRedirectResult()
             .then((result) => {
                 if (result.user) {
-                    // Login bem-sucedido, o onAuthStateChanged vai cuidar do resto.
-                    console.log("Login via redirect bem-sucedido:", result.user.displayName);
+                    // O onAuthStateChanged vai lidar com a lógica principal.
                 }
             }).catch((error) => {
                 console.error("Erro no getRedirectResult:", error);
-                alert("Ocorreu um erro durante o login. Verifique se os pop-ups não estão bloqueados e tente novamente.");
             });
 
-        // --- Lógica de Dados com Firestore ---
         async function loadUserData(userId) {
             if (unsubscribe) unsubscribe();
             
             const userDocRef = db.collection('users').doc(userId);
             
-            unsubscribe = userDocRef.onSnapshot(doc => {
-                if (doc.exists) {
-                    appData = doc.data();
-                } else {
-                    appData = { cycles: {}, activeCycleId: null };
-                    db.collection('users').doc(userId).set(appData);
-                }
+            const doc = await userDocRef.get().catch(err => console.error("Erro ao buscar documento:", err));
+            
+            if (!doc.exists) {
+                appData = { cycles: {}, activeCycleId: null };
+                await userDocRef.set(appData).catch(err => console.error("Erro ao criar documento:", err));
+            }
+            
+            unsubscribe = userDocRef.onSnapshot(snapshot => {
+                if (!snapshot.exists) return; // Guarda contra exclusão de doc
+                appData = snapshot.data();
                 
                 Object.values(timers).forEach(clearInterval);
                 timers = {};
@@ -305,8 +300,8 @@
                     returnToCycleSelection();
                 }
             }, error => {
-                console.error("Erro ao carregar dados:", error);
-                alert("Não foi possível carregar seus dados. Tente recarregar a página.");
+                console.error("Erro no listener de dados:", error);
+                alert("Não foi possível carregar seus dados em tempo real.");
             });
         }
 
@@ -321,7 +316,6 @@
             }
         }
         
-        // --- Lógica de Ciclos ---
         function returnToCycleSelection() {
             Object.keys(timers).forEach(id => stopTimer(id, false));
             activeCycle = null;
@@ -476,7 +470,7 @@
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.getElementById(`${viewName}-view`).classList.add('active');
             const nav = document.querySelector('.main-navigation');
-            if (viewName === 'login' || viewName === 'cycle-selection') {
+            if (viewName === 'login' || viewName === 'cycle-selection' || viewName === 'loading') {
                 nav.style.display = 'none';
             } else {
                 nav.style.display = 'flex';
@@ -588,7 +582,7 @@
                 path.setAttribute("fill", COLORS[i % COLORS.length]);
                 
                 path.addEventListener('mouseover', () => {
-                    tooltip.innerHTML = `<strong>${d.name}</strong>Estudado: ${formatTime(d.currentHours)}Meta: ${formatTime(d.targetHours)}`;
+                    tooltip.innerHTML = `<strong>${d.name}</strong><br>Estudado: ${formatTime(d.currentHours)}<br>Meta: ${formatTime(d.targetHours)}`;
                     tooltip.style.display = 'block';
                 });
                 path.addEventListener('mousemove', (e) => {
