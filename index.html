@@ -84,7 +84,14 @@
             min-width: 200px;
         }
 
-        input[type="text"] {
+        .input-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        input[type="text"], input[type="number"], input[type="file"] {
             width: 100%;
             padding: 12px;
             border: 2px solid #e0e0e0;
@@ -93,7 +100,7 @@
             transition: border-color 0.3s;
         }
 
-        input[type="text"]:focus {
+        input[type="text"]:focus, input[type="number"]:focus, input[type="file"]:focus {
             outline: none;
             border-color: #667eea;
         }
@@ -176,53 +183,95 @@
             background: #f8f9fa;
             border-radius: 10px;
             transition: all 0.3s;
+            flex-wrap: wrap;
         }
 
-        .discipline-item.studied-today {
+        .discipline-item.completed {
             background: #e7f3ff;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid #28a745;
         }
 
         .discipline-name {
             flex: 1;
             font-weight: 500;
+            min-width: 150px;
         }
 
-        .study-count {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 14px;
+        .time-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 100px;
+        }
+
+        .time-current {
+            font-size: 18px;
             font-weight: bold;
-            min-width: 40px;
-            text-align: center;
+            color: #333;
         }
 
-        .study-count.completed {
+        .time-target {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .time-progress {
+            width: 100px;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 5px 0;
+        }
+
+        .time-progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+        }
+
+        .time-progress-fill.completed {
             background: linear-gradient(45deg, #28a745, #20c997);
         }
 
-        .study-btn {
+        .timer-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .timer-btn {
             background: linear-gradient(45deg, #28a745, #20c997);
             color: white;
             border: none;
-            padding: 8px 16px;
+            padding: 8px 12px;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 12px;
             font-weight: bold;
+            min-width: 60px;
+            margin-right: 5px;
         }
 
-        .study-btn:hover {
+        .timer-btn.stop {
+            background: linear-gradient(45deg, #dc3545, #c82333);
+        }
+
+        .timer-btn:hover {
             transform: translateY(-1px);
+        }
+
+        .timer-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .remove-btn {
             background: #dc3545;
             color: white;
             border: none;
-            padding: 5px 10px;
+            padding: 8px 12px;
             border-radius: 5px;
             cursor: pointer;
             font-size: 12px;
@@ -376,6 +425,52 @@
             font-weight: bold;
             color: #333;
         }
+
+        .add-discipline-form {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .form-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .running-timer {
+            display: inline-block;
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .timer-counter {
+            font-size: 12px;
+            color: #333;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+
+        #cycleDecision {
+            display: none;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        #cycleDecision button {
+            margin: 0 10px;
+            padding: 10px 20px;
+        }
     </style>
 </head>
 <body>
@@ -403,8 +498,8 @@
                     <div class="stat-label">Disciplinas</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number" id="studiesCount">0</div>
-                    <div class="stat-label">Estudos Hoje</div>
+                    <div class="stat-number" id="totalHours">0h</div>
+                    <div class="stat-label">Horas Hoje</div>
                 </div>
             </div>
 
@@ -413,21 +508,38 @@
                 <div class="progress-bar">
                     <div class="progress-fill" id="progressFill" style="width: 0%"></div>
                 </div>
-                <div id="progressText" class="progress-text">0 de 0 disciplinas estudadas</div>
+                <div id="progressText" class="progress-text">0 de 0 disciplinas concluídas</div>
+            </div>
+
+            <div class="add-discipline-form">
+                <div class="form-title">➕ Adicionar Nova Disciplina</div>
+                <div class="input-row">
+                    <div class="input-group">
+                        <input type="text" id="disciplineInput" placeholder="Nome da disciplina...">
+                    </div>
+                    <div class="input-group" style="max-width: 150px;">
+                        <input type="number" id="hoursInput" placeholder="Horas mínimas" min="0.5" step="0.5" value="2">
+                    </div>
+                    <button onclick="addDiscipline()">Adicionar</button>
+                </div>
             </div>
 
             <div class="controls">
-                <div class="input-group">
-                    <input type="text" id="disciplineInput" placeholder="Adicionar nova disciplina...">
-                </div>
-                <button onclick="addDiscipline()">Adicionar</button>
                 <button onclick="completeCycle()" id="completeCycleBtn" disabled>Completar Ciclo</button>
                 <button onclick="exportData()">Exportar Dados</button>
+                <button onclick="importData()">Importar Dados</button>
+                <input type="file" id="importFile" accept=".json" style="display: none;">
                 <button onclick="clearAllData()" style="background: linear-gradient(45deg, #dc3545, #c82333);">Limpar Tudo</button>
             </div>
 
             <div id="successMessage" class="success-message" style="display: none;">
                 🎉 Ciclo completo! Parabéns! Iniciando novo ciclo...
+            </div>
+
+            <div id="cycleDecision" style="display: none;">
+                <p>Todas as disciplinas atingiram suas metas mínimas! O que deseja fazer?</p>
+                <button onclick="startNewCycle()">Iniciar Novo Ciclo</button>
+                <button onclick="continueCurrentCycle()">Continuar no Ciclo Atual</button>
             </div>
 
             <div class="chart-container">
@@ -469,43 +581,34 @@
         let currentCycle = 1;
         let completedCycles = 0;
         let studyHistory = {};
-        let currentDate = new Date();
+        let currentDate = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }).split(',')[0];
         let selectedDate = null;
+        let timers = {};
+        let startTimes = {};
 
         function loadData() {
             try {
-                const savedData = localStorage.getItem('studyCycleDataAdvanced');
-                if (savedData) {
-                    const data = JSON.parse(savedData);
-                    disciplines = data.disciplines || [];
-                    currentCycle = data.currentCycle || 1;
-                    completedCycles = data.completedCycles || 0;
-                    studyHistory = data.studyHistory || {};
-                    console.log('Dados carregados:', { disciplines: disciplines.length, currentCycle, completedCycles });
-                } else {
-                    console.log('Nenhum dado salvo encontrado - iniciando novo');
-                }
+                const savedData = JSON.parse(localStorage.getItem('studyCycleDataAdvanced') || '{}');
+                disciplines = savedData.disciplines || [];
+                currentCycle = savedData.currentCycle || 1;
+                completedCycles = savedData.completedCycles || 0;
+                studyHistory = savedData.studyHistory || {};
+                disciplines.forEach(discipline => {
+                    if (!discipline.hasOwnProperty('currentHours')) discipline.currentHours = 0;
+                    if (!discipline.hasOwnProperty('targetHours')) discipline.targetHours = 2;
+                    if (!discipline.hasOwnProperty('isRunning')) discipline.isRunning = false;
+                });
+                updateDisplay();
             } catch (error) {
                 console.error('Erro ao carregar dados:', error);
-                disciplines = [];
-                currentCycle = 1;
-                completedCycles = 0;
-                studyHistory = {};
+                alert('Erro ao carregar dados. Verifique o espaço disponível no navegador.');
             }
-            updateDisplay();
         }
 
         function saveData() {
             try {
-                const data = {
-                    disciplines,
-                    currentCycle,
-                    completedCycles,
-                    studyHistory,
-                    lastUpdate: new Date().toISOString()
-                };
+                const data = { disciplines, currentCycle, completedCycles, studyHistory, lastUpdate: new Date().toISOString() };
                 localStorage.setItem('studyCycleDataAdvanced', JSON.stringify(data));
-                console.log('Dados salvos com sucesso');
             } catch (error) {
                 console.error('Erro ao salvar dados:', error);
                 alert('Erro ao salvar dados. Verifique o espaço disponível no navegador.');
@@ -513,196 +616,280 @@
         }
 
         function addDiscipline() {
-            const input = document.getElementById('disciplineInput');
-            const disciplineName = input.value.trim();
-            
-            if (disciplineName && !disciplines.some(d => d.name === disciplineName)) {
-                disciplines.push({
-                    name: disciplineName,
-                    id: Date.now(),
-                    studiedInCurrentCycle: false,
-                    currentCycleCount: 0
-                });
-                input.value = '';
-                updateDisplay();
-                saveData();
-            }
-        }
+            const nameInput = document.getElementById('disciplineInput');
+            const hoursInput = document.getElementById('hoursInput');
+            const disciplineName = nameInput.value.trim();
+            const targetHours = parseFloat(hoursInput.value) || 2;
 
-        function removeDiscipline(id) {
-            disciplines = disciplines.filter(d => d.id !== id);
+            if (!disciplineName) {
+                alert('Por favor, insira um nome válido para a disciplina.');
+                return;
+            }
+            if (disciplines.some(d => d.name.toLowerCase() === disciplineName.toLowerCase())) {
+                alert('Já existe uma disciplina com esse nome.');
+                return;
+            }
+            if (isNaN(targetHours) || targetHours <= 0) {
+                alert('Por favor, insira uma meta de horas válida (maior que 0).');
+                return;
+            }
+
+            disciplines.push({
+                name: disciplineName,
+                id: Date.now(),
+                currentHours: 0,
+                targetHours: targetHours,
+                isRunning: false
+            });
+            nameInput.value = '';
+            hoursInput.value = '2';
             updateDisplay();
             saveData();
         }
 
-        function studyDiscipline(id) {
+        function removeDiscipline(id) {
+            if (timers[id]) stopTimer(id);
+            disciplines = disciplines.filter(d => d.id !== id);
+            delete startTimes[id];
+            updateDisplay();
+            saveData();
+        }
+
+        function startTimer(id) {
             const discipline = disciplines.find(d => d.id === id);
-            if (discipline) {
-                const today = new Date().toISOString().split('T')[0];
-                
-                discipline.studiedInCurrentCycle = true;
-                discipline.currentCycleCount++;
-                
-                if (!studyHistory[today]) {
-                    studyHistory[today] = {};
-                }
-                studyHistory[today][id] = (studyHistory[today][id] || 0) + 1;
-                
-                if (canCompleteCycle()) {
-                    completeCycle();
-                }
-                
+            if (!discipline || discipline.isRunning) return;
+
+            discipline.isRunning = true;
+            startTimes[id] = Date.now();
+            timers[id] = setInterval(() => {
+                const elapsedSeconds = Math.floor((Date.now() - startTimes[id]) / 1000);
+                const elapsedHours = elapsedSeconds / 3600;
+                discipline.currentHours += 1 / 3600;
+                const today = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }).split('/').reverse().join('-');
+                if (!studyHistory[today]) studyHistory[today] = {};
+                studyHistory[today][id] = (studyHistory[today][id] || 0) + (1 / 3600);
+
+                checkCycleCompletion();
                 updateDisplay();
                 saveData();
+            }, 1000);
+
+            updateDisplay();
+        }
+
+        function stopTimer(id) {
+            const discipline = disciplines.find(d => d.id === id);
+            if (!discipline || !discipline.isRunning) return;
+
+            clearInterval(timers[id]);
+            timers[id] = null;
+            discipline.isRunning = false;
+            delete startTimes[id];
+            checkCompleteCycleButton();
+            updateDisplay();
+            saveData();
+        }
+
+        function toggleTimer(id) {
+            const discipline = disciplines.find(d => d.id === id);
+            if (discipline.isRunning) {
+                stopTimer(id);
+            } else {
+                startTimer(id);
             }
+        }
+
+        function formatTime(hours) {
+            const totalMinutes = Math.floor(hours * 60);
+            const h = Math.floor(totalMinutes / 60);
+            const m = totalMinutes % 60;
+            return `${h}h ${m.toString().padStart(2, '0')}m`;
+        }
+
+        function formatElapsedTime(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = seconds % 60;
+            return `${h}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
+        }
+
+        function checkCycleCompletion() {
+            const pendingDisciplines = disciplines.filter(d => d.currentHours < d.targetHours);
+            if (pendingDisciplines.length === 0 && disciplines.length > 0) {
+                const decisionPanel = document.getElementById('cycleDecision');
+                decisionPanel.style.display = 'block';
+            }
+        }
+
+        function startNewCycle() {
+            completeCycle();
+            document.getElementById('cycleDecision').style.display = 'none';
+        }
+
+        function continueCurrentCycle() {
+            document.getElementById('completeCycleBtn').disabled = false;
+            document.getElementById('cycleDecision').style.display = 'none';
         }
 
         function completeCycle() {
             if (canCompleteCycle()) {
                 completedCycles++;
                 currentCycle++;
-                
+                Object.keys(timers).forEach(id => stopTimer(id));
+                const today = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }).split('/').reverse().join('-');
                 disciplines.forEach(d => {
-                    d.studiedInCurrentCycle = false;
-                    d.currentCycleCount = 0;
+                    if (!studyHistory[today]) studyHistory[today] = {};
+                    studyHistory[today][d.id] = (studyHistory[today][d.id] || 0) + d.currentHours;
                 });
-                
+                disciplines.forEach(d => {
+                    d.currentHours = 0;
+                    d.isRunning = false;
+                });
                 const successMsg = document.getElementById('successMessage');
                 successMsg.style.display = 'block';
-                
                 setTimeout(() => {
                     successMsg.style.display = 'none';
                     updateDisplay();
                     saveData();
                 }, 3000);
-                
                 updateDisplay();
                 saveData();
             }
         }
 
         function canCompleteCycle() {
-            return disciplines.length > 0 && disciplines.every(d => d.studiedInCurrentCycle);
+            return disciplines.length > 0 && disciplines.every(d => d.currentHours >= d.targetHours);
+        }
+
+        function checkCompleteCycleButton() {
+            const allStopped = Object.keys(timers).length === 0;
+            if (allStopped && disciplines.every(d => d.currentHours >= d.targetHours)) {
+                document.getElementById('completeCycleBtn').disabled = false;
+            } else {
+                document.getElementById('completeCycleBtn').disabled = true;
+            }
         }
 
         function clearAllData() {
-            console.log('clearAllData function triggered');
             const confirmMessage = 'Tem certeza que deseja limpar TODOS os dados? Esta ação irá apagar:\n\n' +
                                   '• Todas as disciplinas\n' +
                                   '• Histórico completo de estudos\n' +
                                   '• Progresso atual\n' +
                                   '• Dados salvos no navegador\n\n' +
                                   'Esta ação NÃO PODE ser desfeita!';
-            
             if (confirm(confirmMessage)) {
                 try {
-                    console.log('Clearing all data...');
+                    Object.keys(timers).forEach(id => stopTimer(id));
                     localStorage.removeItem('studyCycleDataAdvanced');
                     disciplines = [];
                     currentCycle = 1;
                     completedCycles = 0;
                     studyHistory = {};
                     selectedDate = null;
+                    timers = {};
+                    startTimes = {};
                     document.getElementById('disciplineInput').value = '';
+                    document.getElementById('hoursInput').value = '2';
                     document.getElementById('selectedDateInfo').style.display = 'none';
-                    document.getElementById('selectedDateInfo').innerHTML = '';
+                    document.getElementById('cycleDecision').style.display = 'none';
                     updateDisplay();
                     updateHistory();
                     updateCalendar();
                     saveData();
-                    console.log('Dados limpos com sucesso');
                     alert('✅ Todos os dados foram limpos com sucesso!');
                 } catch (error) {
                     console.error('Erro ao limpar dados:', error);
-                    alert('❌ Erro ao limpar dados. Verifique as permissões do navegador ou espaço de armazenamento.');
+                    alert('❌ Erro ao limpar dados. Verifique as permissões do navegador.');
                 }
-            } else {
-                console.log('Confirmation cancelled');
             }
         }
 
         function exportData() {
-            const data = {
-                disciplines,
-                currentCycle,
-                completedCycles,
-                studyHistory,
-                exportDate: new Date().toISOString()
-            };
-            
+            const data = { disciplines, currentCycle, completedCycles, studyHistory, exportDate: new Date().toISOString() };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `ciclo-estudos-backup-${new Date().toISOString().split('T')[0]}.json`;
+            a.download = `ciclo-estudos-backup-${new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }).split('/').join('-')}.json`;
             a.click();
             URL.revokeObjectURL(url);
+        }
+
+        function importData() {
+            const fileInput = document.getElementById('importFile');
+            fileInput.click();
+            fileInput.onchange = function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    try {
+                        const importedData = JSON.parse(event.target.result);
+                        disciplines = importedData.disciplines || [];
+                        currentCycle = importedData.currentCycle || 1;
+                        completedCycles = importedData.completedCycles || 0;
+                        studyHistory = importedData.studyHistory || {};
+                        timers = {};
+                        startTimes = {};
+                        disciplines.forEach(discipline => {
+                            if (!discipline.hasOwnProperty('currentHours')) discipline.currentHours = 0;
+                            if (!discipline.hasOwnProperty('targetHours')) discipline.targetHours = 2;
+                            if (!discipline.hasOwnProperty('isRunning')) discipline.isRunning = false;
+                        });
+                        updateDisplay();
+                        saveData();
+                        alert('✅ Dados importados com sucesso!');
+                    } catch (error) {
+                        console.error('Erro ao importar dados:', error);
+                        alert('❌ Erro ao importar dados. Verifique se o arquivo JSON é válido.');
+                    }
+                };
+                reader.readAsText(file);
+                fileInput.value = '';
+            };
         }
 
         function switchTab(tabName) {
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            
             document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
             document.getElementById(tabName).classList.add('active');
-            
-            if (tabName === 'calendar') {
-                updateCalendar();
-            } else if (tabName === 'history') {
-                updateHistory();
-            }
+            if (tabName === 'calendar') updateCalendar();
+            else if (tabName === 'history') updateHistory();
         }
 
         function updateCalendar() {
-            const monthNames = [
-                'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-                'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-            ];
-            
+            const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
             const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-            
-            document.getElementById('currentMonth').textContent = 
-                `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
-            
+            const current = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+            const [datePart] = current.split(', ');
+            const [day, month, year] = datePart.split('/');
+            document.getElementById('currentMonth').textContent = `${monthNames[parseInt(month) - 1]} ${year}`;
             const grid = document.getElementById('calendarGrid');
             grid.innerHTML = '';
-            
             dayNames.forEach(day => {
                 const dayHeader = document.createElement('div');
                 dayHeader.className = 'calendar-day-header';
                 dayHeader.textContent = day;
                 grid.appendChild(dayHeader);
             });
-            
-            const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-            const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-            
+            const firstDay = new Date(parseInt(year), parseInt(month) - 1, 1);
+            const lastDay = new Date(parseInt(year), parseInt(month), 0);
             for (let i = 0; i < firstDay.getDay(); i++) {
                 const emptyDay = document.createElement('div');
                 emptyDay.className = 'calendar-day';
                 grid.appendChild(emptyDay);
             }
-            
             for (let day = 1; day <= lastDay.getDate(); day++) {
                 const dayElement = document.createElement('div');
                 dayElement.className = 'calendar-day';
                 dayElement.textContent = day;
-                
-                const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                
-                const today = new Date().toISOString().split('T')[0];
-                if (dateStr === today) {
-                    dayElement.classList.add('today');
-                }
-                
-                if (studyHistory[dateStr]) {
-                    dayElement.classList.add('has-studies');
-                }
-                
-                if (selectedDate === dateStr) {
-                    dayElement.classList.add('selected');
-                }
-                
+                const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const today = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }).split('/').reverse().join('-');
+                if (dateStr === today) dayElement.classList.add('today');
+                if (studyHistory[dateStr]) dayElement.classList.add('has-studies');
+                if (selectedDate === dateStr) dayElement.classList.add('selected');
                 dayElement.onclick = () => selectDate(dateStr);
                 grid.appendChild(dayElement);
             }
@@ -711,182 +898,131 @@
         function selectDate(dateStr) {
             selectedDate = dateStr;
             updateCalendar();
-            
             const info = document.getElementById('selectedDateInfo');
             const history = studyHistory[dateStr];
-            
             if (history) {
-                let html = `<h4>Estudos do dia ${formatDate(dateStr)}</h4>`;
-                
+                let html = `<h4>Estudos do dia ${new Date(dateStr).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</h4>`;
                 Object.keys(history).forEach(disciplineId => {
                     const discipline = disciplines.find(d => d.id == disciplineId);
-                    const count = history[disciplineId];
-                    
+                    const hours = history[disciplineId];
                     if (discipline) {
-                        html += `<div class="history-item">
-                            <strong>${discipline.name}</strong>: ${count} ${count === 1 ? 'estudo' : 'estudos'}
-                        </div>`;
+                        html += `<div class="history-item"><strong>${discipline.name}</strong>: ${formatTime(hours)}</div>`;
                     }
                 });
-                
                 info.innerHTML = html;
                 info.style.display = 'block';
             } else {
-                info.innerHTML = `<p>Nenhum estudo registrado para ${formatDate(dateStr)}</p>`;
+                info.innerHTML = `<p>Nenhum estudo registrado para ${new Date(dateStr).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</p>`;
                 info.style.display = 'block';
             }
         }
 
         function changeMonth(direction) {
-            currentDate.setMonth(currentDate.getMonth() + direction);
+            const current = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+            const [datePart] = current.split(', ');
+            const [day, month, year] = datePart.split('/');
+            let newDate = new Date(parseInt(year), parseInt(month) - 1 + direction, 1);
+            currentDate = newDate.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }).split(',')[0];
             updateCalendar();
         }
 
         function formatDate(dateStr) {
-            const date = new Date(dateStr + 'T00:00:00');
-            return date.toLocaleDateString('pt-BR');
+            return new Date(dateStr).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
         }
 
         function updateHistory() {
             const historyList = document.getElementById('historyList');
-            
             if (Object.keys(studyHistory).length === 0) {
                 historyList.innerHTML = '<div class="empty-state">Nenhum estudo registrado ainda</div>';
                 return;
             }
-            
-            const sortedDates = Object.keys(studyHistory).sort().reverse();
-            
+            const sortedDates = Object.keys(studyHistory).sort((a, b) => new Date(b + 'T00:00:00Z') - new Date(a + 'T00:00:00Z')); // Adiciona fuso horário explícito
             let html = '';
             sortedDates.forEach(date => {
                 const studies = studyHistory[date];
                 let studiesText = '';
-                
                 Object.keys(studies).forEach(disciplineId => {
                     const discipline = disciplines.find(d => d.id == disciplineId);
-                    const count = studies[disciplineId];
-                    
-                    if (discipline) {
-                        studiesText += `${discipline.name} (${count}x), `;
-                    }
+                    const hours = studies[disciplineId];
+                    if (discipline) studiesText += `${discipline.name} (${formatTime(hours)}), `;
                 });
-                
                 if (studiesText) {
-                    html += `
-                        <div class="history-item">
-                            <div class="history-date">${formatDate(date)}</div>
-                            <div class="history-disciplines">${studiesText.slice(0, -2)}</div>
-                        </div>
-                    `;
+                    html += `<div class="history-item"><div class="history-date">${new Date(date + 'T00:00:00-03:00').toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</div><div class="history-disciplines">${studiesText.slice(0, -2)}</div></div>`;
                 }
             });
-            
             historyList.innerHTML = html;
         }
 
         function createWheelChart() {
             const svg = document.getElementById('wheelChart');
             const total = disciplines.length;
-            
             if (total === 0) {
-                svg.innerHTML = `
-                    <text x="200" y="200" text-anchor="middle" fill="white" font-size="16">
-                        Adicione disciplinas para começar
-                    </text>
-                `;
+                svg.innerHTML = `<text x="200" y="200" text-anchor="middle" fill="white" font-size="16">Adicione disciplinas para começar</text>`;
                 return;
             }
-
             const radius = 150;
             const center = 200;
             const sliceAngle = 360 / total;
             let startAngle = -90;
-            
-            let svgContent = '';
-            
-            svgContent += `<circle cx="${center}" cy="${center}" r="60" fill="white" stroke="#fff" stroke-width="3"/>`;
-            
+            let svgContent = `<circle cx="${center}" cy="${center}" r="60" fill="white" stroke="#fff" stroke-width="3"/>`;
             disciplines.forEach((discipline, index) => {
                 const endAngle = startAngle + sliceAngle;
                 const baseColor = COLORS[index % COLORS.length];
-                const color = discipline.studiedInCurrentCycle ? '#28a745' : baseColor;
-                
+                const color = discipline.currentHours >= discipline.targetHours ? '#28a745' : baseColor;
                 const startRadians = (startAngle * Math.PI) / 180;
                 const endRadians = (endAngle * Math.PI) / 180;
-                
                 const x1 = center + radius * Math.cos(startRadians);
                 const y1 = center + radius * Math.sin(startRadians);
                 const x2 = center + radius * Math.cos(endRadians);
                 const y2 = center + radius * Math.sin(endRadians);
-                
-                svgContent += `
-                    <path d="M${center},${center} L${x1},${y1} A${radius},${radius} 0 ${sliceAngle <= 180 ? '0' : '1'},1 ${x2},${y2} Z"
-                        fill="${color}"
-                        stroke="white"
-                        stroke-width="3"
-                        opacity="${discipline.studiedInCurrentCycle ? 1 : 0.6}"
-                    />
-                `;
-                
+                svgContent += `<path d="M${center},${center} L${x1},${y1} A${radius},${radius} 0 ${sliceAngle <= 180 ? '0' : '1'},1 ${x2},${y2} Z" fill="${color}" stroke="white" stroke-width="3" opacity="${discipline.currentHours >= discipline.targetHours ? 1 : 0.6}"/>`;
                 const labelRadius = radius * 0.7;
                 const labelAngle = startAngle + (sliceAngle / 2);
                 const labelRadians = (labelAngle * Math.PI) / 180;
                 const labelX = center + labelRadius * Math.cos(labelRadians);
                 const labelY = center + labelRadius * Math.sin(labelRadians);
-                
-                svgContent += `
-                    <text x="${labelX}" y="${labelY}" text-anchor="middle" dominant-baseline="middle" 
-                          fill="white" font-size="12" font-weight="bold">
-                        ${discipline.name}
-                        ${discipline.studiedInCurrentCycle ? ` (${discipline.currentCycleCount})` : ''}
-                    </text>
-                `;
-                
+                svgContent += `<text x="${labelX}" y="${labelY}" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="12" font-weight="bold">${discipline.name} ${formatTime(discipline.currentHours)}/${formatTime(discipline.targetHours)}</text>`;
                 startAngle += sliceAngle;
             });
-            
-            const studiedCount = disciplines.filter(d => d.studiedInCurrentCycle).length;
-            svgContent += `
-                <text x="${center}" y="${center - 10}" text-anchor="middle" fill="#333" font-size="14" font-weight="bold">
-                    ${studiedCount}/${total}
-                </text>
-                <text x="${center}" y="${center + 10}" text-anchor="middle" fill="#666" font-size="12">
-                    Estudadas
-                </text>
-            `;
-            
+            const completedCount = disciplines.filter(d => d.currentHours >= d.targetHours).length;
+            svgContent += `<text x="${center}" y="${center - 10}" text-anchor="middle" fill="#333" font-size="14" font-weight="bold">${completedCount}/${total}</text><text x="${center}" y="${center + 10}" text-anchor="middle" fill="#666" font-size="12">Concluídas</text>`;
             svg.innerHTML = svgContent;
         }
 
         function updateDisciplinesList() {
             const container = document.getElementById('disciplinesList');
-            
             if (disciplines.length === 0) {
                 container.innerHTML = '<div class="empty-state">Nenhuma disciplina adicionada</div>';
                 return;
             }
-            
-            const today = new Date().toISOString().split('T')[0];
-            
+            const today = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }).split('/').reverse().join('-');
             container.innerHTML = disciplines.map(discipline => {
-                const studiedToday = studyHistory[today] && studyHistory[today][discipline.id];
-                const studyCountToday = studiedToday || 0;
-                
+                const hoursToday = studyHistory[today] && studyHistory[today][discipline.id] ? studyHistory[today][discipline.id] : 0;
+                const progressPercentage = Math.min((discipline.currentHours / discipline.targetHours) * 100, 100);
+                let counter = '';
+                if (discipline.isRunning && startTimes[discipline.id]) {
+                    const elapsedSeconds = Math.floor((Date.now() - startTimes[discipline.id]) / 1000);
+                    counter = `<span class="timer-counter">${formatElapsedTime(elapsedSeconds)}</span>`;
+                }
                 return `
-                    <div class="discipline-item ${studiedToday ? 'studied-today' : ''}">
+                    <div class="discipline-item ${discipline.currentHours >= discipline.targetHours ? 'completed' : ''}">
                         <span class="discipline-name">${discipline.name}</span>
-                        <span class="study-count ${discipline.studiedInCurrentCycle ? 'completed' : ''}">
-                            ${discipline.currentCycleCount}x
-                        </span>
-                        <span style="font-size: 12px; color: #666;">
-                            Hoje: ${studyCountToday}x
-                        </span>
-                        <button class="study-btn" onclick="studyDiscipline(${discipline.id})">
-                            Estudar
-                        </button>
-                        <button class="remove-btn" onclick="removeDiscipline(${discipline.id})">
-                            Remover
-                        </button>
+                        <div class="time-display">
+                            <span class="time-current">${formatTime(discipline.currentHours)}</span>
+                            <span class="time-target">Meta: ${formatTime(discipline.targetHours)}</span>
+                            <div class="time-progress">
+                                <div class="time-progress-fill ${discipline.currentHours >= discipline.targetHours ? 'completed' : ''}" style="width: ${progressPercentage}%"></div>
+                            </div>
+                        </div>
+                        <span style="font-size: 12px; color: #666;">Hoje: ${formatTime(hoursToday)}</span>
+                        <div class="timer-controls">
+                            <button class="timer-btn ${discipline.isRunning ? 'stop' : ''}" 
+                                    onclick="toggleTimer(${discipline.id})">
+                                ${discipline.isRunning ? 'Pausar' : 'Iniciar'}
+                            </button>
+                            <button class="remove-btn" onclick="removeDiscipline(${discipline.id})">Remover</button>
+                            ${discipline.isRunning ? '<span class="running-timer">Rodando</span>' : ''} ${counter}
+                        </div>
                     </div>
                 `;
             }).join('');
@@ -896,23 +1032,18 @@
             document.getElementById('cycleCount').textContent = currentCycle;
             document.getElementById('completedCycles').textContent = completedCycles;
             document.getElementById('totalDisciplines').textContent = disciplines.length;
-            
-            const today = new Date().toISOString().split('T')[0];
+            const today = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }).split('/').reverse().join('-');
             const todayStudies = studyHistory[today] || {};
-            const studiesCount = Object.values(todayStudies).reduce((sum, count) => sum + count, 0);
-            document.getElementById('studiesCount').textContent = studiesCount;
+            const totalHours = Object.values(todayStudies).reduce((sum, hours) => sum + hours, 0);
+            document.getElementById('totalHours').textContent = formatTime(totalHours);
         }
 
         function updateProgress() {
-            const studiedCount = disciplines.filter(d => d.studiedInCurrentCycle).length;
+            const completedCount = disciplines.filter(d => d.currentHours >= d.targetHours).length;
             const total = disciplines.length;
-            const percentage = total > 0 ? (studiedCount / total) * 100 : 0;
-            
+            const percentage = total > 0 ? (completedCount / total) * 100 : 0;
             document.getElementById('progressFill').style.width = percentage + '%';
-            document.getElementById('progressText').textContent = `${studiedCount} de ${total} disciplinas estudadas`;
-            
-            const completeBtn = document.getElementById('completeCycleBtn');
-            completeBtn.disabled = !canCompleteCycle();
+            document.getElementById('progressText').textContent = `${completedCount} de ${total} disciplinas concluídas`;
         }
 
         function updateDisplay() {
@@ -923,9 +1054,7 @@
         }
 
         document.getElementById('disciplineInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                addDiscipline();
-            }
+            if (e.key === 'Enter') addDiscipline();
         });
 
         loadData();
