@@ -280,13 +280,13 @@
             
             const doc = await userDocRef.get().catch(err => console.error("Erro ao buscar documento:", err));
             
-            if (!doc.exists) {
+            if (doc && !doc.exists) {
                 appData = { cycles: {}, activeCycleId: null };
                 await userDocRef.set(appData).catch(err => console.error("Erro ao criar documento:", err));
             }
             
             unsubscribe = userDocRef.onSnapshot(snapshot => {
-                if (!snapshot.exists) return; // Guarda contra exclusão de doc
+                if (!snapshot.exists) return; 
                 appData = snapshot.data();
                 
                 Object.values(timers).forEach(clearInterval);
