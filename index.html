@@ -103,6 +103,39 @@
         .history-stat-card { background: linear-gradient(135deg, #f5f7fa, #c3cfe2); color: #333; padding: 20px; border-radius: 15px; text-align: center; }
         .history-stat-number { font-size: 2em; font-weight: bold; margin-bottom: 5px; color: #667eea; }
         .history-stat-label { font-size: 0.9em; opacity: 0.9; }
+
+        /* --- ESTILOS PARA RESPONSIVIDADE EM CELULAR --- */
+        @media (max-width: 600px) {
+            /*
+             * Altera o container do formulário para permitir que os itens quebrem a linha
+             * e aumenta o espaçamento entre eles quando estiverem um sobre o outro.
+             */
+            .add-discipline-form .input-row {
+                flex-wrap: wrap;
+                gap: 15px;
+            }
+
+            /*
+             * Faz o campo de nome da disciplina ocupar 100% da largura,
+             * movendo os outros elementos para a linha de baixo.
+             */
+            .add-discipline-form .input-group {
+                width: 100%;
+                min-width: 100%; /* Garante que ele ocupe a linha inteira */
+            }
+
+            /*
+             * Faz o container de tempo e o botão crescerem para preencher
+             * o espaço na segunda linha, criando um visual equilibrado.
+             */
+            .add-discipline-form .time-input-container {
+                flex-grow: 1;
+            }
+
+            .add-discipline-form button {
+                flex-grow: 1;
+            }
+        }
     </style>
 </head>
 <body>
