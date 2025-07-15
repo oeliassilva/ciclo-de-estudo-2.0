@@ -247,62 +247,95 @@
         let selectedDate = null;
         let unsubscribe;
 
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                loadUserData(user.uid);
-            } else {
-                switchView('login');
-                if(unsubscribe) unsubscribe();
-            }
-        });
+        async function handleAuth() {
+                    // PRIMEIRO, e mais importante, configure o listener principal.
+                    // Ele vai reagir a qualquer mudança no estado de login,
+                    // seja de uma sessão antiga ou de um novo login por redirecionamento.
+                    auth.onAuthStateChanged(async (user) => {
+                        if (user) {
+                            // Se um usuário estiver logado, mostre a tela de carregamento
+                            // enquanto os dados são buscados e depois carregue os dados.
+                            document.querySelector('.main-navigation').style.display = 'flex';
+                            await loadUserData(user.uid);
+                        } else {
+                            // Se não houver usuário, esconde a navegação e mostra a tela de login.
+                            // O `getRedirectResult` abaixo pode acionar o `onAuthStateChanged`
+                            // se encontrar um usuário, por isso é seguro mostrar o login aqui como padrão.
+                            document.querySelector('.main-navigation').style.display = 'none';
+                            switchView('login');
+                        }
+                    });
 
-        function signInWithGoogle() {
-            auth.signInWithRedirect(provider);
+                    // Em paralelo, tente processar o resultado do redirecionamento.
+                    // O resultado disso (seja um usuário ou um erro) será capturado pelo
+                    // listener `onAuthStateChanged` que acabamos de configurar.
+                    try {
+                        await auth.getRedirectResult();
+                    } catch (error) {
+                        console.error("Erro ao processar o resultado do redirecionamento:", error);
+                        // Mesmo com erro, o onAuthStateChanged garantirá que a tela de login seja exibida.
+                    }
+                }
+
+       function signInWithGoogle() {
+            auth.signInWithPopup(provider)
+                .then((result) => {
+                    // Login bem-sucedido. O listener 'onAuthStateChanged'
+                    // já vai cuidar de tudo a partir daqui, carregando os dados do usuário.
+                    console.log("Login com popup concluído com sucesso!", result.user);
+                })
+                .catch((error) => {
+                    // Lida com possíveis erros, como o usuário fechar o popup.
+                    console.error("Erro durante o login com popup:", error);
+                    if (error.code === 'auth/popup-closed-by-user') {
+                        alert("A janela de login foi fechada antes da conclusão.");
+                    } else {
+                        alert("Ocorreu um erro durante o login: " + error.message);
+                    }
+                });
         }
 
         function signOutUser() {
             auth.signOut();
         }
-        
-        auth.getRedirectResult()
-            .then((result) => {
-                if (result.user) {
-                    // O onAuthStateChanged vai lidar com a lógica principal.
-                }
-            }).catch((error) => {
-                console.error("Erro no getRedirectResult:", error);
-            });
 
         async function loadUserData(userId) {
             if (unsubscribe) unsubscribe();
             
             const userDocRef = db.collection('users').doc(userId);
             
-            const doc = await userDocRef.get().catch(err => console.error("Erro ao buscar documento:", err));
-            
-            if (doc && !doc.exists) {
-                appData = { cycles: {}, activeCycleId: null };
-                await userDocRef.set(appData).catch(err => console.error("Erro ao criar documento:", err));
-            }
-            
-            unsubscribe = userDocRef.onSnapshot(snapshot => {
-                if (!snapshot.exists) return; 
-                appData = snapshot.data();
+            try {
+                const doc = await userDocRef.get();
                 
-                Object.values(timers).forEach(clearInterval);
-                timers = {};
-
-                if (appData.activeCycleId && appData.cycles[appData.activeCycleId]) {
-                    activeCycle = appData.cycles[appData.activeCycleId];
-                    switchView('current');
-                    updateDisplay();
-                } else {
-                    returnToCycleSelection();
+                if (!doc.exists) {
+                    await userDocRef.set({ cycles: {}, activeCycleId: null });
                 }
-            }, error => {
-                console.error("Erro no listener de dados:", error);
-                alert("Não foi possível carregar seus dados em tempo real.");
-            });
+                
+                unsubscribe = userDocRef.onSnapshot(snapshot => {
+                    if (!snapshot.exists) {
+                        console.error("User document deleted.");
+                        return;
+                    } 
+                    appData = snapshot.data();
+                    
+                    Object.values(timers).forEach(clearInterval);
+                    timers = {};
+
+                    if (appData.activeCycleId && appData.cycles[appData.activeCycleId]) {
+                        activeCycle = appData.cycles[appData.activeCycleId];
+                        switchView('current');
+                        updateDisplay();
+                    } else {
+                        returnToCycleSelection();
+                    }
+                }, error => {
+                    console.error("Erro no listener de dados:", error);
+                });
+
+            } catch (error) {
+                 console.error("Erro ao carregar ou criar dados do usuário:", error);
+                 alert("Não foi possível carregar seus dados. Tente recarregar a página.");
+            }
         }
 
         function saveData() {
@@ -317,13 +350,13 @@
         }
         
         function returnToCycleSelection() {
-            Object.keys(timers).forEach(id => stopTimer(id, false));
-            activeCycle = null;
-            appData.activeCycleId = null;
-            saveData();
-            populateCycleSelector();
-            switchView('cycle-selection');
-        }
+                    Object.keys(timers).forEach(id => stopTimer(id, false));
+                    activeCycle = null;
+                    appData.activeCycleId = null;
+                    // A linha saveData() foi removida daqui.
+                    populateCycleSelector();
+                    switchView('cycle-selection');
+                }
 
         function populateCycleSelector() {
             const selector = document.getElementById('existingCycleSelector');
@@ -733,6 +766,9 @@
             return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
         }
         
+        // Inicializa o fluxo de autenticação quando o script é carregado
+        handleAuth();
+
     </script>
 </body>
 </html>
