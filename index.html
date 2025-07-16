@@ -10,14 +10,9 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
 
     <style>
-        /* --- ESTILO BASE INSPIRADO NA CAREERPATH --- */
+        /* --- ESTILO BASE --- */
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa;
-            color: #2c3e50;
-            min-height: 100vh;
-        }
+        body { font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; color: #2c3e50; min-height: 100vh; }
         .app-shell { width: 100%; max-width: 1200px; margin: 0 auto; padding: 20px; }
         
         /* --- NAVEGAÇÃO PRINCIPAL --- */
@@ -67,10 +62,19 @@
         .discipline-list { margin: 20px 0; }
         .discipline-item { display: flex; align-items: center; gap: 15px; padding: 15px; margin: 10px 0; background: #fdfdff; border-radius: 10px; border: 1px solid #e9ecef; transition: all 0.3s; flex-wrap: wrap; border-left: 5px solid; }
         .discipline-item.completed { border-left-color: #28a745 !important; background-color: #f6fff8; }
+        .discipline-name-group { flex: 1; display: flex; align-items: center; gap: 10px; font-weight: 500; min-width: 150px; }
+        .edit-btn { background: none; border: none; color: #6c757d; cursor: pointer; padding: 4px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .edit-btn:hover { background-color: #e9ecef; color: #003366; }
         .timer-btn { background-color: #28a745; font-size: 14px; padding: 10px 16px; }
         .timer-btn.stop { background-color: #ff6f61; }
         
         /* --- CALENDÁRIO --- */
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+        .calendar-nav-group { display: flex; align-items: center; gap: 10px; }
+        .calendar-title { color: #003366; font-weight: 600; text-align: center; flex-grow: 1; }
+        .view-toggles { display: flex; }
+        .view-toggles button { font-size: 14px; padding: 6px 12px; border-radius: 6px; background-color: #e9ecef; color: #495057; border: 1px solid #dee2e6; }
+        .view-toggles button.active { background-color: #003366; color: white; border-color: #003366; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
         .calendar-day-header { text-align: center; font-weight: 600; color: #6c757d; font-size: 0.9em; padding-bottom: 10px; }
         .calendar-day { aspect-ratio: 1; border: 1px solid transparent; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; position: relative; font-size: 14px; }
@@ -81,63 +85,27 @@
         .calendar-day.has-studies::after { content: ''; position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); width: 5px; height: 5px; background-color: #003366; border-radius: 50%; }
         .calendar-day.selected.has-studies::after { background-color: #ff6f61; }
         .calendar-nav { background-color: #003366; }
+        .calendar-summary { text-align: center; font-size: 1.1em; font-weight: 500; color: #003366; background-color: #e9f0f5; padding: 10px; border-radius: 8px; margin-bottom: 20px; }
         .study-history { border-top: 1px solid #dee2e6; margin-top: 20px; padding-top: 20px; }
+        .daily-total { font-size: 1.1em; font-weight: 600; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #e9ecef; }
         .study-history-item { padding: 8px; margin-top: 5px; background: #fdfdff; border-left: 3px solid #003366; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
         .history-delete-btn { background: #e74c3c; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-size: 14px; line-height: 24px; text-align: center; padding: 0; }
-        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 
         /* --- MODAIS E OUTROS --- */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        .modal-content {
-            background: white;
-            padding: 30px 40px;
-            border-radius: 12px;
-            text-align: center;
-            max-width: 500px;
-            width: 100%;
-            box-shadow: 0 5px 25px rgba(0,0,0,0.2);
-            animation: modal-appear 0.3s ease-out;
-        }
-        @keyframes modal-appear {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
+        .modal-content { background: white; padding: 30px 40px; border-radius: 12px; text-align: center; max-width: 500px; width: 100%; box-shadow: 0 5px 25px rgba(0,0,0,0.2); animation: modal-appear 0.3s ease-out; }
+        @keyframes modal-appear { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
         .modal-content h3 { color: #003366; margin-bottom: 15px; font-size: 1.6em; }
         .modal-content p { margin-bottom: 30px; color: #6c757d; font-size: 1.1em; line-height: 1.6; }
         .modal-buttons { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
-        .trophy-icon {
-            width: 60px;
-            height: 60px;
-            margin: 0 auto 20px auto;
-            fill: #ffc107;
-        }
-
+        .trophy-icon { width: 60px; height: 60px; margin: 0 auto 20px auto; fill: #ffc107; }
+        .form-group-modal { margin-bottom: 15px; text-align: left; }
+        .form-group-modal label { display: block; margin-bottom: 5px; font-weight: 500; }
         #cycle-selection-view { text-align: center; background: white; border-radius: 12px; padding: 40px 20px; max-width: 600px; margin: 40px auto; border: 1px solid #e9ecef; }
         .add-discipline-form { background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
         .form-title { font-size: 1.2em; font-weight: 600; margin-bottom: 15px; color: #003366; }
-        
-        /* ALTERADO: Alinhamento do formulário */
-        .input-row { 
-            display: flex; 
-            gap: 10px; 
-            align-items: flex-end; /* Alinha os itens pela base */
-            margin-bottom: 10px; 
-        }
-        /* NOVO: Faz o campo de nome ocupar o espaço disponível */
-        .input-row .input-group {
-            flex-grow: 1;
-        }
-
+        .input-row { display: flex; gap: 10px; align-items: flex-end; margin-bottom: 10px; }
+        .input-row .input-group { flex-grow: 1; }
         .time-input-container { display: flex; gap: 10px; align-items: flex-end; }
         .time-input-group { display: flex; flex-direction: column; align-items: center; }
         .time-input-group label { font-size: 0.8em; color: #666; margin-bottom: 4px; }
@@ -145,6 +113,7 @@
         .time-input-separator { font-size: 1.5em; color: #999; padding-bottom: 10px; }
         
         @media (max-width: 600px) {
+            .calendar-header { flex-direction: column; gap: 15px; }
             body { padding: 5px; }
             .app-shell { padding: 10px; }
             .content-wrapper, #current-view .container, .fullscreen-view { padding: 15px; }
@@ -154,7 +123,6 @@
             .add-discipline-form .time-input-container { flex-grow: 1; }
             .add-discipline-form button { flex-grow: 1; }
             .stats, #historyStats { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
-            .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
             .main-navigation { display: flex; justify-content: space-around; padding: 0; gap: 0; }
             .nav-tab { flex-grow: 1; text-align: center; font-size: 15px; padding: 0 5px 12px 5px; }
         }
@@ -196,6 +164,7 @@
                  <input type="text" id="newCycleNameInput" placeholder="Ex: Trilha Front-End...">
             </div>
             <button onclick="createNewCycle()">Criar e Iniciar</button>
+            <button class="danger" onclick="signOutUser()" style="margin-top: 30px;">Sair</button>
         </div>
 
         <div id="current-view" class="view">
@@ -215,7 +184,7 @@
                             <div class="time-input-container">
                                 <div class="time-input-group">
                                     <label for="hoursInput">Horas</label>
-                                    <input type="number" id="hoursInput" min="0" placeholder="HH" value="2">
+                                    <input type="number" id="hoursInput" min="0" placeholder="HH" value="1">
                                 </div>
                                 <span class="time-input-separator">:</span>
                                 <div class="time-input-group">
@@ -244,10 +213,17 @@
             <header class="page-header"><span class="material-icons-outlined">calendar_today</span> Calendário de Estudos</header>
             <div class="content-wrapper">
                 <div class="calendar-header">
-                    <button class="calendar-nav" onclick="changeMonth(-1)">❮</button>
-                    <h2 id="currentMonth" style="color: #003366; font-weight: 600;"></h2>
-                    <button class="calendar-nav" onclick="changeMonth(1)">❯</button>
+                    <div class="calendar-nav-group">
+                        <button class="calendar-nav" onclick="navigateCalendar(-1)">❮</button>
+                        <h2 id="calendarTitle" class="calendar-title"></h2>
+                        <button class="calendar-nav" onclick="navigateCalendar(1)">❯</button>
+                    </div>
+                    <div class="view-toggles">
+                        <button id="view-toggle-month" class="active" onclick="setCalendarView('month')">Mês</button>
+                        <button id="view-toggle-week" onclick="setCalendarView('week')">Semana</button>
+                    </div>
                 </div>
+                <div id="calendar-summary" class="calendar-summary"></div>
                 <div class="calendar-grid">
                     <div class="calendar-day-header">Dom</div><div class="calendar-day-header">Seg</div><div class="calendar-day-header">Ter</div><div class="calendar-day-header">Qua</div><div class="calendar-day-header">Qui</div><div class="calendar-day-header">Sex</div><div class="calendar-day-header">Sáb</div>
                 </div>
@@ -265,48 +241,11 @@
         </div>
     </div>
 
-    <div id="completionModal" class="modal-overlay">
-        <div class="modal-content">
-            <h3>Ciclo Concluído!</h3>
-            <p>Parabéns! Você atingiu a meta de todas as disciplinas. O que deseja fazer agora?</p>
-            <div class="modal-buttons">
-                <button class="secondary" onclick="handleContinueCycle()">Continuar Neste Ciclo</button>
-                <button onclick="handleStartNewCycle()">Iniciar Novo Ciclo</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="celebrationModal" class="modal-overlay">
-        <div class="modal-content">
-            <svg class="trophy-icon" viewBox="0 0 24 24"><path d="M20.2,4H22L19,2H5L2,4h1.8C4.4,4.8,5,5.9,5,7c0,1.5-1.2,2.7-2.7,2.9C2.1,10,2,10.1,2,10.3V12h1v9H2v1h20v-1h-1v-9h1v-1.7 c0-0.2-0.1-0.3-0.3-0.4C21.2,9.7,20,8.5,20,7C20,5.9,20.6,4.8,21.2,4H20.2z M4,12h2.1c0.5-0.7,1.2-1.3,2-1.7V12H4z M15.9,10.3 c0.8,0.4,1.5,1,2,1.7H20V12h-4.1V10.3z M12,6c1.1,0,2,0.9,2,2s-0.9,2-2,2s-2-0.9-2-2S10.9,6,12,6z"/></svg>
-            <h3>Missão Cumprida!</h3>
-            <p>Você é incrível! O ciclo foi concluído com sucesso e contabilizado. Pronto para o próximo desafio?</p>
-            <div class="modal-buttons">
-                <button onclick="hideCelebrationModal()">Fechar</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="alertModal" class="modal-overlay">
-        <div class="modal-content">
-            <h3 id="alertModalTitle">Atenção</h3>
-            <p id="alertModalMessage"></p>
-            <div class="modal-buttons">
-                <button onclick="hideAlertModal()">OK</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="confirmModal" class="modal-overlay">
-        <div class="modal-content">
-            <h3 id="confirmModalTitle">Confirmar Ação</h3>
-            <p id="confirmModalMessage"></p>
-            <div class="modal-buttons">
-                <button class="secondary" onclick="hideConfirmModal()">Cancelar</button>
-                <button class="danger" onclick="handleConfirmAction()">Confirmar</button>
-            </div>
-        </div>
-    </div>
+    <div id="completionModal" class="modal-overlay"> <div class="modal-content"> <h3>Ciclo Concluído!</h3> <p>Parabéns! Você atingiu a meta de todas as disciplinas. O que deseja fazer agora?</p> <div class="modal-buttons"> <button class="secondary" onclick="handleContinueCycle()">Continuar Neste Ciclo</button> <button onclick="handleStartNewCycle()">Iniciar Novo Ciclo</button> </div> </div> </div>
+    <div id="celebrationModal" class="modal-overlay"> <div class="modal-content"> <svg class="trophy-icon" viewBox="0 0 24 24"><path d="M20.2,4H22L19,2H5L2,4h1.8C4.4,4.8,5,5.9,5,7c0,1.5-1.2,2.7-2.7,2.9C2.1,10,2,10.1,2,10.3V12h1v9H2v1h20v-1h-1v-9h1v-1.7 c0-0.2-0.1-0.3-0.3-0.4C21.2,9.7,20,8.5,20,7C20,5.9,20.6,4.8,21.2,4H20.2z M4,12h2.1c0.5-0.7,1.2-1.3,2-1.7V12H4z M15.9,10.3 c0.8,0.4,1.5,1,2,1.7H20V12h-4.1V10.3z M12,6c1.1,0,2,0.9,2,2s-0.9,2-2,2s-2-0.9-2-2S10.9,6,12,6z"/></svg> <h3>Missão Cumprida!</h3> <p>Você é incrível! O ciclo foi concluído com sucesso e contabilizado. Pronto para o próximo desafio?</p> <div class="modal-buttons"> <button onclick="hideCelebrationModal()">Fechar</button> </div> </div> </div>
+    <div id="alertModal" class="modal-overlay"> <div class="modal-content"> <h3 id="alertModalTitle">Atenção</h3> <p id="alertModalMessage"></p> <div class="modal-buttons"> <button onclick="hideAlertModal()">OK</button> </div> </div> </div>
+    <div id="confirmModal" class="modal-overlay"> <div class="modal-content"> <h3 id="confirmModalTitle">Confirmar Ação</h3> <p id="confirmModalMessage"></p> <div class="modal-buttons"> <button class="secondary" onclick="hideConfirmModal()">Cancelar</button> <button class="danger" onclick="handleConfirmAction()">Confirmar</button> </div> </div> </div>
+    <div id="editDisciplineModal" class="modal-overlay"> <div class="modal-content"> <h3>Editar Disciplina</h3> <input type="hidden" id="editDisciplineId"> <div class="form-group-modal"> <label for="editDisciplineName">Nome da Disciplina</label> <input type="text" id="editDisciplineName"> </div> <div class="form-group-modal"> <label>Meta de Tempo</label> <div class="time-input-container" style="justify-content: center;"> <div class="time-input-group"> <label for="editHoursInput">Horas</label> <input type="number" id="editHoursInput" min="0" placeholder="HH"> </div> <span class="time-input-separator">:</span> <div class="time-input-group"> <label for="editMinutesInput">Minutos</label> <input type="number" id="editMinutesInput" min="0" max="59" step="5" placeholder="MM"> </div> </div> </div> <div class="modal-buttons"> <button class="secondary" onclick="hideEditModal()">Cancelar</button> <button onclick="saveDisciplineChanges()">Salvar Alterações</button> </div> </div> </div>
 
     <div class="tooltip" id="tooltip" style="position: fixed; background: rgba(0, 0, 0, 0.8); color: white; padding: 8px 12px; border-radius: 5px; font-size: 14px; pointer-events: none; display: none; z-index: 1000; white-space: nowrap; transition: opacity 0.2s;"></div>
     
@@ -337,13 +276,26 @@
         let selectedDate = null;
         let unsubscribe;
         let confirmCallback = null;
+        let calendarViewMode = 'month';
 
+        // --- FUNÇÃO CORRIGIDA ---
         async function handleAuth() {
             auth.onAuthStateChanged(async (user) => {
                 if (user) {
                     document.querySelector('.main-navigation').style.display = 'flex';
                     await loadUserData(user.uid);
                 } else {
+                    // Se o usuário deslogou, primeiro removemos o 'escutador' de dados
+                    if (unsubscribe) {
+                        unsubscribe();
+                        unsubscribe = null; // Limpa a variável para segurança
+                    }
+                    // Limpa os dados em memória para evitar que apareçam para o próximo usuário
+                    activeCycle = null;
+                    appData = { cycles: {}, activeCycleId: null };
+                    Object.values(timers).forEach(clearInterval);
+                    timers = {};
+
                     document.querySelector('.main-navigation').style.display = 'none';
                     switchView('login');
                 }
@@ -375,6 +327,7 @@
                     }
                 }, error => {
                     console.error("Listener error:", error)
+                    // Este erro não deve mais acontecer no logout, mas é bom manter para erros reais de conexão
                     showAlertModal('Erro de Conexão', 'Não foi possível carregar seus dados. Verifique sua conexão com a internet e tente recarregar a página.');
                 });
             } catch (error) {
@@ -465,9 +418,9 @@
             const hours = parseInt(document.getElementById('hoursInput').value, 10) || 0;
             const minutes = parseInt(document.getElementById('minutesInput').value, 10) || 0;
             const disciplineName = nameInput.value.trim();
-            const targetHours = hours + (minutes / 60);
+            const targetSeconds = (hours * 3600) + (minutes * 60);
 
-            if (!disciplineName || targetHours <= 0) { 
+            if (!disciplineName || targetSeconds <= 0) { 
                 showAlertModal('Dados Inválidos', 'Por favor, insira um nome e uma meta de tempo válida para a disciplina.');
                 return; 
             }
@@ -476,9 +429,15 @@
                 return; 
             }
 
-            activeCycle.disciplines.push({ id: Date.now(), name: disciplineName, currentHours: 0, targetHours: targetHours, isRunning: false });
+            activeCycle.disciplines.push({ 
+                id: Date.now(), 
+                name: disciplineName, 
+                currentSeconds: 0, 
+                targetSeconds: targetSeconds, 
+                isRunning: false 
+            });
             nameInput.value = '';
-            document.getElementById('hoursInput').value = '2';
+            document.getElementById('hoursInput').value = '1';
             document.getElementById('minutesInput').value = '0';
             saveData();
         }
@@ -502,6 +461,7 @@
                 'Encerrar Ciclo Manualmente',
                 'Tem certeza que deseja encerrar este ciclo? Ele será contabilizado como concluído e os tempos de estudo serão zerados para um novo início.',
                 () => {
+                    hideConfirmModal(); 
                     handleStartNewCycle(); 
                 }
             );
@@ -515,11 +475,11 @@
             discipline.isRunning = true;
             updateDisciplinesList();
             timers[id] = setInterval(() => {
-                discipline.currentHours += 1 / 3600;
+                discipline.currentSeconds += 1;
                 const today = new Date().toISOString().split('T')[0];
                 if (!activeCycle.studyHistory[today]) activeCycle.studyHistory[today] = {};
                 const discIdStr = String(discipline.id);
-                activeCycle.studyHistory[today][discIdStr] = (activeCycle.studyHistory[today][discIdStr] || 0) + (1 / 3600);
+                activeCycle.studyHistory[today][discIdStr] = (activeCycle.studyHistory[today][discIdStr] || 0) + 1; 
                 updateTimerDisplay(discipline);
             }, 1000);
         }
@@ -541,7 +501,7 @@
 
         function checkCycleCompletion() {
             if (!activeCycle || activeCycle.disciplines.length === 0) return false;
-            return activeCycle.disciplines.every(d => d.currentHours >= d.targetHours);
+            return activeCycle.disciplines.every(d => d.currentSeconds >= d.targetSeconds);
         }
 
         function showCompletionModal() { document.getElementById('completionModal').style.display = 'flex'; }
@@ -551,7 +511,7 @@
             if (!activeCycle) return;
             hideCompletionModal();
             activeCycle.completions = (activeCycle.completions || 0) + 1;
-            activeCycle.disciplines.forEach(d => { d.currentHours = 0; });
+            activeCycle.disciplines.forEach(d => { d.currentSeconds = 0; });
             saveData();
             updateDisplay();
             showCelebrationModal();
@@ -584,6 +544,47 @@
             }
             hideConfirmModal();
         }
+        
+        function openEditModal(id) {
+            const discipline = activeCycle.disciplines.find(d => d.id === id);
+            if (!discipline) return;
+            
+            document.getElementById('editDisciplineId').value = discipline.id;
+            document.getElementById('editDisciplineName').value = discipline.name;
+
+            const hours = Math.floor(discipline.targetSeconds / 3600);
+            const minutes = Math.floor((discipline.targetSeconds % 3600) / 60);
+            document.getElementById('editHoursInput').value = hours;
+            document.getElementById('editMinutesInput').value = minutes;
+
+            document.getElementById('editDisciplineModal').style.display = 'flex';
+        }
+
+        function hideEditModal() {
+            document.getElementById('editDisciplineModal').style.display = 'none';
+        }
+
+        function saveDisciplineChanges() {
+            const id = parseInt(document.getElementById('editDisciplineId').value, 10);
+            const newName = document.getElementById('editDisciplineName').value.trim();
+            const newHours = parseInt(document.getElementById('editHoursInput').value, 10) || 0;
+            const newMinutes = parseInt(document.getElementById('editMinutesInput').value, 10) || 0;
+            const newTargetSeconds = (newHours * 3600) + (newMinutes * 60);
+
+            if (!newName || newTargetSeconds <= 0) {
+                showAlertModal('Dados Inválidos', 'O nome não pode estar em branco e a meta de tempo deve ser maior que zero.');
+                return;
+            }
+
+            const discipline = activeCycle.disciplines.find(d => d.id === id);
+            if (discipline) {
+                discipline.name = newName;
+                discipline.targetSeconds = newTargetSeconds;
+                saveData();
+                updateDisplay();
+                hideEditModal();
+            }
+        }
 
         function toggleTimer(id) {
             const discipline = activeCycle.disciplines.find(d => d.id === id);
@@ -602,8 +603,8 @@
                 document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
                 document.querySelector(`[onclick="switchView('${viewName}')"]`).classList.add('active');
             }
-            if (viewName === 'calendar') updateCalendar();
-            if (viewName === 'history') updateHistoryView();
+            if (viewName === 'calendar') { renderCalendar(); } 
+            if (viewName === 'history') { updateHistoryView(); }
         }
 
         function updateDisplay() {
@@ -619,9 +620,15 @@
             document.getElementById('cycleCompletions').textContent = activeCycle.completions || 0;
             document.getElementById('totalDisciplines').textContent = activeCycle.disciplines.length;
             const today = new Date().toISOString().split('T')[0];
-            const todayStudies = (activeCycle && activeCycle.studyHistory && activeCycle.studyHistory[today]) || {};
-            const totalHoursToday = Object.values(todayStudies).reduce((sum, h) => sum + h, 0);
-            document.getElementById('totalHours').textContent = formatTime(totalHoursToday);
+            let totalSecondsToday = 0;
+            if(appData.cycles){
+                Object.values(appData.cycles).forEach(cycle => {
+                    if (cycle.studyHistory && cycle.studyHistory[today]) {
+                         totalSecondsToday += Object.values(cycle.studyHistory[today]).reduce((sum, s) => sum + s, 0);
+                    }
+                });
+            }
+            document.getElementById('totalHours').textContent = formatTime(totalSecondsToday);
         }
 
         function updateDisciplinesList() {
@@ -629,16 +636,30 @@
             const listEl = document.getElementById('disciplinesList');
             if (!listEl) return;
             listEl.innerHTML = activeCycle.disciplines.map((d, i) => {
-                const isCompleted = d.targetHours > 0 && d.currentHours >= d.targetHours;
-                return `<div class="discipline-item ${isCompleted ? 'completed' : ''}" id="discipline-${d.id}" style="border-left-color: ${COLORS[i % COLORS.length]};"> <span style="flex: 1; font-weight: 500; min-width: 150px;">${d.name}</span> <div style="display: flex; flex-direction: column; align-items: center; min-width: 100px;"> <span class="time-current">${formatTime(d.currentHours)}</span> <span style="font-size: 12px; color: #666;">Meta: ${formatTime(d.targetHours)}</span> </div> <div class="timer-controls" style="display:flex; gap:8px; align-items:center;"> <button class="timer-btn ${d.isRunning ? 'stop' : ''}" onclick="toggleTimer(${d.id})">${d.isRunning ? 'Pausar' : 'Iniciar'}</button> <button class="remove-btn secondary" onclick="removeDiscipline(${d.id})">Remover</button> </div> </div>`;
+                const isCompleted = d.targetSeconds > 0 && d.currentSeconds >= d.targetSeconds;
+                return `
+                    <div class="discipline-item ${isCompleted ? 'completed' : ''}" id="discipline-${d.id}" style="border-left-color: ${COLORS[i % COLORS.length]};">
+                        <div class="discipline-name-group">
+                            <button class="edit-btn" title="Editar disciplina" onclick="openEditModal(${d.id})"><span class="material-icons-outlined">edit</span></button>
+                            <span>${d.name}</span>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center; min-width: 100px;">
+                            <span class="time-current">${formatTime(d.currentSeconds)}</span>
+                            <span style="font-size: 12px; color: #666;">Meta: ${formatTime(d.targetSeconds)}</span>
+                        </div>
+                        <div class="timer-controls" style="display:flex; gap:8px; align-items:center;">
+                            <button class="timer-btn ${d.isRunning ? 'stop' : ''}" onclick="toggleTimer(${d.id})">${d.isRunning ? 'Pausar' : 'Iniciar'}</button>
+                            <button class="remove-btn secondary" onclick="removeDiscipline(${d.id})">Remover</button>
+                        </div>
+                    </div>`;
             }).join('');
         }
         
         function updateTimerDisplay(discipline) {
             const itemEl = document.getElementById(`discipline-${discipline.id}`);
             if (!itemEl) return;
-            itemEl.querySelector('.time-current').textContent = formatTime(discipline.currentHours);
-            const isCompleted = discipline.targetHours > 0 && discipline.currentHours >= discipline.targetHours;
+            itemEl.querySelector('.time-current').textContent = formatTime(discipline.currentSeconds);
+            const isCompleted = discipline.targetSeconds > 0 && discipline.currentSeconds >= discipline.targetSeconds;
             if(isCompleted) { itemEl.classList.add('completed'); } 
             else { itemEl.classList.remove('completed'); }
             updateStats();
@@ -653,13 +674,13 @@
                 return;
             }
             
-            const totalStudied = activeCycle.disciplines.reduce((sum, d) => sum + d.currentHours, 0);
-            const totalTarget = activeCycle.disciplines.reduce((sum, d) => sum + d.targetHours, 0);
+            const totalStudied = activeCycle.disciplines.reduce((sum, d) => sum + d.currentSeconds, 0);
+            const totalTarget = activeCycle.disciplines.reduce((sum, d) => sum + d.targetSeconds, 0);
             let startAngle = -90;
             const gapDegrees = 2;
 
             activeCycle.disciplines.forEach((d, i) => {
-                let sliceAngle = totalTarget > 0 ? (d.targetHours / totalTarget) * 360 : 360 / activeCycle.disciplines.length;
+                let sliceAngle = totalTarget > 0 ? (d.targetSeconds / totalTarget) * 360 : 360 / activeCycle.disciplines.length;
                 let endAngle = startAngle + sliceAngle;
 
                 if (sliceAngle > gapDegrees) {
@@ -668,7 +689,7 @@
                     const path = createArc(200, 200, 150, 90, arcStart, arcEnd);
                     path.setAttribute("fill", COLORS[i % COLORS.length]);
                     path.addEventListener('mouseover', (e) => {
-                        tooltip.innerHTML = `<strong>${d.name}</strong><br>Estudado: ${formatTime(d.currentHours)}<br>Meta: ${formatTime(d.targetHours)}`;
+                        tooltip.innerHTML = `<strong>${d.name}</strong><br>Estudado: ${formatTime(d.currentSeconds)}<br>Meta: ${formatTime(d.targetSeconds)}`;
                         tooltip.style.display = 'block';
                         tooltip.style.left = `${e.clientX + 15}px`;
                         tooltip.style.top = `${e.clientY - 10}px`;
@@ -707,76 +728,143 @@
             return p;
         }
         
-        function updateCalendar() {
-            const grid = document.getElementById('calendarGrid');
-            grid.innerHTML = '';
-            const month = currentCalendarDate.getMonth();
-            const year = currentCalendarDate.getFullYear();
-            document.getElementById('currentMonth').textContent = `${currentCalendarDate.toLocaleString('pt-BR', { month: 'long', year: 'numeric' })}`;
-            const firstDayOfMonth = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            for (let i = 0; i < firstDayOfMonth; i++) { grid.insertAdjacentHTML('beforeend', '<div></div>'); }
-            const allHistories = Object.values(appData.cycles).map(c => c.studyHistory);
-            for (let i = 1; i <= daysInMonth; i++) {
-                const date = new Date(year, month, i);
-                const isoDate = date.toISOString().split('T')[0];
-                let classes = 'calendar-day';
-                if (isoDate === new Date().toISOString().split('T')[0]) classes += ' today';
-                if (selectedDate === isoDate) classes += ' selected';
-                if (allHistories.some(history => history && history[isoDate])) classes += ' has-studies';
-                grid.insertAdjacentHTML('beforeend', `<div class="${classes}" onclick="selectDate('${isoDate}')">${i}</div>`);
-            }
+        function setCalendarView(mode) {
+            calendarViewMode = mode;
+            document.getElementById('view-toggle-month').classList.toggle('active', mode === 'month');
+            document.getElementById('view-toggle-week').classList.toggle('active', mode === 'week');
+            renderCalendar();
         }
 
-        function changeMonth(dir) {
-            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + dir);
-            updateCalendar();
+        function navigateCalendar(direction) {
+            if (calendarViewMode === 'month') {
+                currentCalendarDate.setMonth(currentCalendarDate.getMonth() + direction);
+            } else {
+                currentCalendarDate.setDate(currentCalendarDate.getDate() + (direction * 7));
+            }
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            const titleEl = document.getElementById('calendarTitle');
+            const summaryEl = document.getElementById('calendar-summary');
+            grid.innerHTML = '';
+            
+            const allHistories = Object.values(appData.cycles).map(c => c.studyHistory).filter(Boolean);
+
+            if (calendarViewMode === 'month') {
+                const year = currentCalendarDate.getFullYear();
+                const month = currentCalendarDate.getMonth();
+                titleEl.textContent = `${currentCalendarDate.toLocaleString('pt-BR', { month: 'long', year: 'numeric' })}`;
+                
+                const firstDayOfMonth = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                let monthlyTotalSeconds = 0;
+
+                for (let i = 0; i < firstDayOfMonth; i++) { grid.insertAdjacentHTML('beforeend', '<div></div>'); }
+
+                for (let i = 1; i <= daysInMonth; i++) {
+                    const date = new Date(year, month, i);
+                    const isoDate = date.toISOString().split('T')[0];
+                    let dailyTotal = 0;
+                    allHistories.forEach(history => {
+                        if (history[isoDate]) {
+                            dailyTotal += Object.values(history[isoDate]).reduce((sum, s) => sum + s, 0);
+                        }
+                    });
+                    monthlyTotalSeconds += dailyTotal;
+
+                    let classes = 'calendar-day';
+                    if (isoDate === new Date().toISOString().split('T')[0]) classes += ' today';
+                    if (selectedDate === isoDate) classes += ' selected';
+                    if (dailyTotal > 0) classes += ' has-studies';
+                    grid.insertAdjacentHTML('beforeend', `<div class="${classes}" onclick="selectDate('${isoDate}')">${i}</div>`);
+                }
+                summaryEl.innerHTML = `Total no Mês: <strong>${formatTime(monthlyTotalSeconds)}</strong>`;
+
+            } else { // 'week' view
+                const weekStart = new Date(currentCalendarDate);
+                weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+                
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekEnd.getDate() + 6);
+
+                titleEl.textContent = `${weekStart.toLocaleDateString('pt-BR')} - ${weekEnd.toLocaleDateString('pt-BR')}`;
+                let weeklyTotalSeconds = 0;
+
+                for (let i = 0; i < 7; i++) {
+                    const date = new Date(weekStart);
+                    date.setDate(date.getDate() + i);
+                    const isoDate = date.toISOString().split('T')[0];
+                    let dailyTotal = 0;
+                     allHistories.forEach(history => {
+                        if (history[isoDate]) {
+                            dailyTotal += Object.values(history[isoDate]).reduce((sum, s) => sum + s, 0);
+                        }
+                    });
+                    weeklyTotalSeconds += dailyTotal;
+
+                    let classes = 'calendar-day';
+                    if (isoDate === new Date().toISOString().split('T')[0]) classes += ' today';
+                    if (selectedDate === isoDate) classes += ' selected';
+                    if (dailyTotal > 0) classes += ' has-studies';
+                    grid.insertAdjacentHTML('beforeend', `<div class="${classes}" onclick="selectDate('${isoDate}')">${date.getDate()}</div>`);
+                }
+                 summaryEl.innerHTML = `Total na Semana: <strong>${formatTime(weeklyTotalSeconds)}</strong>`;
+            }
         }
 
         function selectDate(dateStr) {
             selectedDate = dateStr;
-            updateCalendar();
+            renderCalendar(); 
             const infoEl = document.getElementById('selectedDateInfo');
+            
+            let dailyTotalSeconds = 0;
             let html = `<h4 style="color: #003366; font-weight: 600;">Estudos de ${new Date(dateStr + 'T12:00:00').toLocaleDateString('pt-BR')}</h4>`;
             let studiesFound = false;
+
             Object.values(appData.cycles).forEach(cycle => {
                 if (cycle.studyHistory && cycle.studyHistory[dateStr]) {
-                    Object.entries(cycle.studyHistory[dateStr]).forEach(([discId, hours]) => {
+                    Object.entries(cycle.studyHistory[dateStr]).forEach(([discId, seconds]) => {
                         const discipline = cycle.disciplines.find(d => d.id == discId);
                         if (discipline) {
-                            html += `<div class="study-history-item"> <span><strong>${discipline.name}</strong> (${cycle.id}): ${formatTime(hours)}</span> <button class="history-delete-btn" title="Apagar este registro" onclick="deleteHistoryEntry('${dateStr}', '${cycle.id}', '${discId}')">X</button> </div>`;
+                            html += `<div class="study-history-item"> <span><strong>${discipline.name}</strong> (${cycle.id}): ${formatTime(seconds)}</span> <button class="history-delete-btn" title="Apagar este registro" onclick="deleteHistoryEntry('${dateStr}', '${cycle.id}', '${discId}')">X</button> </div>`;
                             studiesFound = true;
+                            dailyTotalSeconds += seconds;
                         }
                     });
                 }
             });
-            if (!studiesFound) html += `<p style="margin-top: 10px;">Nenhum estudo registrado para este dia.</p>`;
-            infoEl.innerHTML = html;
+
+            const summaryHtml = `<div class="daily-total"><strong>Total do Dia:</strong> ${formatTime(dailyTotalSeconds)}</div>`;
+
+            if (!studiesFound) {
+                html += `<p style="margin-top: 10px;">Nenhum estudo registrado para este dia.</p>`;
+                infoEl.innerHTML = html;
+            } else {
+                infoEl.innerHTML = summaryHtml + html;
+            }
             infoEl.style.display = 'block';
         }
         
         function deleteHistoryEntry(dateStr, cycleId, disciplineId) {
-            showConfirmModal(
-                'Apagar Registro',
-                'Tem certeza que deseja apagar este registro de estudo? O tempo total da disciplina será recalculado.',
-                () => {
-                    const cycle = appData.cycles[cycleId];
-                    if (!cycle || !cycle.studyHistory || !cycle.studyHistory[dateStr] || !cycle.studyHistory[dateStr][disciplineId]) return;
-                    const hoursToDelete = cycle.studyHistory[dateStr][disciplineId];
-                    const discipline = cycle.disciplines.find(d => String(d.id) === disciplineId);
-                    if (discipline) {
-                        discipline.currentHours -= hoursToDelete;
-                        if (discipline.currentHours < 0) discipline.currentHours = 0;
-                    }
-                    delete cycle.studyHistory[dateStr][disciplineId];
-                    if (Object.keys(cycle.studyHistory[dateStr]).length === 0) {
-                        delete cycle.studyHistory[dateStr];
-                    }
-                    saveData();
-                    selectDate(dateStr);
-                    if (activeCycle && activeCycle.id === cycleId) updateDisplay();
+            showConfirmModal('Apagar Registro', 'Tem certeza que deseja apagar este registro de estudo? O tempo total da disciplina será recalculado.', () => {
+                const cycle = appData.cycles[cycleId];
+                if (!cycle || !cycle.studyHistory || !cycle.studyHistory[dateStr] || !cycle.studyHistory[dateStr][disciplineId]) return;
+                const secondsToDelete = cycle.studyHistory[dateStr][disciplineId];
+                const discipline = cycle.disciplines.find(d => String(d.id) === disciplineId);
+                if (discipline) {
+                    discipline.currentSeconds -= secondsToDelete;
+                    if (discipline.currentSeconds < 0) discipline.currentSeconds = 0;
                 }
-            );
+                delete cycle.studyHistory[dateStr][disciplineId];
+                if (Object.keys(cycle.studyHistory[dateStr]).length === 0) {
+                    delete cycle.studyHistory[dateStr];
+                }
+                saveData();
+                selectDate(dateStr); 
+                if (activeCycle && activeCycle.id === cycleId) updateDisplay();
+            });
         }
 
         function updateHistoryView() {
@@ -789,11 +877,10 @@
             selector.value = selectedValue || 'geral';
             updateHistoryStats();
         }
-
         function updateHistoryStats() {
             const selectedId = document.getElementById('historyCycleSelector').value;
             const statsContainer = document.getElementById('historyStats');
-            let totalHours = 0, studyDays = new Set(), completions = 0;
+            let totalSeconds = 0, studyDays = new Set(), completions = 0;
             const cyclesToProcess = selectedId === 'geral' ? Object.values(appData.cycles) : (appData.cycles[selectedId] ? [appData.cycles[selectedId]] : []);
             cyclesToProcess.forEach(cycle => {
                 if (!cycle) return;
@@ -801,18 +888,18 @@
                 if (cycle.studyHistory) {
                     Object.entries(cycle.studyHistory).forEach(([date, disciplines]) => {
                         studyDays.add(date);
-                        totalHours += Object.values(disciplines).reduce((sum, h) => sum + h, 0);
+                        totalSeconds += Object.values(disciplines).reduce((sum, s) => sum + s, 0);
                     });
                 }
             });
-            statsContainer.innerHTML = `<div class="stat-card"><div class="stat-number">${formatTime(totalHours)}</div><div class="stat-label">Total de Horas</div></div> <div class="stat-card"><div class="stat-number">${studyDays.size}</div><div class="stat-label">Dias de Estudo</div></div> <div class="stat-card"><div class="stat-number">${completions}</div><div class="stat-label">Ciclos Concluídos</div></div>`;
+            statsContainer.innerHTML = `<div class="stat-card"><div class="stat-number">${formatTime(totalSeconds)}</div><div class="stat-label">Total de Horas</div></div> <div class="stat-card"><div class="stat-number">${studyDays.size}</div><div class="stat-label">Dias de Estudo</div></div> <div class="stat-card"><div class="stat-number">${completions}</div><div class="stat-label">Ciclos Concluídos</div></div>`;
         }
 
-        function formatTime(hours) {
-            hours = hours || 0;
-            const h = Math.floor(hours);
-            const m = Math.floor((hours * 60) % 60);
-            const s = Math.floor((hours * 3600) % 60);
+        function formatTime(totalSeconds) {
+            totalSeconds = Math.round(totalSeconds || 0);
+            const h = Math.floor(totalSeconds / 3600);
+            const m = Math.floor((totalSeconds % 3600) / 60);
+            const s = Math.floor(totalSeconds % 60);
             return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
         }
         
