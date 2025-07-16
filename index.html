@@ -278,19 +278,16 @@
         let confirmCallback = null;
         let calendarViewMode = 'month';
 
-        // --- FUNÇÃO CORRIGIDA ---
         async function handleAuth() {
             auth.onAuthStateChanged(async (user) => {
                 if (user) {
                     document.querySelector('.main-navigation').style.display = 'flex';
                     await loadUserData(user.uid);
                 } else {
-                    // Se o usuário deslogou, primeiro removemos o 'escutador' de dados
                     if (unsubscribe) {
                         unsubscribe();
-                        unsubscribe = null; // Limpa a variável para segurança
+                        unsubscribe = null; 
                     }
-                    // Limpa os dados em memória para evitar que apareçam para o próximo usuário
                     activeCycle = null;
                     appData = { cycles: {}, activeCycleId: null };
                     Object.values(timers).forEach(clearInterval);
@@ -323,11 +320,15 @@
                         switchView('current');
                         updateDisplay();
                     } else {
-                        returnToCycleSelection();
+                        // --- CORREÇÃO 1: LÓGICA DO LISTENER ---
+                        // Se não houver ciclo ativo, a interface deve mostrar a tela de seleção.
+                        // Não se deve chamar returnToCycleSelection() daqui para evitar loops.
+                        activeCycle = null; // Garante que o estado local está limpo.
+                        populateCycleSelector();
+                        switchView('cycle-selection');
                     }
                 }, error => {
                     console.error("Listener error:", error)
-                    // Este erro não deve mais acontecer no logout, mas é bom manter para erros reais de conexão
                     showAlertModal('Erro de Conexão', 'Não foi possível carregar seus dados. Verifique sua conexão com a internet e tente recarregar a página.');
                 });
             } catch (error) {
@@ -350,18 +351,22 @@
             }
         }
         
+        // --- CORREÇÃO 2: FUNÇÃO PARA TROCAR DE CICLO ---
         function returnToCycleSelection() {
             Object.keys(timers).forEach(id => stopTimer(id, false));
-            activeCycle = null;
-            appData.activeCycleId = null;
-            populateCycleSelector();
-            switchView('cycle-selection');
+            // Define o ciclo ativo como nulo e salva essa alteração no Firebase.
+            // O listener onSnapshot irá reagir a essa mudança e atualizar a interface
+            // para a tela de seleção de ciclo.
+            if (appData.activeCycleId !== null) {
+                appData.activeCycleId = null;
+                saveData();
+            }
         }
 
         function populateCycleSelector() {
             const selector = document.getElementById('existingCycleSelector');
             selector.innerHTML = '<option value="">-- Selecione um ciclo --</option>';
-            const cycleIds = Object.keys(appData.cycles);
+            const cycleIds = Object.keys(appData.cycles || {});
             if (cycleIds.length > 0) {
                 cycleIds.forEach(id => selector.innerHTML += `<option value="${id}">${id}</option>`);
                 selector.disabled = false;
@@ -377,7 +382,7 @@
             const selectedId = document.getElementById('existingCycleSelector').value;
             if (selectedId && appData.cycles[selectedId]) {
                 appData.activeCycleId = selectedId;
-                saveData();
+                saveData(); // Salva o novo ID. O listener irá carregar a view.
             }
         }
         
@@ -406,8 +411,7 @@
                     delete appData.cycles[activeCycle.id];
                     appData.activeCycleId = null;
                     activeCycle = null;
-                    saveData();
-                    returnToCycleSelection();
+                    saveData(); // A alteração aqui acionará o listener, que levará para a tela de seleção.
                 }
             );
         }
@@ -601,7 +605,8 @@
             } else {
                 nav.style.display = 'flex';
                 document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-                document.querySelector(`[onclick="switchView('${viewName}')"]`).classList.add('active');
+                const activeTab = document.querySelector(`[onclick="switchView('${viewName}')"]`);
+                if(activeTab) activeTab.classList.add('active');
             }
             if (viewName === 'calendar') { renderCalendar(); } 
             if (viewName === 'history') { updateHistoryView(); }
