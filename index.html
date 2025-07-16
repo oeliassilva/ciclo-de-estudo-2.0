@@ -344,10 +344,11 @@
 
 
     <script>
+        // ATENÇÃO: VERIFIQUE SE ESTAS CREDENCIAIS SÃO DO SEU PROJETO FIREBASE ATUAL!
         const firebaseConfig = {
-            apiKey: "AIzaSyDU50I5YKjP-pH8NfCuc59N5_U0rzbeac4",
-            authDomain: "ciclo-de-estudo-elias.firebaseapp.com",
-            projectId: "ciclo-de-estudo-elias",
+            apiKey: "AIzaSyDU50I5YKjP-pH8NfCuc59N5_U0rzbeac4", // <--- VERIFIQUE AQUI
+            authDomain: "ciclo-de-estudo-elias.firebaseapp.com", // <--- VERIFIQUE AQUI
+            projectId: "ciclo-de-estudo-elias", // <--- VERIFIQUE AQUI
             storageBucket: "ciclo-de-estudo-elias.appspot.com",
             messagingSenderId: "1065929930079",
             appId: "1:1065929930079:web:28eaffabc8daeb7ff732ea",
@@ -381,18 +382,29 @@
         // Função para obter a data local no formato AAAA-MM-DD, evitando problemas com UTC.
         function getLocalDateString(date = new Date()) {
             // A biblioteca date-fns já está incluída e lida com isso corretamente.
-            return dateFns.format(date, 'yyyy-MM-dd');
+            // Verifica se dateFns está definido antes de usá-lo
+            if (typeof dateFns !== 'undefined' && dateFns.format) {
+                return dateFns.format(date, 'yyyy-MM-dd');
+            } else {
+                console.error("dateFns não está definido. Verifique o carregamento do script date-fns.");
+                // Fallback para o formato ISO se dateFns não estiver disponível
+                return date.toISOString().split('T')[0];
+            }
         }
 
         async function handleAuth() {
+            console.log("handleAuth: Iniciando verificação de autenticação...");
             auth.onAuthStateChanged(async (user) => {
                 if (user) {
+                    console.log("handleAuth: Usuário autenticado. UID:", user.uid);
                     document.querySelector('.main-navigation').style.display = 'flex';
                     await loadUserData(user.uid);
                 } else {
+                    console.log("handleAuth: Usuário não autenticado.");
                     if (unsubscribe) {
                         unsubscribe();
                         unsubscribe = null; 
+                        console.log("handleAuth: Listener do Firestore desinscrito.");
                     }
                     activeCycle = null;
                     appData = { cycles: {}, activeCycleId: null };
@@ -404,39 +416,67 @@
                     switchView('login');
                 }
             });
-            try { await auth.getRedirectResult(); } catch (error) { console.error("Auth redirect error:", error); }
+            try { 
+                await auth.getRedirectResult(); 
+                console.log("handleAuth: Resultado de redirecionamento do Firebase processado.");
+            } catch (error) { 
+                console.error("handleAuth: Erro no redirecionamento de autenticação:", error); 
+            }
         }
-        function signInWithGoogle() { auth.signInWithPopup(provider).catch((error) => console.error("Login error:", error)); }
-        function signOutUser() { auth.signOut(); }
+        function signInWithGoogle() { 
+            console.log("signInWithGoogle: Tentando login com Google Popup...");
+            auth.signInWithPopup(provider).catch((error) => {
+                console.error("signInWithGoogle: Erro no login:", error);
+                showAlertModal('Erro de Login', `Não foi possível fazer login com o Google. Erro: ${error.message}`);
+            }); 
+        }
+        function signOutUser() { 
+            console.log("signOutUser: Tentando deslogar...");
+            auth.signOut().then(() => {
+                console.log("signOutUser: Usuário deslogado com sucesso.");
+            }).catch((error) => {
+                console.error("signOutUser: Erro ao deslogar:", error);
+                showAlertModal('Erro ao Sair', `Não foi possível sair. Erro: ${error.message}`);
+            });
+        }
 
         async function loadUserData(userId) {
+            console.log("loadUserData: Carregando dados para o UID:", userId);
             if (unsubscribe) unsubscribe();
             const userDocRef = db.collection('users').doc(userId);
             try {
                 const doc = await userDocRef.get();
                 if (!doc.exists) {
+                    console.log("loadUserData: Documento do usuário não existe. Criando um novo...");
                     await userDocRef.set({ cycles: {}, activeCycleId: null });
                 }
                 unsubscribe = userDocRef.onSnapshot(snapshot => {
-                    if (!snapshot.exists) return;
+                    console.log("loadUserData: Snapshot do Firestore recebido.");
+                    if (!snapshot.exists) {
+                        console.warn("loadUserData: Snapshot não existe, retornando.");
+                        return;
+                    }
                     appData = snapshot.data();
+                    console.log("loadUserData: appData atualizado:", JSON.parse(JSON.stringify(appData))); // Log profundo
                     Object.values(timers).forEach(clearInterval);
                     timers = {};
                     if (appData.activeCycleId && appData.cycles[appData.activeCycleId]) {
+                        console.log("loadUserData: Ciclo ativo encontrado:", appData.activeCycleId);
                         activeCycle = appData.cycles[appData.activeCycleId];
                         switchView('current');
                         updateDisplay();
                     } else {
+                        console.log("loadUserData: Nenhum ciclo ativo ou ciclo ativo inválido. Indo para seleção de ciclo.");
                         activeCycle = null; 
                         populateCycleSelector();
                         switchView('cycle-selection');
                     }
                 }, error => {
-                    console.error("Listener error:", error)
+                    console.error("loadUserData: Erro no listener do Firestore:", error);
                     showAlertModal('Erro de Conexão', 'Não foi possível carregar seus dados. Verifique sua conexão com a internet e tente recarregar a página.');
                 });
             } catch (error) {
-                 console.error("Error loading user data:", error);
+                 console.error("loadUserData: Erro ao carregar dados do usuário:", error);
                  showAlertModal('Erro Crítico', 'Não foi possível carregar seus dados. Tente recarregar a página.');
             }
         }
@@ -448,10 +488,13 @@
                 if(dataToSave.activeCycleId && dataToSave.cycles[dataToSave.activeCycleId]) {
                     dataToSave.cycles[dataToSave.activeCycleId].disciplines.forEach(d => d.isRunning = false);
                 }
+                console.log("saveData: Salvando dados para o UID:", userId, "Dados:", JSON.parse(JSON.stringify(dataToSave)));
                 db.collection('users').doc(userId).set(dataToSave).catch(error => {
-                    console.error("Save error:", error);
+                    console.error("saveData: Erro ao salvar dados:", error);
                     showAlertModal('Erro ao Salvar', 'Não foi possível salvar suas alterações. Verifique sua conexão e tente novamente.');
                 });
+            } else {
+                console.warn("saveData: Tentativa de salvar dados sem usuário autenticado.");
             }
         }
         
@@ -461,6 +504,7 @@
                 appData.activeCycleId = null;
                 saveData();
             }
+            console.log("returnToCycleSelection: Retornando para seleção de ciclo.");
         }
 
         function populateCycleSelector() {
@@ -471,10 +515,12 @@
                 cycleIds.forEach(id => selector.innerHTML += `<option value="${id}">${id}</option>`);
                 selector.disabled = false;
                 selector.parentElement.nextElementSibling.disabled = false;
+                console.log("populateCycleSelector: Seletor de ciclo populado com ciclos existentes.");
             } else {
                 selector.innerHTML = '<option value="">Nenhum ciclo criado</option>';
                 selector.disabled = true;
                 selector.parentElement.nextElementSibling.disabled = true;
+                console.log("populateCycleSelector: Nenhum ciclo existente encontrado.");
             }
         }
 
@@ -483,6 +529,10 @@
             if (selectedId && appData.cycles[selectedId]) {
                 appData.activeCycleId = selectedId;
                 saveData(); 
+                console.log("loadSelectedCycle: Ciclo selecionado carregado:", selectedId);
+            } else {
+                showAlertModal('Seleção Inválida', 'Por favor, selecione um ciclo válido para carregar.');
+                console.warn("loadSelectedCycle: Tentativa de carregar ciclo inválido ou não selecionado.");
             }
         }
         
@@ -490,23 +540,30 @@
             const newName = document.getElementById('newCycleNameInput').value.trim();
             if (!newName) { 
                 showAlertModal('Nome Inválido', 'Por favor, dê um nome ao novo ciclo.'); 
+                console.warn("createNewCycle: Nome do novo ciclo vazio.");
                 return; 
             }
             if (appData.cycles[newName]) { 
                 showAlertModal('Nome Duplicado', 'Já existe um ciclo com esse nome. Por favor, escolha outro.'); 
+                console.warn("createNewCycle: Nome do novo ciclo duplicado:", newName);
                 return; 
             }
             appData.cycles[newName] = { id: newName, disciplines: [], completions: 0, studyHistory: {} };
             appData.activeCycleId = newName;
             saveData();
+            console.log("createNewCycle: Novo ciclo criado:", newName);
         }
 
         function deleteCurrentCycle() {
-            if (!activeCycle) return;
+            if (!activeCycle) {
+                console.warn("deleteCurrentCycle: Nenhum ciclo ativo para apagar.");
+                return;
+            }
             showConfirmModal(
                 'Apagar Ciclo',
                 `Tem certeza que deseja apagar o ciclo '${activeCycle.id}'? Esta ação é irreversível e removerá todo o histórico associado.`,
                 () => {
+                    console.log("deleteCurrentCycle: Confirmado apagar ciclo:", activeCycle.id);
                     Object.keys(timers).forEach(id => stopTimer(id, false));
                     delete appData.cycles[activeCycle.id];
                     appData.activeCycleId = null;
@@ -517,7 +574,11 @@
         }
 
         function addDiscipline() {
-            if (!activeCycle) return;
+            if (!activeCycle) {
+                console.warn("addDiscipline: Nenhum ciclo ativo para adicionar disciplina.");
+                showAlertModal('Nenhum Ciclo Ativo', 'Por favor, selecione ou crie um ciclo antes de adicionar disciplinas.');
+                return;
+            }
             const nameInput = document.getElementById('disciplineInput');
             const hours = parseInt(document.getElementById('hoursInput').value, 10) || 0;
             const minutes = parseInt(document.getElementById('minutesInput').value, 10) || 0;
@@ -526,10 +587,12 @@
 
             if (!disciplineName || targetSeconds <= 0) { 
                 showAlertModal('Dados Inválidos', 'Por favor, insira um nome e uma meta de tempo válida para a disciplina.');
+                console.warn("addDiscipline: Dados de disciplina inválidos. Nome:", disciplineName, "Meta:", targetSeconds);
                 return; 
             }
             if (activeCycle.disciplines.some(d => d.name.toLowerCase() === disciplineName.toLowerCase())) {
                 showAlertModal('Nome Duplicado', 'Já existe uma disciplina com esse nome neste ciclo.');
+                console.warn("addDiscipline: Nome de disciplina duplicado:", disciplineName);
                 return; 
             }
 
@@ -544,14 +607,19 @@
             document.getElementById('hoursInput').value = '1';
             document.getElementById('minutesInput').value = '0';
             saveData();
+            console.log("addDiscipline: Disciplina adicionada:", disciplineName);
         }
         
         function removeDiscipline(id) {
-            if (!activeCycle) return;
+            if (!activeCycle) {
+                console.warn("removeDiscipline: Nenhum ciclo ativo para remover disciplina.");
+                return;
+            }
             showConfirmModal(
                 'Remover Disciplina',
                 'Tem certeza que deseja remover esta disciplina?',
                 () => {
+                    console.log("removeDiscipline: Confirmado remover disciplina com ID:", id);
                     if (timers[id]) stopTimer(id, false);
                     activeCycle.disciplines = activeCycle.disciplines.filter(d => d.id !== id);
                     saveData();
@@ -560,21 +628,31 @@
         }
         
         function manuallyEndCycle() {
-            if (!activeCycle) return;
+            if (!activeCycle) {
+                console.warn("manuallyEndCycle: Nenhum ciclo ativo para encerrar.");
+                return;
+            }
             showConfirmModal(
                 'Encerrar Ciclo Manualmente',
                 'Tem certeza que deseja encerrar este ciclo? Ele será contabilizado como concluído e os tempos de estudo serão zerados para um novo início.',
                 () => {
                     hideConfirmModal(); 
                     handleStartNewCycle(); 
+                    console.log("manuallyEndCycle: Ciclo encerrado manualmente.");
                 }
             );
         }
 
         function startTimer(id) {
-            if (!activeCycle) return;
+            if (!activeCycle) {
+                console.warn("startTimer: Nenhum ciclo ativo para iniciar timer.");
+                return;
+            }
             const discipline = activeCycle.disciplines.find(d => d.id === id);
-            if (!discipline || discipline.isRunning) return;
+            if (!discipline || discipline.isRunning) {
+                console.warn("startTimer: Disciplina não encontrada ou já em execução. ID:", id);
+                return;
+            }
             activeCycle.disciplines.forEach(d => { if (d.isRunning) stopTimer(d.id, false); });
             discipline.isRunning = true;
             updateDisciplinesList();
@@ -586,10 +664,14 @@
                 activeCycle.studyHistory[today][discIdStr] = (activeCycle.studyHistory[today][discIdStr] || 0) + 1; 
                 updateTimerDisplay(discipline);
             }, 1000);
+            console.log("startTimer: Timer iniciado para disciplina ID:", id);
         }
 
         function stopTimer(id, doSave = true) {
-            if (!activeCycle || !timers[id]) return;
+            if (!activeCycle || !timers[id]) {
+                console.warn("stopTimer: Nenhum ciclo ativo ou timer não encontrado. ID:", id);
+                return;
+            }
             const discipline = activeCycle.disciplines.find(d => d.id === id);
             clearInterval(timers[id]);
             delete timers[id];
@@ -597,31 +679,42 @@
             
             if (doSave && checkCycleCompletion()) {
                 showCompletionModal();
+                console.log("stopTimer: Ciclo concluído, mostrando modal de conclusão.");
             }
             
             if (doSave) saveData();
             updateDisciplinesList();
+            console.log("stopTimer: Timer parado para disciplina ID:", id, "Salvando:", doSave);
         }
 
         function checkCycleCompletion() {
-            if (!activeCycle || activeCycle.disciplines.length === 0) return false;
-            return activeCycle.disciplines.every(d => d.currentSeconds >= d.targetSeconds);
+            if (!activeCycle || activeCycle.disciplines.length === 0) {
+                console.log("checkCycleCompletion: Nenhum ciclo ativo ou sem disciplinas.");
+                return false;
+            }
+            const completed = activeCycle.disciplines.every(d => d.currentSeconds >= d.targetSeconds);
+            console.log("checkCycleCompletion: Ciclo concluído?", completed);
+            return completed;
         }
 
         function showCompletionModal() { document.getElementById('completionModal').style.display = 'flex'; }
         function hideCompletionModal() { document.getElementById('completionModal').style.display = 'none'; }
 
         function handleStartNewCycle() {
-            if (!activeCycle) return;
+            if (!activeCycle) {
+                console.warn("handleStartNewCycle: Nenhum ciclo ativo para iniciar um novo.");
+                return;
+            }
             hideCompletionModal();
             activeCycle.completions = (activeCycle.completions || 0) + 1;
             activeCycle.disciplines.forEach(d => { d.currentSeconds = 0; });
             saveData();
             updateDisplay();
             showCelebrationModal();
+            console.log("handleStartNewCycle: Novo ciclo iniciado.");
         }
 
-        function handleContinueCycle() { hideCompletionModal(); }
+        function handleContinueCycle() { hideCompletionModal(); console.log("handleContinueCycle: Continuar no ciclo atual."); }
         function showCelebrationModal() { document.getElementById('celebrationModal').style.display = 'flex'; }
         function hideCelebrationModal() { document.getElementById('celebrationModal').style.display = 'none'; }
 
@@ -629,6 +722,7 @@
             document.getElementById('alertModalTitle').textContent = title;
             document.getElementById('alertModalMessage').textContent = message;
             document.getElementById('alertModal').style.display = 'flex';
+            console.warn("showAlertModal: Alerta exibido -", title, message);
         }
         function hideAlertModal() { document.getElementById('alertModal').style.display = 'none'; }
 
@@ -637,6 +731,7 @@
             document.getElementById('confirmModalMessage').textContent = message;
             confirmCallback = callback;
             document.getElementById('confirmModal').style.display = 'flex';
+            console.log("showConfirmModal: Confirmação exibida -", title, message);
         }
         function hideConfirmModal() {
             document.getElementById('confirmModal').style.display = 'none';
@@ -647,11 +742,15 @@
                 confirmCallback();
             }
             hideConfirmModal();
+            console.log("handleConfirmAction: Ação de confirmação executada.");
         }
         
         function openEditModal(id) {
             const discipline = activeCycle.disciplines.find(d => d.id === id);
-            if (!discipline) return;
+            if (!discipline) {
+                console.warn("openEditModal: Disciplina não encontrada para edição. ID:", id);
+                return;
+            }
             
             document.getElementById('editDisciplineId').value = discipline.id;
             document.getElementById('editDisciplineName').value = discipline.name;
@@ -662,6 +761,7 @@
             document.getElementById('editMinutesInput').value = minutes;
 
             document.getElementById('editDisciplineModal').style.display = 'flex';
+            console.log("openEditModal: Abrindo modal de edição para disciplina ID:", id);
         }
 
         function hideEditModal() {
@@ -677,6 +777,7 @@
 
             if (!newName || newTargetSeconds <= 0) {
                 showAlertModal('Dados Inválidos', 'O nome não pode estar em branco e a meta de tempo deve ser maior que zero.');
+                console.warn("saveDisciplineChanges: Dados inválidos para salvar edição. Nome:", newName, "Meta:", newTargetSeconds);
                 return;
             }
 
@@ -687,13 +788,21 @@
                 saveData();
                 updateDisplay();
                 hideEditModal();
+                console.log("saveDisciplineChanges: Alterações salvas para disciplina ID:", id);
+            } else {
+                console.warn("saveDisciplineChanges: Disciplina não encontrada para salvar alterações. ID:", id);
             }
         }
 
         function toggleTimer(id) {
             const discipline = activeCycle.disciplines.find(d => d.id === id);
+            if (!discipline) {
+                console.warn("toggleTimer: Disciplina não encontrada para alternar timer. ID:", id);
+                return;
+            }
             if (discipline.isRunning) stopTimer(id);
             else startTimer(id);
+            console.log("toggleTimer: Alternando timer para disciplina ID:", id, "Estado atual:", discipline.isRunning ? "Rodando" : "Parado");
         }
 
         function switchView(viewName) {
@@ -708,6 +817,7 @@
                 const activeTab = document.querySelector(`.nav-tab[onclick="switchView('${viewName}')"]`);
                 if(activeTab) activeTab.classList.add('active');
             }
+            console.log("switchView: Mudando para a view:", viewName);
             if (viewName === 'calendar') { renderCalendar(); } 
             if (viewName === 'reports') {
                 if (!reportsInitialized) {
@@ -718,7 +828,11 @@
         }
 
         function updateDisplay() {
-            if (!activeCycle) return;
+            console.log("updateDisplay: Atualizando a exibição principal.");
+            if (!activeCycle) {
+                console.warn("updateDisplay: Nenhum ciclo ativo para atualizar a exibição.");
+                return;
+            }
             document.getElementById('cycleTitle').innerHTML = `<svg class="cycle-icon" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="M256 0C114.6 0 0 114.6 0 256s114.6 256 256 256 256-114.6 256-256S399.4 0 256 0zm0 464C141.1 464 48 370.9 48 256S141.1 48 256 48s208 93.1 208 208-93.1 208-208 208zm-62.5-133.3l105.3-43.9 43.9-105.3-105.3 43.9-43.9 105.3z"/></svg> <span>Ciclo ${activeCycle.id}</span>`;
             updateStats();
             updateDisciplinesList();
@@ -726,7 +840,11 @@
         }
         
         function updateStats() {
-            if (!activeCycle) return;
+            console.log("updateStats: Atualizando estatísticas.");
+            if (!activeCycle) {
+                console.warn("updateStats: Nenhum ciclo ativo para atualizar estatísticas.");
+                return;
+            }
             document.getElementById('cycleCompletions').textContent = activeCycle.completions || 0;
             document.getElementById('totalDisciplines').textContent = activeCycle.disciplines.length;
             const today = getLocalDateString(); // CORREÇÃO DE FUSO HORÁRIO
@@ -739,12 +857,20 @@
                 });
             }
             document.getElementById('totalHours').textContent = formatTime(totalSecondsToday);
+            console.log("updateStats: Estatísticas atualizadas. Conclusões:", activeCycle.completions, "Disciplinas:", activeCycle.disciplines.length, "Horas Hoje:", formatTime(totalSecondsToday));
         }
 
         function updateDisciplinesList() {
-            if (!activeCycle) return;
+            console.log("updateDisciplinesList: Atualizando lista de disciplinas.");
+            if (!activeCycle) {
+                console.warn("updateDisciplinesList: Nenhum ciclo ativo para atualizar lista de disciplinas.");
+                return;
+            }
             const listEl = document.getElementById('disciplinesList');
-            if (!listEl) return;
+            if (!listEl) {
+                console.error("updateDisciplinesList: Elemento #disciplinesList não encontrado.");
+                return;
+            }
             listEl.innerHTML = activeCycle.disciplines.map((d, i) => {
                 const isCompleted = d.targetSeconds > 0 && d.currentSeconds >= d.targetSeconds;
                 return `
@@ -763,11 +889,15 @@
                         </div>
                     </div>`;
             }).join('');
+            console.log("updateDisciplinesList: Lista de disciplinas renderizada. Total de disciplinas:", activeCycle.disciplines.length);
         }
         
         function updateTimerDisplay(discipline) {
             const itemEl = document.getElementById(`discipline-${discipline.id}`);
-            if (!itemEl) return;
+            if (!itemEl) {
+                console.warn("updateTimerDisplay: Elemento da disciplina não encontrado para ID:", discipline.id);
+                return;
+            }
             itemEl.querySelector('.time-current').textContent = formatTime(discipline.currentSeconds);
             const isCompleted = discipline.targetSeconds > 0 && discipline.currentSeconds >= discipline.targetSeconds;
             if(isCompleted) { itemEl.classList.add('completed'); } 
@@ -776,11 +906,13 @@
         }
 
         function createWheelChart() {
+            console.log("createWheelChart: Tentando criar gráfico de roda.");
             const svg = document.getElementById('wheelChart');
             const tooltip = document.getElementById('tooltip');
             svg.innerHTML = ''; 
             if (!activeCycle || activeCycle.disciplines.length === 0) {
                 svg.innerHTML = `<text x="200" y="200" text-anchor="middle" font-size="16">Adicione disciplinas para começar</text>`;
+                console.log("createWheelChart: Nenhum ciclo ativo ou disciplinas para o gráfico de roda.");
                 return;
             }
             
@@ -789,26 +921,56 @@
             let startAngle = -90;
             const gapDegrees = 2;
 
-            activeCycle.disciplines.forEach((d, i) => {
-                let sliceAngle = totalTarget > 0 ? (d.targetSeconds / totalTarget) * 360 : 360 / activeCycle.disciplines.length;
-                let endAngle = startAngle + sliceAngle;
+            console.log("createWheelChart: Dados para o gráfico de roda - Total Estudado:", totalStudied, "Total Meta:", totalTarget);
 
-                if (sliceAngle > gapDegrees) {
-                    const arcStart = startAngle + gapDegrees / 2;
-                    const arcEnd = endAngle - gapDegrees / 2;
-                    const path = createArc(200, 200, 150, 90, arcStart, arcEnd);
-                    path.setAttribute("fill", COLORS[i % COLORS.length]);
-                    path.addEventListener('mouseover', (e) => {
-                        tooltip.innerHTML = `<strong>${d.name}</strong><br>Estudado: ${formatTime(d.currentSeconds)}<br>Meta: ${formatTime(d.targetSeconds)}`;
-                        tooltip.style.display = 'block';
-                        tooltip.style.left = `${e.clientX + 15}px`;
-                        tooltip.style.top = `${e.clientY - 10}px`;
-                    });
-                    path.addEventListener('mouseout', () => { tooltip.style.display = 'none'; });
-                    svg.appendChild(path);
-                }
-                startAngle = endAngle;
-            });
+            if (totalTarget === 0 && activeCycle.disciplines.length > 0) {
+                // Se não há meta definida, distribua igualmente
+                const equalSliceAngle = 360 / activeCycle.disciplines.length;
+                activeCycle.disciplines.forEach((d, i) => {
+                    let sliceAngle = equalSliceAngle;
+                    let endAngle = startAngle + sliceAngle;
+                    if (sliceAngle > gapDegrees) {
+                        const arcStart = startAngle + gapDegrees / 2;
+                        const arcEnd = endAngle - gapDegrees / 2;
+                        const path = createArc(200, 200, 150, 90, arcStart, arcEnd);
+                        path.setAttribute("fill", COLORS[i % COLORS.length]);
+                        path.addEventListener('mouseover', (e) => {
+                            tooltip.innerHTML = `<strong>${d.name}</strong><br>Estudado: ${formatTime(d.currentSeconds)}<br>Meta: ${formatTime(d.targetSeconds)}`;
+                            tooltip.style.display = 'block';
+                            tooltip.style.left = `${e.clientX + 15}px`;
+                            tooltip.style.top = `${e.clientY - 10}px`;
+                        });
+                        path.addEventListener('mouseout', () => { tooltip.style.display = 'none'; });
+                        svg.appendChild(path);
+                    }
+                    startAngle = endAngle;
+                });
+            } else {
+                activeCycle.disciplines.forEach((d, i) => {
+                    let sliceAngle = totalTarget > 0 ? (d.targetSeconds / totalTarget) * 360 : 0; // Evita divisão por zero
+                    if (sliceAngle === 0 && d.targetSeconds > 0) { // Caso uma disciplina tenha meta, mas o totalTarget seja 0 (improvável)
+                        sliceAngle = 360 / activeCycle.disciplines.length;
+                    }
+                    let endAngle = startAngle + sliceAngle;
+
+                    if (sliceAngle > gapDegrees) {
+                        const arcStart = startAngle + gapDegrees / 2;
+                        const arcEnd = endAngle - gapDegrees / 2;
+                        const path = createArc(200, 200, 150, 90, arcStart, arcEnd);
+                        path.setAttribute("fill", COLORS[i % COLORS.length]);
+                        path.addEventListener('mouseover', (e) => {
+                            tooltip.innerHTML = `<strong>${d.name}</strong><br>Estudado: ${formatTime(d.currentSeconds)}<br>Meta: ${formatTime(d.targetSeconds)}`;
+                            tooltip.style.display = 'block';
+                            tooltip.style.left = `${e.clientX + 15}px`;
+                            tooltip.style.top = `${e.clientY - 10}px`;
+                        });
+                        path.addEventListener('mouseout', () => { tooltip.style.display = 'none'; });
+                        svg.appendChild(path);
+                    }
+                    startAngle = endAngle;
+                });
+            }
+
 
             const svgNS = "http://www.w3.org/2000/svg";
             function createText(x, y, content, size, weight, color, opacity = 1) {
@@ -826,6 +988,7 @@
             svg.appendChild(createText("200", "185", "Estudei", "18", "500", "#6c757d"));
             svg.appendChild(createText("200", "215", formatTime(totalStudied), "28", "600", "#003366"));
             svg.appendChild(createText("200", "238", `de ${formatTime(totalTarget)}`, "16", "500", "#6c757d", 0.8));
+            console.log("createWheelChart: Gráfico de roda criado com sucesso.");
         }
 
         function createArc(x, y, outerR, innerR, start, end) {
@@ -843,6 +1006,7 @@
             document.getElementById('view-toggle-month').classList.toggle('active', mode === 'month');
             document.getElementById('view-toggle-week').classList.toggle('active', mode === 'week');
             renderCalendar();
+            console.log("setCalendarView: Modo de visualização do calendário alterado para:", mode);
         }
 
         function navigateCalendar(direction) {
@@ -852,9 +1016,11 @@
                 currentCalendarDate.setDate(currentCalendarDate.getDate() + (direction * 7));
             }
             renderCalendar();
+            console.log("navigateCalendar: Calendário navegado. Direção:", direction);
         }
 
         function renderCalendar() {
+            console.log("renderCalendar: Renderizando calendário. Modo:", calendarViewMode);
             const grid = document.getElementById('calendarGrid');
             const titleEl = document.getElementById('calendarTitle');
             const summaryEl = document.getElementById('calendar-summary');
@@ -922,9 +1088,11 @@
                 }
                  summaryEl.innerHTML = `Total na Semana: <strong>${formatTime(weeklyTotalSeconds)}</strong>`;
             }
+            console.log("renderCalendar: Calendário renderizado com sucesso.");
         }
 
         function selectDate(dateStr) {
+            console.log("selectDate: Data selecionada:", dateStr);
             selectedDate = dateStr;
             renderCalendar(); 
             const infoEl = document.getElementById('selectedDateInfo');
@@ -955,12 +1123,17 @@
                 infoEl.innerHTML = summaryHtml + html;
             }
             infoEl.style.display = 'block';
+            console.log("selectDate: Informações da data selecionada atualizadas. Total de estudos:", formatTime(dailyTotalSeconds));
         }
         
         function deleteHistoryEntry(dateStr, cycleId, disciplineId) {
+            console.log("deleteHistoryEntry: Solicitado apagar registro. Data:", dateStr, "Ciclo:", cycleId, "Disciplina:", disciplineId);
             showConfirmModal('Apagar Registro', 'Tem certeza que deseja apagar este registro de estudo? O tempo total da disciplina será recalculado.', () => {
                 const cycle = appData.cycles[cycleId];
-                if (!cycle || !cycle.studyHistory || !cycle.studyHistory[dateStr] || !cycle.studyHistory[dateStr][disciplineId]) return;
+                if (!cycle || !cycle.studyHistory || !cycle.studyHistory[dateStr] || !cycle.studyHistory[dateStr][disciplineId]) {
+                    console.warn("deleteHistoryEntry: Registro de histórico não encontrado para apagar.");
+                    return;
+                }
                 const secondsToDelete = cycle.studyHistory[dateStr][disciplineId];
                 const discipline = cycle.disciplines.find(d => String(d.id) === disciplineId);
                 if (discipline) {
@@ -974,12 +1147,14 @@
                 saveData();
                 selectDate(dateStr); 
                 if (activeCycle && activeCycle.id === cycleId) updateDisplay();
+                console.log("deleteHistoryEntry: Registro de histórico apagado com sucesso.");
             });
         }
         
         // --- LÓGICA DA TELA DE RELATÓRIOS (ATUALIZADA) ---
         
         function initializeReportFilters() {
+            console.log("initializeReportFilters: Inicializando filtros de relatório.");
             const today = new Date();
             reportStartDate = new Date(today);
             reportStartDate.setDate(today.getDate() - today.getDay()); // Início da semana (domingo)
@@ -995,26 +1170,33 @@
                 "weekdays": ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
             };
 
-            reportDatePicker = new Litepicker({
-                element: document.getElementById('report-date-input'),
-                singleMode: false,
-                allowRepick: true,
-                lang: "pt-BR",
-                lexicon: ptBR,
-                format: 'DD/MM/YYYY',
-                startDate: reportStartDate,
-                endDate: reportEndDate,
-                setup: (picker) => {
-                    picker.on('selected', (date1, date2) => {
-                        reportStartDate = date1.dateInstance;
-                        reportEndDate = date2.dateInstance;
-                        renderReportsView();
-                    });
-                }
-            });
+            // Verifica se Litepicker está definido antes de inicializá-lo
+            if (typeof Litepicker !== 'undefined') {
+                reportDatePicker = new Litepicker({
+                    element: document.getElementById('report-date-input'),
+                    singleMode: false,
+                    allowRepick: true,
+                    lang: "pt-BR",
+                    lexicon: ptBR,
+                    format: 'DD/MM/YYYY',
+                    startDate: reportStartDate,
+                    endDate: reportEndDate,
+                    setup: (picker) => {
+                        picker.on('selected', (date1, date2) => {
+                            reportStartDate = date1.dateInstance;
+                            reportEndDate = date2.dateInstance;
+                            renderReportsView();
+                            console.log("initializeReportFilters: Período do relatório selecionado:", reportStartDate, "-", reportEndDate);
+                        });
+                    }
+                });
+            } else {
+                console.error("Litepicker não está definido. O seletor de datas do relatório pode não funcionar.");
+            }
 
             populateCycleFilter();
             reportsInitialized = true;
+            console.log("initializeReportFilters: Filtros de relatório inicializados.");
         }
 
         function populateCycleFilter() {
@@ -1022,10 +1204,15 @@
             selector.innerHTML = '<option value="all">Todos os Ciclos</option>';
             const cycleIds = Object.keys(appData.cycles || {});
             cycleIds.forEach(id => selector.innerHTML += `<option value="${id}">${id}</option>`);
+            console.log("populateCycleFilter: Filtro de ciclo populado. Ciclos disponíveis:", cycleIds.length);
         }
 
         function renderReportsView() {
-            if (!reportsInitialized) return;
+            console.log("renderReportsView: Renderizando tela de relatórios.");
+            if (!reportsInitialized) {
+                console.warn("renderReportsView: Relatórios não inicializados, retornando.");
+                return;
+            }
 
             const selectedCycle = document.getElementById('report-cycle-filter').value;
             const reportData = processReportData(reportStartDate, reportEndDate, selectedCycle);
@@ -1036,9 +1223,11 @@
             renderDurationBarChart(reportData.durationByDay);
             renderDistributionDonutChart(reportData.distributionByCycle);
             renderBreakdownTable(reportData.breakdown, reportData.totalSeconds);
+            console.log("renderReportsView: Relatórios renderizados com sucesso.");
         }
 
         function processReportData(startDate, endDate, selectedCycle) {
+            console.log("processReportData: Processando dados para relatório. Início:", startDate, "Fim:", endDate, "Ciclo selecionado:", selectedCycle);
             let totalSeconds = 0;
             const durationByDay = {};
             const distributionByCycle = {};
@@ -1081,11 +1270,18 @@
             });
             
             const dailyAverage = studyDaysCount > 0 ? totalSeconds / studyDaysCount : 0;
+            console.log("processReportData: Dados processados - Total Segundos:", totalSeconds, "Média Diária:", dailyAverage);
             return { totalSeconds, dailyAverage, durationByDay, distributionByCycle, breakdown };
         }
 
         function renderDurationBarChart(data) {
-            const ctx = document.getElementById('durationBarChart').getContext('2d');
+            console.log("renderDurationBarChart: Renderizando gráfico de barras. Dados:", data);
+            const ctx = document.getElementById('durationBarChart');
+            if (!ctx) {
+                console.error("renderDurationBarChart: Elemento canvas 'durationBarChart' não encontrado.");
+                return;
+            }
+            const context = ctx.getContext('2d');
             
             const labels = Object.keys(data).map(dateStr => {
                 const date = new Date(dateStr + 'T12:00:00');
@@ -1097,34 +1293,40 @@
 
             if (durationBarChart) durationBarChart.destroy();
 
-            durationBarChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Duração',
-                        data: values,
-                        backgroundColor: BAR_CHART_COLOR, // Cor única
-                        borderRadius: 4,
-                        barThickness: 25
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: { type: 'category', grid: { display: false } },
-                        y: {
-                            beginAtZero: true,
-                            ticks: { callback: (value) => formatTime(value).substring(0, 5) }
-                        }
+            // Verifica se Chart está definido antes de usá-lo
+            if (typeof Chart !== 'undefined') {
+                durationBarChart = new Chart(context, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Duração',
+                            data: values,
+                            backgroundColor: BAR_CHART_COLOR, // Cor única
+                            borderRadius: 4,
+                            barThickness: 25
+                        }]
                     },
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { callbacks: { label: (ctx) => `Duração: ${formatTime(ctx.raw)}` } }
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { type: 'category', grid: { display: false } },
+                            y: {
+                                beginAtZero: true,
+                                ticks: { callback: (value) => formatTime(value).substring(0, 5) }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { callbacks: { label: (ctx) => `Duração: ${formatTime(ctx.raw)}` } }
+                        }
                     }
-                }
-            });
+                });
+            } else {
+                console.error("Chart.js não está definido. O gráfico de barras pode não funcionar.");
+            }
+            console.log("renderDurationBarChart: Gráfico de barras renderizado.");
         }
 
         const doughnutText = {
@@ -1136,6 +1338,7 @@
                 const meta = chart.getDatasetMeta(0);
                 const hasData = meta.data && meta.data.length > 0;
                 if (!hasData) {
+                    console.warn("doughnutText: Não há dados para exibir texto no donut chart.");
                     return;
                 }
 
@@ -1160,7 +1363,13 @@
         };
 
         function renderDistributionDonutChart(data) {
-            const ctx = document.getElementById('distributionDonutChart').getContext('2d');
+            console.log("renderDistributionDonutChart: Renderizando gráfico de donut. Dados:", data);
+            const ctx = document.getElementById('distributionDonutChart');
+            if (!ctx) {
+                console.error("renderDistributionDonutChart: Elemento canvas 'distributionDonutChart' não encontrado.");
+                return;
+            }
+            const context = ctx.getContext('2d');
             const labels = Object.keys(data);
             const values = Object.values(data);
             const backgroundColors = labels.map((_, i) => COLORS[i % COLORS.length]);
@@ -1170,40 +1379,48 @@
 
             if (distributionDonutChart) distributionDonutChart.destroy();
 
-            distributionDonutChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: labels,
-                    datasets: [{ data: values, backgroundColor: backgroundColors, borderColor: '#fff', borderWidth: 2 }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '70%',
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                             callbacks: {
-                                label: function(context) {
-                                    const total = context.chart.getDatasetMeta(0).total;
-                                    const percentage = total > 0 ? ((context.raw / total) * 100).toFixed(1) : 0;
-                                    return `${context.label}: ${formatTime(context.raw)} (${percentage}%)`;
+            // Verifica se Chart está definido antes de usá-lo
+            if (typeof Chart !== 'undefined') {
+                distributionDonutChart = new Chart(context, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{ data: values, backgroundColor: backgroundColors, borderColor: '#fff', borderWidth: 2 }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '70%',
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const total = context.chart.getDatasetMeta(0).total;
+                                        const percentage = total > 0 ? ((context.raw / total) * 100).toFixed(1) : 0;
+                                        return `${context.label}: ${formatTime(context.raw)} (${percentage}%)`;
+                                    }
                                 }
-                            }
-                        },
-                        doughnutText: { text: { total: formattedTotalTime, label: 'Total' } }
-                    }
-                },
-                plugins: [doughnutText]
-            });
+                            },
+                            doughnutText: { text: { total: formattedTotalTime, label: 'Total' } }
+                        }
+                    },
+                    plugins: [doughnutText]
+                });
+            } else {
+                console.error("Chart.js não está definido. O gráfico de donut pode não funcionar.");
+            }
+            console.log("renderDistributionDonutChart: Gráfico de donut renderizado.");
         }
 
         function renderBreakdownTable(data, totalSeconds) {
+            console.log("renderBreakdownTable: Renderizando tabela de detalhamento. Dados:", data, "Total Geral:", totalSeconds);
             const tableBody = document.getElementById('breakdown-table-body');
             tableBody.innerHTML = '';
             
             if (Object.keys(data).length === 0) {
                 tableBody.innerHTML = '<p style="text-align:center; padding: 20px; color: #6c757d;">Nenhum dado de estudo para o período selecionado.</p>';
+                console.log("renderBreakdownTable: Nenhum dado para a tabela de detalhamento.");
                 return;
             }
 
@@ -1212,7 +1429,10 @@
 
             for (const [cycleId, cycleData] of sortedCycles) {
                 const cycle = appData.cycles[cycleId];
-                if (!cycle) continue;
+                if (!cycle) {
+                    console.warn("renderBreakdownTable: Ciclo não encontrado para ID:", cycleId);
+                    continue;
+                }
 
                 const percentage = totalSeconds > 0 ? ((cycleData.totalSeconds / totalSeconds) * 100).toFixed(1) : 0;
                 const cycleColor = COLORS[colorIndex % COLORS.length];
@@ -1251,10 +1471,12 @@
                 tableBody.appendChild(disciplinesWrapper);
                 colorIndex++;
             }
+            console.log("renderBreakdownTable: Tabela de detalhamento renderizada.");
         }
 
         function toggleCycleDetails(element) {
             element.classList.toggle('expanded');
+            console.log("toggleCycleDetails: Detalhes do ciclo expandidos/colapsados.");
         }
 
         function formatTime(totalSeconds) {
@@ -1265,7 +1487,8 @@
             return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
         }
         
-        handleAuth();
+        // Garante que o código só seja executado após o DOM e todos os recursos estarem completamente carregados
+        window.addEventListener('load', handleAuth);
     </script>
 </body>
 </html>
