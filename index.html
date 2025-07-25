@@ -486,16 +486,20 @@
         const provider = new firebase.auth.GoogleAuthProvider();
 
         // Cor reservada para relatórios (não pode ser usada para disciplinas)
-        const REPORT_RESERVED_COLOR = '#3f3f3f';
+        const REPORT_RESERVED_COLOR = '#0D253F';
         
         // Gerador de cores aleatórias que evita a cor reservada
         function generateRandomColor() {
             let color;
             do {
-                color = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+                const r = Math.floor(Math.random() * 156) + 100; // 100-255
+                const g = Math.floor(Math.random() * 156) + 100;
+                const b = Math.floor(Math.random() * 156) + 100;
+                color = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
             } while (color.toLowerCase() === REPORT_RESERVED_COLOR.toLowerCase());
             return color;
         }
+
         
         // Função para obter cor de uma disciplina (gera uma nova se não existir)
         function getDisciplineColor(disciplineId, cycleId) {
