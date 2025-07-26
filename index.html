@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CareerPath | Ciclo de Estudos</title>
+    <title>CareerPath | Projeto de Estudos</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -240,7 +240,7 @@
         .time-input-group input { width: 70px; text-align: center; }
         .time-input-separator { font-size: 1.5em; color: #999; padding-bottom: 10px; }
 
-        /* Estilos para seleção de cor do ciclo */
+        /* Estilos para seleção de cor do Projeto */
         .color-palette {
             display: flex;
             flex-wrap: wrap;
@@ -284,6 +284,60 @@
             border-radius: 6px;
             background-color: #e9ecef;
             font-size: 0.9em;
+        }
+
+        /* Estilos para a tela de Tags */
+        #allTagsList {
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            max-height: 200px;
+            overflow-y: auto;
+            align-items: flex-start; /* Alinha os itens ao topo */
+        }
+        .tag-item {
+            display: inline-block;
+            background-color: #e9ecef;
+            color: #495057;
+            padding: 6px 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+            white-space: nowrap; /* Evita quebras de linha dentro da tag */
+        }
+        .tag-item:hover {
+            background-color: #dee2e6;
+            color: #0d253f;
+        }
+        .tag-item.active {
+            background-color: #0d253f;
+            color: white;
+        }
+
+        .tag-results .breakdown-header {
+            grid-template-columns: 2fr 100px; /* Ajuste para assunto/disciplina/projeto e duração */
+        }
+        .tag-results .tag-study-item {
+            display: grid;
+            grid-template-columns: 2fr 100px;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid #f1f3f5;
+            word-break: break-word; /* Permite quebras de palavras longas */
+        }
+        .tag-study-item .study-details {
+            display: flex;
+            flex-direction: column;
+        }
+        .tag-study-item .study-details .main-info {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        .tag-study-item .study-details .sub-info {
+            font-size: 0.85em;
+            color: #6c757d;
         }
 
         @media (max-width: 992px) {
@@ -340,6 +394,10 @@
                     <span class="material-icons-outlined">calendar_today</span>
                     <span class="menu-text">Calendário</span>
                 </li>
+                <li onclick="switchView('tags')" data-view="tags">
+                    <span class="material-icons-outlined">label</span>
+                    <span class="menu-text">Tags</span>
+                </li>
             </ul>
             <div class="sidebar-footer">
                 <button class="logout-button" onclick="signOutUser()">
@@ -356,8 +414,8 @@
             </div>
 
             <div id="login-view" class="view fullscreen-view">
-                <h2>Bem-vindo ao seu Ciclo de Estudos</h2>
-                <p>Faça login com sua conta Google para salvar e sincronizar seus ciclos de estudo na plataforma CareerPath.</p>
+                <h2>Bem-vindo ao seu Projeto de Estudos</h2>
+                <p>Faça login com sua conta Google para salvar e sincronizar seus Projetos de estudo na plataforma CareerPath.</p>
                 <button id="login-button" onclick="signInWithGoogle()">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.223,0-9.651-3.358-11.303-8H6.306C9.656,39.663,16.318,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.574l6.19,5.238C39.901,35.636,44,30.138,44,24C44,22.659,43.862,21.35,43.611,20.083z"/></svg>
                     <span>Entrar com Google</span>
@@ -365,24 +423,24 @@
             </div>
 
             <div id="cycle-selection-view" class="view content-wrapper">
-                <h2>Selecione ou Crie um Ciclo</h2>
+                <h2>Selecione ou Crie um Projeto</h2>
                 <div class="form-group" style="margin-bottom: 20px; text-align: left;">
-                    <label for="existingCycleSelector" style="display: block; margin-bottom: 8px; font-weight: 500;">Escolha um ciclo existente</label>
+                    <label for="existingCycleSelector" style="display: block; margin-bottom: 8px; font-weight: 500;">Escolha um Projeto existente</label>
                     <select id="existingCycleSelector"></select>
                 </div>
-                <button onclick="loadSelectedCycle()">Carregar Ciclo</button>
+                <button onclick="loadSelectedCycle()">Carregar Projeto</button>
                 <div style="margin: 25px 0; font-weight: bold; color: #999;">OU</div>
                 
                 <div class="form-group" style="margin-bottom: 20px; text-align: left;">
-                    <label for="newCycleNameInput" style="display: block; margin-bottom: 8px; font-weight: 500;">Crie um novo ciclo</label>
+                    <label for="newCycleNameInput" style="display: block; margin-bottom: 8px; font-weight: 500;">Crie um novo Projeto</label>
                     <input type="text" id="newCycleNameInput" placeholder="Ex: Trilha Front-End...">
                 </div>
 
                 <div class="form-group" style="margin-bottom: 20px; text-align: left;">
-                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">Cores de ciclos existentes:</label>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">Cores de Projetos existentes:</label>
                     <div id="existingCyclesDisplay" class="existing-cycles-display">
                         </div>
-                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">Escolha uma cor para o novo ciclo:</label>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">Escolha uma cor para o novo Projeto:</label>
                     <div id="cycleColorPalette" class="color-palette">
                         </div>
                 </div>
@@ -426,9 +484,9 @@
                         <div class="discipline-list" id="disciplinesList"></div>
 
                         <div id="mainControls" style="display:flex; flex-wrap: wrap; gap:10px; margin-top:30px; justify-content:center;">
-                            <button class="secondary" onclick="returnToCycleSelection()">Trocar de Ciclo</button>
-                            <button class="secondary" onclick="manuallyEndCycle()">Encerrar Ciclo</button>
-                            <button class="danger" onclick="deleteCurrentCycle()">Apagar Ciclo Atual</button>
+                            <button class="secondary" onclick="returnToCycleSelection()">Trocar de Projeto</button>
+                            <button class="secondary" onclick="manuallyEndCycle()">Encerrar Projeto</button>
+                            <button class="danger" onclick="deleteCurrentCycle()">Apagar Projeto Atual</button>
                         </div>
                     </div>
                 </div>
@@ -466,7 +524,7 @@
                             <input type="text" id="report-date-input" readonly>
                         </div>
                         <div class="filter-group">
-                            <label for="report-cycle-filter">Filtrar por Ciclo</label>
+                            <label for="report-cycle-filter">Filtrar por Projeto</label>
                             <select id="report-cycle-filter" onchange="renderReportsView()"></select>
                         </div>
                     </div>
@@ -488,14 +546,14 @@
                             <canvas id="durationBarChart"></canvas>
                         </div>
                         <div class="chart-wrapper">
-                            <h3>Distribuição por Ciclo</h3>
+                            <h3>Distribuição por Projeto</h3>
                             <canvas id="distributionDonutChart"></canvas>
                         </div>
                     </div>
 
                     <div class="reports-breakdown">
                         <div class="breakdown-header">
-                            <span>CICLO / DISCIPLINA</span>
+                            <span>Projeto / DISCIPLINA</span>
                             <span class="d-right">DURAÇÃO</span>
                             <span class="d-right">%</span>
                         </div>
@@ -503,11 +561,34 @@
                     </div>
                 </div>
             </div>
+            <div id="tags-view" class="view">
+                <header class="page-header"><span class="material-icons-outlined">label</span> Buscar por Tags</header>
+                <div class="content-wrapper">
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label for="tagSearchInput" style="display: block; margin-bottom: 8px; font-weight: 500;">Pesquisar Tags (Ex: #python)</label>
+                        <input type="text" id="tagSearchInput" placeholder="Digite uma tag ou parte dela..." onkeyup="filterTagsAndStudies()">
+                        <div id="allTagsList" style="margin-top: 15px; display: flex; flex-wrap: wrap; gap: 8px;">
+                            </div>
+                    </div>
+                    
+                    <div class="tag-results" id="tagSearchResults">
+                        <h4 style="margin-bottom: 15px; color: #0d253f;">Resultados da Busca</h4>
+                        <div class="breakdown-header">
+                            <span>Assunto / Disciplina / Projeto</span>
+                            <span class="d-right">DURAÇÃO</span>
+                        </div>
+                        <div id="tagResultsBody">
+                            <p style="text-align:center; padding: 20px; color: #6c757d;">Nenhum resultado para exibir. Use a busca acima ou clique em uma tag.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </main>
     </div>
 
-    <div id="completionModal" class="modal-overlay"> <div class="modal-content"> <h3>Ciclo Concluído!</h3> <p>Parabéns! Você atingiu a meta de todas as disciplinas. O que deseja fazer agora?</p> <div class="modal-buttons"> <button class="secondary" onclick="handleContinueCycle()">Continuar Neste Ciclo</button> <button onclick="handleStartNewCycle()">Iniciar Novo Ciclo</button> </div> </div> </div>
-    <div id="celebrationModal" class="modal-overlay"> <div class="modal-content"> <svg class="trophy-icon" viewBox="0 0 24 24"><path d="M20.2,4H22L19,2H5L2,4h1.8C4.4,4.8,5,5.9,5,7c0,1.5-1.2,2.7-2.7,2.9C2.1,10,2,10.1,2,10.3V12h1v9H2v1h20v-1h-1v-9h1v-1.7 c0-0.2-0.1-0.3-0.3-0.4C21.2,9.7,20,8.5,20,7C20,5.9,20.6,4.8,21.2,4H20.2z M4,12h2.1c0.5-0.7,1.2-1.3,2-1.7V12H4z M15.9,10.3 c0.8,0.4,1.5,1,2,1.7H20V12h-4.1V10.3z M12,6c1.1,0,2,0.9,2,2s-0.9,2-2,2s-2-0.9-2-2S10.9,6,12,6z"/></svg> <h3>Missão Cumprida!</h3> <p>Você é incrível! O ciclo foi concluído com sucesso e contabilizado. Pronto para o próximo desafio?</p> <div class="modal-buttons"> <button onclick="hideCelebrationModal()">Fechar</button> </div> </div> </div>
+    <div id="completionModal" class="modal-overlay"> <div class="modal-content"> <h3>Projeto Concluído!</h3> <p>Parabéns! Você atingiu a meta de todas as disciplinas. O que deseja fazer agora?</p> <div class="modal-buttons"> <button class="secondary" onclick="handleContinueCycle()">Continuar Neste Projeto</button> <button onclick="handleStartNewCycle()">Iniciar Novo Projeto</button> </div> </div> </div>
+    <div id="celebrationModal" class="modal-overlay"> <div class="modal-content"> <svg class="trophy-icon" viewBox="0 0 24 24"><path d="M20.2,4H22L19,2H5L2,4h1.8C4.4,4.8,5,5.9,5,7c0,1.5-1.2,2.7-2.7,2.9C2.1,10,2,10.1,2,10.3V12h1v9H2v1h20v-1h-1v-9h1v-1.7 c0-0.2-0.1-0.3-0.3-0.4C21.2,9.7,20,8.5,20,7C20,5.9,20.6,4.8,21.2,4H20.2z M4,12h2.1c0.5-0.7,1.2-1.3,2-1.7V12H4z M15.9,10.3 c0.8,0.4,1.5,1,2,1.7H20V12h-4.1V10.3z M12,6c1.1,0,2,0.9,2,2s-0.9,2-2,2s-2-0.9-2-2S10.9,6,12,6z"/></svg> <h3>Missão Cumprida!</h3> <p>Você é incrível! O Projeto foi concluído com sucesso e contabilizado. Pronto para o próximo desafio?</p> <div class="modal-buttons"> <button onclick="hideCelebrationModal()">Fechar</button> </div> </div> </div>
     <div id="alertModal" class="modal-overlay"> <div class="modal-content"> <h3 id="alertModalTitle">Atenção</h3> <p id="alertModalMessage"></p> <div class="modal-buttons"> <button onclick="hideAlertModal()">OK</button> </div> </div> </div>
     <div id="confirmModal" class="modal-overlay"> <div class="modal-content"> <h3 id="confirmModalTitle">Confirmar Ação</h3> <p id="confirmModalMessage"></p> <div class="modal-buttons"> <button class="secondary" onclick="hideConfirmModal()">Cancelar</button> <button class="danger" onclick="handleConfirmAction()">Confirmar</button> </div> </div> </div>
     <div id="editDisciplineModal" class="modal-overlay"> <div class="modal-content"> <h3>Editar Disciplina</h3> <input type="hidden" id="editDisciplineId"> <div class="form-group-modal"> <label for="editDisciplineName">Nome da Disciplina</label> <input type="text" id="editDisciplineName"> </div> <div class="form-group-modal"> <label>Meta de Tempo</label> <div class="time-input-container" style="justify-content: center;"> <div class="time-input-group"> <label for="editHoursInput">Horas</label> <input type="number" id="editHoursInput" min="0" placeholder="HH"> </div> <span class="time-input-separator">:</span> <div class="time-input-group"> <label for="editMinutesInput">Minutos</label> <input type="number" id="editMinutesInput" min="0" max="59" step="5" placeholder="MM"> </div> </div> </div> <div class="modal-buttons"> <button class="secondary" onclick="hideEditModal()">Cancelar</button> <button onclick="saveDisciplineChanges()">Salvar Alterações</button> </div> </div> </div>
@@ -535,6 +616,33 @@
                     </div>
                 </div>
             </div>
+            <div class="form-group-modal">
+                <label for="addTimeSubjectInput">Assunto (Opcional)</label>
+                <input type="text" id="addTimeSubjectInput" placeholder="Ex: Métodos em JS" list="subjectRecommendations">
+            </div>
+
+            <div class="form-group-modal">
+                <label for="addTimeTagsInput">Tags (Opcional, separe por vírgulas ou espaços)</label>
+                <input type="text" id="addTimeTagsInput" placeholder="Ex: #javascript, #frontend">
+            </div>
+            <div class="modal-buttons">
+                <button class="secondary" onclick="hideAddTimeModal()">Cancelar</button>
+                <button onclick="saveAddedTime()">Adicionar</button>
+            </div>
+        </div>
+    </div>
+    <div id="addTimeModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Adicionar Tempo Manualmente</h3>
+            <input type="hidden" id="addTimeDisciplineId">
+            <div class="form-group-modal">
+                <label for="addTimeHoursInput">Horas a Adicionar</label>
+                <input type="number" id="addTimeHoursInput" min="0" value="0">
+            </div>
+            <div class="form-group-modal">
+                <label for="addTimeMinutesInput">Minutos a Adicionar</label>
+                <input type="number" id="addTimeMinutesInput" min="0" max="59" step="5" value="0">
+            </div>
             <div class="modal-buttons">
                 <button class="secondary" onclick="hideAddTimeModal()">Cancelar</button>
                 <button onclick="saveAddedTime()">Adicionar</button>
@@ -549,7 +657,7 @@
             <input type="hidden" id="addTimeToDaySelectedDate">
 
             <div class="form-group-modal">
-                <label for="addTimeToDayCycleSelect">Ciclo de Estudo</label>
+                <label for="addTimeToDayCycleSelect">Projeto de Estudo</label>
                 <select id="addTimeToDayCycleSelect" onchange="populateAddTimeToDayDisciplines()"></select>
             </div>
 
@@ -577,7 +685,15 @@
                     </div>
                 </div>
             </div>
+            <div class="form-group-modal">
+                <label for="addTimeToDaySubjectInput">Assunto (Opcional)</label>
+                <input type="text" id="addTimeToDaySubjectInput" placeholder="Ex: Estruturas de Dados" list="subjectRecommendations">
+            </div>
 
+            <div class="form-group-modal">
+                <label for="addTimeToDayTagsInput">Tags (Opcional, separe por vírgulas ou espaços)</label>
+                <input type="text" id="addTimeToDayTagsInput" placeholder="Ex: #algoritmos, #computacao">
+            </div>
             <div class="modal-buttons">
                 <button class="secondary" onclick="hideAddTimeToDayModal()">Cancelar</button>
                 <button onclick="saveAddTimeToDayEntry()">Adicionar Tempo</button>
@@ -598,6 +714,28 @@
 
     <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.js"></script>
 
+<div id="startTimerModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Iniciar Estudo: <span id="startTimerDisciplineName"></span></h3>
+            <input type="hidden" id="startTimerDisciplineId">
+
+            <div class="form-group-modal">
+                <label for="startTimerSubjectInput">Assunto (Opcional)</label>
+                <input type="text" id="startTimerSubjectInput" placeholder="Ex: Funções em Python" list="subjectRecommendations">
+                <datalist id="subjectRecommendations"></datalist>
+            </div>
+
+            <div class="form-group-modal">
+                <label for="startTimerTagsInput">Tags (Opcional, separe por vírgulas ou espaços)</label>
+                <input type="text" id="startTimerTagsInput" placeholder="Ex: #python, #logica">
+            </div>
+
+            <div class="modal-buttons">
+                <button class="secondary" onclick="hideStartTimerModal()">Cancelar</button>
+                <button onclick="confirmStartTimer()">Iniciar Timer</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         const firebaseConfig = {
@@ -614,10 +752,11 @@
         const db = firebase.firestore();
         const provider = new firebase.auth.GoogleAuthProvider();
 
+        
         // Cor reservada para relatórios (não pode ser usada para disciplinas)
         const REPORT_RESERVED_COLOR = '#0D253F';
 
-        // Paleta de cores para os ciclos de estudo (vibrantes e distintas)
+        // Paleta de cores para os Projetos de estudo (vibrantes e distintas)
         const CYCLE_COLOR_PALETTE = [
             '#E6194B',  // Vermelho Vivo
             '#F58231',  // Laranja Forte
@@ -784,15 +923,17 @@
             return cycle.disciplineColors[disciplineId];
         }
         
-        let appData = { cycles: {}, activeCycleId: null };
+        let appData = { cycles: {}, activeCycleId: null, allSubjects: [], allTags: [] };  
         let activeCycle = null;
+        let allSubjects = new Set();
+        let allTags = new Set();
         let timers = {};
         let currentCalendarDate = new Date();
         let selectedDate = null;
         let unsubscribe;
         let confirmCallback = null;
         let calendarViewMode = 'month';
-        let selectedNewCycleColor = null; // Variável para armazenar a cor selecionada para o novo ciclo
+        let selectedNewCycleColor = null; // Variável para armazenar a cor selecionada para o novo Projeto
 
         let durationBarChart = null;
         let distributionDonutChart = null;
@@ -800,6 +941,172 @@
         let reportDatePicker = null;
         let reportsInitialized = false;
 
+    let activeTagFilter = ''; // Para armazenar a tag ativa que está sendo filtrada
+
+        function renderAllTags() {
+            const allTagsListEl = document.getElementById('allTagsList');
+            allTagsListEl.innerHTML = ''; // Limpa a lista existente
+
+            if (allTags.size === 0) {
+                allTagsListEl.innerHTML = '<p style="color: #6c757d; font-size: 0.9em; margin: 0;">Nenhuma tag registrada ainda.</p>';
+                return;
+            }
+
+            // Converte o Set para Array, ordena alfabeticamente e renderiza
+            Array.from(allTags).sort((a, b) => a.localeCompare(b)).forEach(tag => {
+                const tagItem = document.createElement('span');
+                tagItem.className = 'tag-item';
+                if (tag === activeTagFilter) {
+                    tagItem.classList.add('active');
+                }
+                tagItem.textContent = tag;
+                tagItem.onclick = () => selectTagForFilter(tag);
+                allTagsListEl.appendChild(tagItem);
+            });
+        }
+
+        function selectTagForFilter(tag) {
+            if (activeTagFilter === tag) {
+                activeTagFilter = ''; // Desseleciona a tag se for clicada novamente
+            } else {
+                activeTagFilter = tag; // Seleciona a nova tag
+            }
+            document.getElementById('tagSearchInput').value = ''; // Limpa a busca textual
+            renderAllTags(); // Re-renderiza para atualizar o estado ativo
+            filterTagsAndStudies(); // Filtra os estudos com a nova tag ativa
+        }
+
+        function filterTagsAndStudies() {
+            const searchInput = document.getElementById('tagSearchInput').value.trim().toLowerCase();
+            const tagResultsBody = document.getElementById('tagResultsBody');
+            tagResultsBody.innerHTML = '';
+            
+            let studiesFound = false;
+
+            const allStudyRecords = []; // Armazena todos os registros de estudo para processamento
+
+            // Coleta todos os registros de estudo de todos os ciclos
+            Object.values(appData.cycles || {}).forEach(cycle => {
+                if (cycle.studyHistory) {
+                    Object.entries(cycle.studyHistory).forEach(([dateStr, disciplineRecordsMap]) => {
+                        Object.entries(disciplineRecordsMap).forEach(([discId, recordsArray]) => {
+                            if (Array.isArray(recordsArray)) {
+                                const discipline = cycle.disciplines.find(d => String(d.id) === discId);
+                                if (discipline) {
+                                    recordsArray.forEach(record => {
+                                        allStudyRecords.push({
+                                            cycleId: cycle.id,
+                                            cycleColor: cycle.color,
+                                            disciplineName: discipline.name,
+                                            disciplineId: discipline.id,
+                                            date: dateStr,
+                                            time: record.time || 0,
+                                            subject: record.subject || '',
+                                            tags: record.tags || []
+                                        });
+                                    });
+                                }
+                            }
+                        });
+                    });
+                }
+            });
+
+            // Filtra e agrupa os resultados
+            const filteredAndGrouped = {}; // { tag: [ { studyRecord }, ... ] }
+            const uniqueTagsMatchingSearch = new Set(); // Para mostrar apenas as tags relevantes
+
+            allStudyRecords.forEach(study => {
+                let matchesSearchInput = true;
+                if (searchInput) {
+                    // Busca por assunto, disciplina, projeto, ou tags
+                    const searchLower = searchInput.toLowerCase();
+                    const subjectLower = study.subject.toLowerCase();
+                    const disciplineLower = study.disciplineName.toLowerCase();
+                    const cycleLower = study.cycleId.toLowerCase();
+                    const tagsLower = study.tags.map(t => t.toLowerCase()).join(' ');
+
+                    if (!subjectLower.includes(searchLower) && 
+                        !disciplineLower.includes(searchLower) && 
+                        !cycleLower.includes(searchLower) &&
+                        !tagsLower.includes(searchLower)) {
+                        matchesSearchInput = false;
+                    }
+                }
+
+                if (matchesSearchInput) {
+                    study.tags.forEach(tag => {
+                        const tagLower = tag.toLowerCase();
+                        if (!activeTagFilter || tagLower === activeTagFilter.toLowerCase() || searchInput && tagLower.includes(searchInput)) {
+                             // Considera a tag se ela corresponde ao filtro ativo OU à busca textual
+                            if (!filteredAndGrouped[tag]) {
+                                filteredAndGrouped[tag] = [];
+                            }
+                            filteredAndGrouped[tag].push(study);
+                            if(activeTagFilter || searchInput) {
+                                uniqueTagsMatchingSearch.add(tag); // Adiciona apenas tags que são relevantes para a busca/filtro
+                            }
+                        }
+                    });
+
+                    // Se não houver filtro de tag ou busca por tag, mas o estudo corresponder à busca geral (por assunto/disciplina/ciclo)
+                    if (study.tags.length === 0 && matchesSearchInput && (searchInput && !activeTagFilter)) {
+                         // Cria uma categoria "Sem Tags" ou mostra-o diretamente
+                         if (!filteredAndGrouped['Sem Tags']) {
+                            filteredAndGrouped['Sem Tags'] = [];
+                         }
+                         filteredAndGrouped['Sem Tags'].push(study);
+                         uniqueTagsMatchingSearch.add('Sem Tags');
+                    }
+                }
+            });
+
+            const sortedTags = Array.from(Object.keys(filteredAndGrouped)).sort((a,b) => a.localeCompare(b));
+            
+            if (sortedTags.length === 0) {
+                tagResultsBody.innerHTML = '<p style="text-align:center; padding: 20px; color: #6c757d;">Nenhum resultado encontrado para o filtro atual.</p>';
+            } else {
+                sortedTags.forEach(tag => {
+                    const tagStudies = filteredAndGrouped[tag].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // Ordena por data mais recente
+                    let totalTimeForTag = tagStudies.reduce((sum, s) => sum + s.time, 0);
+
+                    // Renderiza o cabeçalho da tag (se houver resultados ou se for uma tag que queremos destacar)
+                    if (tagStudies.length > 0 || (searchInput && uniqueTagsMatchingSearch.has(tag))) {
+                        const tagHeader = document.createElement('div');
+                        tagHeader.className = 'breakdown-row cycle-row'; // Reusa o estilo, mas é para tags
+                        tagHeader.innerHTML = `<div class="cycle-name-cell">
+                                                <span class="material-icons-outlined toggle-arrow" onclick="toggleCycleDetails(this.parentNode.parentNode)">chevron_right</span>
+                                                <span class="cycle-color-dot" style="background-color:${activeCycle ? activeCycle.color : '#CCCCCC'};"></span>
+                                                <span>${tag}</span>
+                                            </div>
+                                            <span class="d-right">${formatTime(totalTimeForTag)}</span>`;
+                        tagResultsBody.appendChild(tagHeader);
+
+                        const studiesWrapper = document.createElement('div');
+                        studiesWrapper.className = 'discipline-rows-wrapper'; // Reusa a classe para esconder/mostrar
+                        tagStudies.forEach(study => {
+                            studiesWrapper.innerHTML += `
+                                <div class="tag-study-item">
+                                    <div class="study-details">
+                                        <span class="main-info">${study.subject || 'Sem Assunto'}</span>
+                                        <span class="sub-info">${study.disciplineName} (${study.cycleId}) - ${new Date(study.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
+                                    </div>
+                                    <span class="d-right">${formatTime(study.time)}</span>
+                                </div>
+                            `;
+                        });
+                        tagResultsBody.appendChild(studiesWrapper);
+                        studiesFound = true;
+                    }
+                });
+            }
+
+            if (!studiesFound && sortedTags.length === 0) {
+                tagResultsBody.innerHTML = '<p style="text-align:center; padding: 20px; color: #6c757d;">Nenhum resultado encontrado para o filtro atual.</p>';
+            }
+        }
+
+     
        function getLocalDateString(date = new Date()) {
             // Cria um novo objeto Date que representa o início do dia NA HORA LOCAL
             const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -870,11 +1177,17 @@
             try {
                 const doc = await userDocRef.get();
                 if (!doc.exists) {
-                    await userDocRef.set({ cycles: {}, activeCycleId: null });
+                    // Inicializa com as novas propriedades se o documento não existir
+                    await userDocRef.set({ cycles: {}, activeCycleId: null, allSubjects: [], allTags: [] }); 
                 }
                 unsubscribe = userDocRef.onSnapshot(snapshot => {
                     if (!snapshot.exists) return;
                     appData = snapshot.data();
+                    
+                    // Carrega assuntos e tags do Firestore
+                    allSubjects = new Set(appData.allSubjects || []);
+                    allTags = new Set(appData.allTags || []);
+
                     Object.values(timers).forEach(clearInterval);
                     timers = {};
                     if (appData.activeCycleId && appData.cycles[appData.activeCycleId]) {
@@ -884,8 +1197,8 @@
                     } else {
                         activeCycle = null; 
                         populateCycleSelector();
-                        renderCycleColorPalette(); // Renderiza a paleta de cores
-                        renderExistingCyclesDisplay(); // Exibe os ciclos existentes com suas cores
+                        renderCycleColorPalette();
+                        renderExistingCyclesDisplay();
                         switchView('cycle-selection');
                     }
                 }, error => {
@@ -898,18 +1211,70 @@
             }
         }
 
-        function saveData() {
+       function saveData() {
             if (auth.currentUser) {
                 const userId = auth.currentUser.uid;
                 const dataToSave = JSON.parse(JSON.stringify(appData));
                 if(dataToSave.activeCycleId && dataToSave.cycles[dataToSave.activeCycleId]) {
                     dataToSave.cycles[dataToSave.activeCycleId].disciplines.forEach(d => d.isRunning = false);
                 }
+                
+                // Recalcula allSubjects e allTags ANTES de salvar
+                recalculateAllSubjectsAndTags(); // <--- CHAME AQUI
+                
+                // Salva os sets de assuntos e tags como arrays
+                dataToSave.allSubjects = Array.from(allSubjects);
+                dataToSave.allTags = Array.from(allTags);
+
                 db.collection('users').doc(userId).set(dataToSave).catch(error => {
                     console.error("saveData: Erro ao salvar dados:", error);
                     showAlertModal('Erro ao Salvar', 'Não foi possível salvar suas alterações.');
                 });
             }
+        }
+
+        function updateAllSubjectsAndTags(subject, tags) {
+            if (subject) {
+                allSubjects.add(subject);
+            }
+            tags.forEach(tag => allTags.add(tag));
+            
+        }
+
+        function recalculateAllSubjectsAndTags() {
+            allSubjects.clear(); // Limpa os sets existentes
+            allTags.clear();
+
+            Object.values(appData.cycles || {}).forEach(cycle => {
+                if (cycle.studyHistory) {
+                    Object.values(cycle.studyHistory).forEach(dailyRecordsMap => {
+                        Object.values(dailyRecordsMap).forEach(disciplineRecordsArray => {
+                            if (Array.isArray(disciplineRecordsArray)) {
+                                disciplineRecordsArray.forEach(record => {
+                                    if (record.subject) {
+                                        allSubjects.add(record.subject);
+                                    }
+                                    if (record.tags && Array.isArray(record.tags)) {
+                                        record.tags.forEach(tag => allTags.add(tag));
+                                    }
+                                });
+                            }
+                        });
+                    });
+                }
+            });
+        }
+
+        function populateSubjectRecommendations() {
+            const datalist = document.getElementById('subjectRecommendations');
+            if (!datalist) return;
+            datalist.innerHTML = '';
+            // Converte o Set para Array e ordena alfabeticamente
+            Array.from(allSubjects).sort().forEach(subject => {
+                const option = document.createElement('option');
+                option.value = subject;
+                datalist.appendChild(option);
+            });
         }
         
         function returnToCycleSelection() {
@@ -920,20 +1285,20 @@
             }
             populateCycleSelector();
             renderCycleColorPalette(); // Renderiza a paleta de cores novamente
-            renderExistingCyclesDisplay(); // Exibe os ciclos existentes com suas cores
+            renderExistingCyclesDisplay(); // Exibe os Projetos existentes com suas cores
             switchView('cycle-selection');
         }
 
         function populateCycleSelector() {
             const selector = document.getElementById('existingCycleSelector');
-            selector.innerHTML = '<option value="">-- Selecione um ciclo --</option>';
+            selector.innerHTML = '<option value="">-- Selecione um Projeto --</option>';
             const cycleIds = Object.keys(appData.cycles || {});
             if (cycleIds.length > 0) {
                 cycleIds.forEach(id => selector.innerHTML += `<option value="${id}">${id}</option>`);
                 selector.disabled = false;
                 selector.parentElement.nextElementSibling.disabled = false;
             } else {
-                selector.innerHTML = '<option value="">Nenhum ciclo criado</option>';
+                selector.innerHTML = '<option value="">Nenhum Projeto criado</option>';
                 selector.disabled = true;
                 selector.parentElement.nextElementSibling.disabled = true;
             }
@@ -989,7 +1354,7 @@
                     }
                 });
             } else {
-                existingCyclesDisplay.innerHTML = '<p style="margin: 0; color: #6c757d;">Nenhum ciclo criado ainda.</p>';
+                existingCyclesDisplay.innerHTML = '<p style="margin: 0; color: #6c757d;">Nenhum Projeto criado ainda.</p>';
             }
         }
 
@@ -999,22 +1364,22 @@
                 appData.activeCycleId = selectedId;
                 saveData(); 
             } else {
-                showAlertModal('Seleção Inválida', 'Por favor, selecione um ciclo válido para carregar.');
+                showAlertModal('Seleção Inválida', 'Por favor, selecione um Projeto válido para carregar.');
             }
         }
         
         function createNewCycle() {
             const newName = document.getElementById('newCycleNameInput').value.trim();
             if (!newName) { 
-                showAlertModal('Nome Inválido', 'Por favor, dê um nome ao novo ciclo.'); 
+                showAlertModal('Nome Inválido', 'Por favor, dê um nome ao novo Projeto.'); 
                 return; 
             }
             if (appData.cycles[newName]) { 
-                showAlertModal('Nome Duplicado', 'Já existe um ciclo com esse nome.'); 
+                showAlertModal('Nome Duplicado', 'Já existe um Projeto com esse nome.'); 
                 return; 
             }
             if (!selectedNewCycleColor) {
-                showAlertModal('Cor Inválida', 'Por favor, selecione uma cor para o novo ciclo.');
+                showAlertModal('Cor Inválida', 'Por favor, selecione uma cor para o novo Projeto.');
                 return;
             }
 
@@ -1024,7 +1389,7 @@
                 completions: 0, 
                 studyHistory: {},
                 disciplineColors: {}, // Campo para armazenar cores das disciplinas (ainda aleatórias)
-                color: selectedNewCycleColor // Armazena a cor escolhida para o ciclo
+                color: selectedNewCycleColor // Armazena a cor escolhida para o Projeto
             };
             appData.activeCycleId = newName;
             saveData();
@@ -1033,8 +1398,8 @@
         function deleteCurrentCycle() {
             if (!activeCycle) return;
             showConfirmModal(
-                'Apagar Ciclo',
-                `Tem certeza que deseja apagar o ciclo '${activeCycle.id}'? Esta ação é irreversível.`,
+                'Apagar Projeto',
+                `Tem certeza que deseja apagar o Projeto '${activeCycle.id}'? Esta ação é irreversível.`,
                 () => {
                     Object.keys(timers).forEach(id => stopTimer(id, false));
                     delete appData.cycles[activeCycle.id];
@@ -1047,7 +1412,7 @@
 
         function addDiscipline() {
             if (!activeCycle) {
-                showAlertModal('Nenhum Ciclo Ativo', 'Crie um ciclo antes de adicionar disciplinas.');
+                showAlertModal('Nenhum Projeto Ativo', 'Crie um Projeto antes de adicionar disciplinas.');
                 return;
             }
             const nameInput = document.getElementById('disciplineInput');
@@ -1103,8 +1468,8 @@
         function manuallyEndCycle() {
             if (!activeCycle) return;
             showConfirmModal(
-                'Encerrar Ciclo Manualmente',
-                'Deseja encerrar este ciclo? Ele será contabilizado como concluído.',
+                'Encerrar Projeto Manualmente',
+                'Deseja encerrar este Projeto? Ele será contabilizado como concluído.',
                 () => {
                     hideConfirmModal(); 
                     handleStartNewCycle(); 
@@ -1186,6 +1551,48 @@
             document.getElementById('addTimeModal').style.display = 'flex';
         }
 
+        function hideAddTimeModal() {
+            document.getElementById('addTimeModal').style.display = 'none';
+            disciplineIdToAddTime = null;
+        }
+
+        function saveAddedTime() {
+            if (!disciplineIdToAddTime || !activeCycle) {
+                showAlertModal('Erro', 'Nenhuma disciplina selecionada para adicionar tempo.');
+                return;
+            }
+
+            const discipline = activeCycle.disciplines.find(d => d.id === disciplineIdToAddTime);
+            if (!discipline) {
+                showAlertModal('Erro', 'Disciplina não encontrada.');
+                return;
+            }
+
+            const hoursToAdd = parseInt(document.getElementById('addTimeHoursInput').value, 10) || 0;
+            const minutesToAdd = parseInt(document.getElementById('addTimeMinutesInput').value, 10) || 0;
+            const secondsToAdd = (hoursToAdd * 3600) + (minutesToAdd * 60);
+
+            if (secondsToAdd <= 0) {
+                showAlertModal('Tempo Inválido', 'Por favor, insira um tempo válido (horas ou minutos) para adicionar.');
+                return;
+            }
+
+            // Adiciona ao currentSeconds da disciplina
+            discipline.currentSeconds += secondsToAdd;
+
+            // Atualiza o histórico de estudo do dia atual
+            const today = getLocalDateString();
+            if (!activeCycle.studyHistory[today]) {
+                activeCycle.studyHistory[today] = {};
+            }
+            const discIdStr = String(discipline.id);
+            activeCycle.studyHistory[today][discIdStr] = (activeCycle.studyHistory[today][discIdStr] || 0) + secondsToAdd;
+
+            hideAddTimeModal();
+            saveData();
+            updateDisplay();
+            showAlertModal('Sucesso', `Tempo adicionado com sucesso à disciplina "${discipline.name}".`);
+        }
         let selectedDateForManualAdd = null; // Armazena a data selecionada no calendário
 
         function openAddTimeToDayModal(dateStr) {
@@ -1197,10 +1604,16 @@
             
             // Resetar campos
             document.getElementById('addTimeToDayCycleSelect').value = '';
-            document.getElementById('addTimeToDayDisciplineSelect').innerHTML = '<option value="">-- Selecione um ciclo primeiro --</option>'; // Corrigido
+            document.getElementById('addTimeToDayDisciplineSelect').innerHTML = '<option value="">-- Selecione um Projeto primeiro --</option>';
             document.getElementById('addTimeToDayHoursInput').value = 0;
             document.getElementById('addTimeToDayMinutesInput').value = 0;
+            document.getElementById('addTimeToDaySecondsInput').value = 0; // Adicionado
+            
+            // Novos campos
+            document.getElementById('addTimeToDaySubjectInput').value = ''; // Adicionado
+            document.getElementById('addTimeToDayTagsInput').value = '';   // Adicionado
 
+            populateSubjectRecommendations(); // Popula as recomendações
             document.getElementById('addTimeToDayModal').style.display = 'flex';
         }
 
@@ -1209,17 +1622,20 @@
             selectedDateForManualAdd = null;
         }
 
+        
+
+
         function populateAddTimeToDayCycles() {
             const cycleSelect = document.getElementById('addTimeToDayCycleSelect');
-            cycleSelect.innerHTML = '<option value="">-- Selecione um ciclo --</option>';
+            cycleSelect.innerHTML = '<option value="">-- Selecione um Projeto --</option>';
             const cycleIds = Object.keys(appData.cycles || {});
             cycleIds.forEach(id => {
                 cycleSelect.innerHTML += `<option value="${id}">${id}</option>`;
             });
-            // Opcional: pré-selecionar o ciclo ativo se houver
+            // Opcional: pré-selecionar o Projeto ativo se houver
             if (activeCycle) {
                 cycleSelect.value = activeCycle.id;
-                populateAddTimeToDayDisciplines(); // Popula disciplinas se um ciclo já foi selecionado
+                populateAddTimeToDayDisciplines(); // Popula disciplinas se um Projeto já foi selecionado
             }
         }
 
@@ -1242,39 +1658,55 @@ function saveAddTimeToDayEntry() {
             const disciplineId = parseInt(document.getElementById('addTimeToDayDisciplineSelect').value, 10);
             const hoursToAdd = parseInt(document.getElementById('addTimeToDayHoursInput').value, 10) || 0;
             const minutesToAdd = parseInt(document.getElementById('addTimeToDayMinutesInput').value, 10) || 0;
-            const secondsToAddInput = parseInt(document.getElementById('addTimeToDaySecondsInput').value, 10) || 0; // Nova linha
-            const totalSecondsToAdd = (hoursToAdd * 3600) + (minutesToAdd * 60) + secondsToAddInput; // Modificado
+            const secondsToAddInput = parseInt(document.getElementById('addTimeToDaySecondsInput').value, 10) || 0;
+            const totalSecondsToAdd = (hoursToAdd * 3600) + (minutesToAdd * 60) + secondsToAddInput;
 
-            if (!dateStr || !cycleId || !disciplineId || totalSecondsToAdd <= 0) { // Modificado
+            const subject = document.getElementById('addTimeToDaySubjectInput').value.trim(); // Nova linha
+            const tagsInput = document.getElementById('addTimeToDayTagsInput').value.trim();   // Nova linha
+            const tags = tagsInput.split(/[\s,]+/).filter(tag => tag !== '');          // Nova linha
+
+            if (!dateStr || !cycleId || !disciplineId || totalSecondsToAdd <= 0) {
                 showAlertModal('Dados Inválidos', 'Por favor, preencha todos os campos e insira um tempo válido.');
                 return;
             }
 
             const cycle = appData.cycles[cycleId];
             if (!cycle) {
-                showAlertModal('Erro', 'Ciclo não encontrado.');
+                showAlertModal('Erro', 'Projeto não encontrado.');
                 return;
             }
 
             const discipline = cycle.disciplines.find(d => d.id === disciplineId);
             if (!discipline) {
-                showAlertModal('Erro', 'Disciplina não encontrada no ciclo selecionado.');
+                showAlertModal('Erro', 'Disciplina não encontrada no Projeto selecionado.');
                 return;
             }
 
             // Atualiza o currentSeconds da disciplina (tempo total estudado para essa disciplina)
-            discipline.currentSeconds += totalSecondsToAdd; // Modificado
+            discipline.currentSeconds += totalSecondsToAdd;
 
-            // Atualiza o histórico de estudo para a data específica
+            // Atualiza o histórico de estudo para a data específica com a nova estrutura
             if (!cycle.studyHistory[dateStr]) {
                 cycle.studyHistory[dateStr] = {};
             }
-            cycle.studyHistory[dateStr][String(discipline.id)] = (cycle.studyHistory[dateStr][String(discipline.id)] || 0) + totalSecondsToAdd; // Modificado
+            const discIdStr = String(discipline.id);
+            if (!cycle.studyHistory[dateStr][discIdStr] || !Array.isArray(cycle.studyHistory[dateStr][discIdStr])) {
+                cycle.studyHistory[dateStr][discIdStr] = [];
+            }
+            cycle.studyHistory[dateStr][discIdStr].push({ // Adiciona um objeto com tempo, assunto e tags
+                time: totalSecondsToAdd,
+                subject: subject,
+                tags: tags,
+                timestamp: Date.now()
+            });
+            
+            // Armazena todos os assuntos e tags para recomendações futuras
+            updateAllSubjectsAndTags(subject, tags);
 
             hideAddTimeToDayModal();
             saveData();
-            selectDate(dateStr); // Re-renderiza a informação da data selecionada no calendário
-            if (activeCycle && activeCycle.id === cycleId) updateDisplay(); // Atualiza display principal se for o ciclo ativo
+            selectDate(dateStr);
+            if (activeCycle && activeCycle.id === cycleId) updateDisplay();
             showAlertModal('Sucesso', `Tempo adicionado em "${discipline.name}" para ${new Date(dateStr + 'T12:00:00').toLocaleDateString('pt-BR')}.`);
         }
 
@@ -1297,24 +1729,39 @@ function saveAddedTime() {
 
             const hoursToAdd = parseInt(document.getElementById('addTimeHoursInput').value, 10) || 0;
             const minutesToAdd = parseInt(document.getElementById('addTimeMinutesInput').value, 10) || 0;
-            const secondsToAddInput = parseInt(document.getElementById('addTimeSecondsInput').value, 10) || 0; // Nova linha
-            const totalSecondsToAdd = (hoursToAdd * 3600) + (minutesToAdd * 60) + secondsToAddInput; // Modificado
+            const secondsToAddInput = parseInt(document.getElementById('addTimeSecondsInput').value, 10) || 0;
+            const totalSecondsToAdd = (hoursToAdd * 3600) + (minutesToAdd * 60) + secondsToAddInput;
+            
+            const subject = document.getElementById('addTimeSubjectInput').value.trim(); // Nova linha
+            const tagsInput = document.getElementById('addTimeTagsInput').value.trim();   // Nova linha
+            const tags = tagsInput.split(/[\s,]+/).filter(tag => tag !== '');          // Nova linha
 
-            if (totalSecondsToAdd <= 0) { // Modificado
-                showAlertModal('Tempo Inválido', 'Por favor, insira um tempo válido (horas, minutos ou segundos) para adicionar.'); // Modificado
+            if (totalSecondsToAdd <= 0) {
+                showAlertModal('Tempo Inválido', 'Por favor, insira um tempo válido (horas, minutos ou segundos) para adicionar.');
                 return;
             }
 
             // Adiciona ao currentSeconds da disciplina
-            discipline.currentSeconds += totalSecondsToAdd; // Modificado
+            discipline.currentSeconds += totalSecondsToAdd;
 
-            // Atualiza o histórico de estudo do dia atual
+            // Atualiza o histórico de estudo do dia atual com a nova estrutura
             const today = getLocalDateString();
             if (!activeCycle.studyHistory[today]) {
                 activeCycle.studyHistory[today] = {};
             }
             const discIdStr = String(discipline.id);
-            activeCycle.studyHistory[today][discIdStr] = (activeCycle.studyHistory[today][discIdStr] || 0) + totalSecondsToAdd; // Modificado
+            if (!activeCycle.studyHistory[today][discIdStr] || !Array.isArray(activeCycle.studyHistory[today][discIdStr])) {
+                activeCycle.studyHistory[today][discIdStr] = [];
+            }
+            activeCycle.studyHistory[today][discIdStr].push({ // Adiciona um objeto com tempo, assunto e tags
+                time: totalSecondsToAdd,
+                subject: subject,
+                tags: tags,
+                timestamp: Date.now()
+            });
+            
+            // Armazena todos os assuntos e tags para recomendações futuras
+            updateAllSubjectsAndTags(subject, tags);
 
             hideAddTimeModal();
             saveData();
@@ -1355,6 +1802,107 @@ function saveAddedTime() {
         function hideEditModal() {
             document.getElementById('editDisciplineModal').style.display = 'none';
         }
+        let disciplineIdToStartTimer = null; // Armazena o ID da disciplina para o timer
+
+        function openStartTimerModal(id) {
+            disciplineIdToStartTimer = id;
+            const discipline = activeCycle.disciplines.find(d => d.id === id);
+            if (!discipline) return;
+
+            document.getElementById('startTimerDisciplineName').textContent = discipline.name;
+            document.getElementById('startTimerDisciplineId').value = id;
+            document.getElementById('startTimerSubjectInput').value = ''; // Limpa o campo
+            document.getElementById('startTimerTagsInput').value = '';   // Limpa o campo
+
+            populateSubjectRecommendations(); // Popula as recomendações de assunto
+            
+            document.getElementById('startTimerModal').style.display = 'flex';
+        }
+
+        function hideStartTimerModal() {
+            document.getElementById('startTimerModal').style.display = 'none';
+            disciplineIdToStartTimer = null;
+        }
+
+        function confirmStartTimer() {
+            const id = parseInt(document.getElementById('startTimerDisciplineId').value, 10);
+            const subject = document.getElementById('startTimerSubjectInput').value.trim();
+            const tagsInput = document.getElementById('startTimerTagsInput').value.trim();
+            const tags = tagsInput.split(/[\s,]+/).filter(tag => tag !== ''); // Divide por vírgula ou espaço
+
+            hideStartTimerModal(); // Esconde o modal antes de iniciar o timer
+            
+            // Agora, chame a função startTimer com os novos parâmetros
+            // Precisa ajustar startTimer para aceitar subject e tags
+            realStartTimer(id, subject, tags); 
+        }
+
+        // Renomeie sua função startTimer existente para realStartTimer
+        function realStartTimer(id, subject = '', tags = []) { // Adicionados subject e tags
+            if (!activeCycle) return;
+            const discipline = activeCycle.disciplines.find(d => d.id === id);
+            if (!discipline || discipline.isRunning) return;
+
+            activeCycle.disciplines.forEach(d => { if (d.isRunning) stopTimer(d.id, false); });
+            discipline.isRunning = true;
+            updateDisciplinesList();
+
+            // Adiciona o registro inicial no studyHistory com subject e tags
+            const today = getLocalDateString();
+            if (!activeCycle.studyHistory[today]) activeCycle.studyHistory[today] = {};
+            const discIdStr = String(discipline.id);
+
+            // Se ainda não houver um array para esta disciplina no dia, crie-o
+            if (!activeCycle.studyHistory[today][discIdStr] || !Array.isArray(activeCycle.studyHistory[today][discIdStr])) {
+                activeCycle.studyHistory[today][discIdStr] = [];
+            }
+            
+            // Adiciona um novo registro de estudo para esta sessão do timer
+            const newStudyRecord = {
+                time: 0, // Começa com 0 e será incrementado
+                subject: subject,
+                tags: tags,
+                timestamp: Date.now() // Adiciona um timestamp para identificar a sessão
+            };
+            activeCycle.studyHistory[today][discIdStr].push(newStudyRecord);
+            
+            // Armazena todos os assuntos e tags para recomendações futuras
+            updateAllSubjectsAndTags(subject, tags);
+
+            // O timer agora incrementa o último registro adicionado
+            timers[id] = setInterval(() => {
+                // Encontra a disciplina e o ÚLTIMO registro adicionado para essa disciplina no dia
+                const currentDisc = activeCycle.disciplines.find(d => d.id === id);
+                if (currentDisc && activeCycle.studyHistory[today] && activeCycle.studyHistory[today][discIdStr]) {
+                    const records = activeCycle.studyHistory[today][discIdStr];
+                    if (records.length > 0) {
+                        const lastRecord = records[records.length - 1];
+                        lastRecord.time += 1; // Incrementa o tempo deste registro específico
+                        currentDisc.currentSeconds += 1; // Continua incrementando o total da disciplina
+                        updateTimerDisplay(currentDisc);
+                    }
+                }
+            }, 1000);
+        }
+
+        // Adapte a função stopTimer para não mais usar o currentSeconds do studyHistory diretamente
+        function stopTimer(id, doSave = true) {
+            if (!activeCycle || !timers[id]) return;
+            const discipline = activeCycle.disciplines.find(d => d.id === id);
+            clearInterval(timers[id]);
+            delete timers[id];
+            if (discipline) discipline.isRunning = false;
+            
+            // Não precisamos mais atualizar activeCycle.studyHistory[today][discIdStr] aqui
+            // A atualização já foi feita no setInterval para o registro específico.
+
+            if (doSave && checkCycleCompletion()) {
+                showCompletionModal();
+            }
+            
+            if (doSave) saveData();
+            updateDisciplinesList();
+        }
 
         function saveDisciplineChanges() {
             const id = parseInt(document.getElementById('editDisciplineId').value, 10);
@@ -1381,8 +1929,12 @@ function saveAddedTime() {
         function toggleTimer(id) {
             const discipline = activeCycle.disciplines.find(d => d.id === id);
             if (!discipline) return;
-            if (discipline.isRunning) stopTimer(id);
-            else startTimer(id);
+            if (discipline.isRunning) {
+                stopTimer(id);
+            } else {
+                // Abre o modal para inserir assunto/tags antes de iniciar
+                openStartTimerModal(id);
+            }
         }
 
         function switchView(viewName) {
@@ -1396,7 +1948,6 @@ function saveAddedTime() {
                  mainContent.style.marginLeft = '0';
             } else {
                 sidebar.style.display = 'flex';
-                // Adapta o margin-left caso a sidebar esteja colapsada
                 mainContent.style.marginLeft = getComputedStyle(sidebar).width;
                 document.querySelectorAll('.sidebar-menu li').forEach(t => t.classList.remove('active'));
                 const activeTab = document.querySelector(`.sidebar-menu li[data-view='${viewName}']`);
@@ -1408,17 +1959,21 @@ function saveAddedTime() {
                 if (!reportsInitialized) initializeReportFilters();
                 renderReportsView(); 
             }
+            if (viewName === 'tags') { // NOVO
+                renderAllTags();
+                filterTagsAndStudies(); // Carrega todos os estudos inicialmente ou com filtro padrão
+            }
         }
 
         function updateDisplay() {
             if (!activeCycle) return;
-            document.getElementById('cycleTitleText').textContent = `Ciclo: ${activeCycle.id}`;
+            document.getElementById('cycleTitleText').textContent = `Projeto: ${activeCycle.id}`;
             updateStats();
             updateDisciplinesList();
             createWheelChart();
         }
         
-        function updateStats() {
+function updateStats() {
             if (!activeCycle) return;
 
             document.getElementById('cycleCompletions').textContent = activeCycle.completions || 0;
@@ -1432,8 +1987,15 @@ function saveAddedTime() {
                 for (const cycleId in appData.cycles) {
                     const cycle = appData.cycles[cycleId];
                     if (cycle.studyHistory && cycle.studyHistory[today]) {
-                        // Soma o tempo estudado para o dia atual em cada disciplina deste ciclo
-                        totalSecondsStudiedTodayAllCycles += Object.values(cycle.studyHistory[today]).reduce((sum, s) => sum + s, 0);
+                        // Itera sobre cada entrada de disciplina no histórico do dia
+                        Object.values(cycle.studyHistory[today]).forEach(disciplineRecords => {
+                            // disciplineRecords é agora um ARRAY de objetos de estudo
+                            if (Array.isArray(disciplineRecords)) {
+                                totalSecondsStudiedTodayAllCycles += disciplineRecords.reduce((sum, record) => {
+                                    return sum + (record.time || 0); // Soma a propriedade 'time' de cada registro
+                                }, 0);
+                            }
+                        });
                     }
                 }
             }
@@ -1610,7 +2172,12 @@ function saveAddedTime() {
                     let dailyTotal = 0;
                     allHistories.forEach(history => {
                         if (history[isoDate]) {
-                            dailyTotal += Object.values(history[isoDate]).reduce((sum, s) => sum + s, 0);
+                            // Soma o tempo de todos os registros de estudo para este dia
+                            Object.values(history[isoDate]).forEach(disciplineRecords => {
+                                if (Array.isArray(disciplineRecords)) {
+                                    dailyTotal += disciplineRecords.reduce((sum, record) => sum + (record.time || 0), 0);
+                                }
+                            });
                         }
                     });
                     monthlyTotalSeconds += dailyTotal;
@@ -1640,7 +2207,12 @@ function saveAddedTime() {
                     let dailyTotal = 0;
                      allHistories.forEach(history => {
                         if (history[isoDate]) {
-                            dailyTotal += Object.values(history[isoDate]).reduce((sum, s) => sum + s, 0);
+                            // Soma o tempo de todos os registros de estudo para este dia
+                            Object.values(history[isoDate]).forEach(disciplineRecords => {
+                                if (Array.isArray(disciplineRecords)) {
+                                    dailyTotal += disciplineRecords.reduce((sum, record) => sum + (record.time || 0), 0);
+                                }
+                            });
                         }
                     });
                     weeklyTotalSeconds += dailyTotal;
@@ -1655,7 +2227,7 @@ function saveAddedTime() {
             }
         }
 
-        function selectDate(dateStr) {
+       function selectDate(dateStr) {
             selectedDate = dateStr;
             renderCalendar(); 
             const infoEl = document.getElementById('selectedDateInfo');
@@ -1666,45 +2238,71 @@ function saveAddedTime() {
 
             Object.values(appData.cycles).forEach(cycle => {
                 if (cycle.studyHistory && cycle.studyHistory[dateStr]) {
-                    Object.entries(cycle.studyHistory[dateStr]).forEach(([discId, seconds]) => {
-                        const discipline = cycle.disciplines.find(d => d.id == discId);
-                        if (discipline) {
-                            html += `<div class="study-history-item"> <span><strong>${discipline.name}</strong> (${cycle.id}): ${formatTime(seconds)}</span> <button class="history-delete-btn" title="Apagar este registro" onclick="deleteHistoryEntry('${dateStr}', '${cycle.id}', '${discId}')">X</button> </div>`;
-                            studiesFound = true;
-                            dailyTotalSeconds += seconds;
+                    Object.entries(cycle.studyHistory[dateStr]).forEach(([discId, records]) => {
+                        if (Array.isArray(records)) {
+                            const discipline = cycle.disciplines.find(d => d.id == discId);
+                            if (discipline) {
+                                records.forEach((record, index) => {
+                                    html += `<div class="study-history-item"> 
+                                                <span>
+                                                    <strong>${discipline.name}</strong> (${cycle.id}): ${formatTime(record.time || 0)}
+                                                    ${record.subject ? `<br><small>Assunto: ${record.subject}</small>` : ''}
+                                                    ${record.tags && record.tags.length > 0 ? `<br><small>Tags: ${record.tags.join(', ')}</small>` : ''}
+                                                </span> 
+                                                <button class="history-delete-btn" title="Apagar este registro" onclick="deleteHistoryEntry('${dateStr}', '${cycle.id}', '${discId}', ${index})">X</button> 
+                                            </div>`;
+                                    studiesFound = true;
+                                    dailyTotalSeconds += (record.time || 0);
+                                });
+                            }
                         }
                     });
                 }
             });
 
-                const summaryHtml = `<div class="daily-total" style="display: flex; justify-content: space-between; align-items: center;">
-                                        <span><strong>Total do Dia:</strong> ${formatTime(dailyTotalSeconds)}</span>
-                                        <button class="secondary" onclick="openAddTimeToDayModal('${dateStr}')">Adicionar Tempo</button>
-                                    </div>`; // Adicionado o botão aqui
+            const summaryHtml = `<div class="daily-total" style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span><strong>Total do Dia:</strong> ${formatTime(dailyTotalSeconds)}</span>
+                                    <button class="secondary" onclick="openAddTimeToDayModal('${dateStr}')">Adicionar Tempo</button>
+                                </div>`;
 
-                if (!studiesFound) {
-                    html += `<p style="margin-top: 10px;">Nenhum estudo registrado para este dia.</p>`;
-                    infoEl.innerHTML = summaryHtml + html; // Inclui o summaryHtml mesmo sem estudos
-                } else {
-                    infoEl.innerHTML = summaryHtml + html;
-                }
-                infoEl.style.display = 'block';
+            if (!studiesFound) {
+                html += `<p style="margin-top: 10px;">Nenhum estudo registrado para este dia.</p>`;
+                infoEl.innerHTML = summaryHtml + html;
+            } else {
+                infoEl.innerHTML = summaryHtml + html;
             }
+            infoEl.style.display = 'block';
+        }
         
-        function deleteHistoryEntry(dateStr, cycleId, disciplineId) {
+       function deleteHistoryEntry(dateStr, cycleId, disciplineId, recordIndex) { // Adicionado recordIndex
             showConfirmModal('Apagar Registro', 'Tem certeza? O tempo total da disciplina será recalculado.', () => {
                 const cycle = appData.cycles[cycleId];
                 if (!cycle || !cycle.studyHistory || !cycle.studyHistory[dateStr] || !cycle.studyHistory[dateStr][disciplineId]) return;
                 
-                const secondsToDelete = cycle.studyHistory[dateStr][disciplineId];
+                const records = cycle.studyHistory[dateStr][disciplineId];
+                if (!Array.isArray(records) || recordIndex < 0 || recordIndex >= records.length) return;
+
+                const secondsToDelete = records[recordIndex].time || 0; // Pega o tempo do registro específico
+                
+                // Remove o registro do array
+                records.splice(recordIndex, 1); 
+
+                // Atualiza o currentSeconds da disciplina
                 const discipline = cycle.disciplines.find(d => String(d.id) === disciplineId);
                 if (discipline) {
                     discipline.currentSeconds = Math.max(0, discipline.currentSeconds - secondsToDelete);
                 }
-                delete cycle.studyHistory[dateStr][disciplineId];
+
+                // Se não houver mais registros para a disciplina no dia, remove a entrada da disciplina
+                if (records.length === 0) {
+                    delete cycle.studyHistory[dateStr][disciplineId];
+                }
+                
+                // Se não houver mais disciplinas estudadas no dia, remove a entrada da data
                 if (Object.keys(cycle.studyHistory[dateStr]).length === 0) {
                     delete cycle.studyHistory[dateStr];
                 }
+
                 saveData();
                 selectDate(dateStr); 
                 if (activeCycle && activeCycle.id === cycleId) updateDisplay();
@@ -1741,7 +2339,7 @@ function saveAddedTime() {
 
         function populateCycleFilter() {
             const selector = document.getElementById('report-cycle-filter');
-            selector.innerHTML = '<option value="all">Todos os Ciclos</option>';
+            selector.innerHTML = '<option value="all">Todos os Projetos</option>';
             Object.keys(appData.cycles || {}).forEach(id => selector.innerHTML += `<option value="${id}">${id}</option>`);
         }
 
@@ -1760,16 +2358,15 @@ function saveAddedTime() {
 
         function processReportData(startDate, endDate, selectedCycle) {
             let totalSeconds = 0;
-            const durationByDay = {};
+            const durationByDay = {}; // Sum total for each day
             const distributionByCycle = {};
             const breakdown = {};
             let studyDaysCount = 0;
 
-            // Normaliza as datas para comparação (apenas parte da data, sem horário)
             const normalizedStartDate = getLocalDateString(startDate);
             const normalizedEndDate = getLocalDateString(endDate);
 
-            // Inicializa todos os dias do período com 0
+            // Initialize all days in the period with 0 to ensure continuity in charts
             for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
                 durationByDay[getLocalDateString(d)] = 0;
             }
@@ -1778,24 +2375,47 @@ function saveAddedTime() {
                 if (selectedCycle !== 'all' && cycle.id !== selectedCycle) return;
                 if (!cycle.studyHistory) return;
 
-                Object.entries(cycle.studyHistory).forEach(([date, entries]) => {
-                    // Compara apenas strings de data (YYYY-MM-DD) sem conversão para Date
+                Object.entries(cycle.studyHistory).forEach(([date, disciplineEntries]) => {
                     if (date >= normalizedStartDate && date <= normalizedEndDate) {
-                        let dailySeconds = 0;
-                        Object.entries(entries).forEach(([discId, seconds]) => {
-                            dailySeconds += seconds;
-                            distributionByCycle[cycle.id] = (distributionByCycle[cycle.id] || 0) + seconds;
-                            if (!breakdown[cycle.id]) breakdown[cycle.id] = { totalSeconds: 0, disciplines: {} };
-                            breakdown[cycle.id].totalSeconds += seconds;
-                            breakdown[cycle.id].disciplines[discId] = (breakdown[cycle.id].disciplines[discId] || 0) + seconds;
+                        let dailySecondsFromRecords = 0; // Total for this day from all disciplines
+
+                        Object.entries(disciplineEntries).forEach(([discId, records]) => {
+                            if (Array.isArray(records)) {
+                                records.forEach(record => {
+                                    const seconds = record.time || 0;
+                                    dailySecondsFromRecords += seconds; // Add to daily total
+                                    
+                                    // Update overall distribution by cycle
+                                    distributionByCycle[cycle.id] = (distributionByCycle[cycle.id] || 0) + seconds;
+
+                                    // Update breakdown structure
+                                    if (!breakdown[cycle.id]) breakdown[cycle.id] = { totalSeconds: 0, disciplines: {} };
+                                    breakdown[cycle.id].totalSeconds += seconds;
+                                    breakdown[cycle.id].disciplines[discId] = (breakdown[cycle.id].disciplines[discId] || 0) + seconds;
+                                });
+                            }
                         });
-                        if (dailySeconds > 0 && durationByDay[date] === 0) studyDaysCount++;
-                        durationByDay[date] = (durationByDay[date] || 0) + dailySeconds;
-                        totalSeconds += dailySeconds;
+                        
+                        // Only count as a "study day" if there was actual study time recorded
+                        if (dailySecondsFromRecords > 0 && !(getLocalDateString(new Date(date)) in durationByDay && durationByDay[getLocalDateString(new Date(date))] > 0)) {
+                           studyDaysCount++; // Only increment if it's the first study on this day
+                        }
+                        durationByDay[date] = (durationByDay[date] || 0) + dailySecondsFromRecords;
+                        totalSeconds += dailySecondsFromRecords;
                     }
                 });
             });
-            const dailyAverage = studyDaysCount > 0 ? totalSeconds / studyDaysCount : 0;
+
+            // Adjust studyDaysCount for ranges where days might have studies from multiple cycles
+            // This is crucial for average calculation.
+            let actualStudyDays = 0;
+            for(const dateStr in durationByDay) {
+                if (durationByDay[dateStr] > 0) {
+                    actualStudyDays++;
+                }
+            }
+
+            const dailyAverage = actualStudyDays > 0 ? totalSeconds / actualStudyDays : 0;
             return { totalSeconds, dailyAverage, durationByDay, distributionByCycle, breakdown };
         }
 
@@ -1847,7 +2467,7 @@ function saveAddedTime() {
             const labels = Object.keys(data);
             const values = Object.values(data);
             
-            // Usar as cores dos ciclos armazenadas
+            // Usar as cores dos Projetos armazenadas
             const backgroundColors = labels.map(cycleId => {
                 const cycle = appData.cycles[cycleId];
                 return cycle ? cycle.color : '#CCCCCC'; // Fallback color
@@ -1881,7 +2501,7 @@ function saveAddedTime() {
                 if (!cycle) continue;
                 const percentage = totalSeconds > 0 ? ((cycleData.totalSeconds / totalSeconds) * 100).toFixed(1) : 0;
                 
-                // Usa a cor armazenada para o ciclo
+                // Usa a cor armazenada para o Projeto
                 const cycleColor = cycle.color || '#CCCCCC'; // Fallback color
                 
                 const cycleRow = document.createElement('div');
