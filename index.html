@@ -512,6 +512,79 @@
     <div id="confirmModal" class="modal-overlay"> <div class="modal-content"> <h3 id="confirmModalTitle">Confirmar Ação</h3> <p id="confirmModalMessage"></p> <div class="modal-buttons"> <button class="secondary" onclick="hideConfirmModal()">Cancelar</button> <button class="danger" onclick="handleConfirmAction()">Confirmar</button> </div> </div> </div>
     <div id="editDisciplineModal" class="modal-overlay"> <div class="modal-content"> <h3>Editar Disciplina</h3> <input type="hidden" id="editDisciplineId"> <div class="form-group-modal"> <label for="editDisciplineName">Nome da Disciplina</label> <input type="text" id="editDisciplineName"> </div> <div class="form-group-modal"> <label>Meta de Tempo</label> <div class="time-input-container" style="justify-content: center;"> <div class="time-input-group"> <label for="editHoursInput">Horas</label> <input type="number" id="editHoursInput" min="0" placeholder="HH"> </div> <span class="time-input-separator">:</span> <div class="time-input-group"> <label for="editMinutesInput">Minutos</label> <input type="number" id="editMinutesInput" min="0" max="59" step="5" placeholder="MM"> </div> </div> </div> <div class="modal-buttons"> <button class="secondary" onclick="hideEditModal()">Cancelar</button> <button onclick="saveDisciplineChanges()">Salvar Alterações</button> </div> </div> </div>
 
+    <div id="addTimeModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Adicionar Tempo Manualmente</h3>
+            <input type="hidden" id="addTimeDisciplineId">
+            <div class="form-group-modal">
+                <label>Tempo a Adicionar</label>
+                <div class="time-input-container" style="justify-content: center;">
+                    <div class="time-input-group">
+                        <label for="addTimeHoursInput">Horas</label>
+                        <input type="number" id="addTimeHoursInput" min="0" value="0">
+                    </div>
+                    <span class="time-input-separator">:</span>
+                    <div class="time-input-group">
+                        <label for="addTimeMinutesInput">Minutos</label>
+                        <input type="number" id="addTimeMinutesInput" min="0" max="59" step="5" value="0">
+                    </div>
+                    <span class="time-input-separator">:</span>
+                    <div class="time-input-group">
+                        <label for="addTimeSecondsInput">Segundos</label>
+                        <input type="number" id="addTimeSecondsInput" min="0" max="59" step="1" value="0">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="secondary" onclick="hideAddTimeModal()">Cancelar</button>
+                <button onclick="saveAddedTime()">Adicionar</button>
+            </div>
+        </div>
+    </div>
+
+<div id="addTimeToDayModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Adicionar Tempo ao Dia</h3>
+            <p>Adicione tempo de estudo para a data selecionada: <strong id="addTimeToDayModalDate"></strong></p>
+            <input type="hidden" id="addTimeToDaySelectedDate">
+
+            <div class="form-group-modal">
+                <label for="addTimeToDayCycleSelect">Ciclo de Estudo</label>
+                <select id="addTimeToDayCycleSelect" onchange="populateAddTimeToDayDisciplines()"></select>
+            </div>
+
+            <div class="form-group-modal">
+                <label for="addTimeToDayDisciplineSelect">Disciplina</label>
+                <select id="addTimeToDayDisciplineSelect"></select>
+            </div>
+            
+            <div class="form-group-modal">
+                <label>Tempo Estudado</label>
+                <div class="time-input-container" style="justify-content: center;">
+                    <div class="time-input-group">
+                        <label for="addTimeToDayHoursInput">Horas</label>
+                        <input type="number" id="addTimeToDayHoursInput" min="0" value="0">
+                    </div>
+                    <span class="time-input-separator">:</span>
+                    <div class="time-input-group">
+                        <label for="addTimeToDayMinutesInput">Minutos</label>
+                        <input type="number" id="addTimeToDayMinutesInput" min="0" max="59" step="5" value="0">
+                    </div>
+                    <span class="time-input-separator">:</span>
+                    <div class="time-input-group">
+                        <label for="addTimeToDaySecondsInput">Segundos</label>
+                        <input type="number" id="addTimeToDaySecondsInput" min="0" max="59" step="1" value="0">
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-buttons">
+                <button class="secondary" onclick="hideAddTimeToDayModal()">Cancelar</button>
+                <button onclick="saveAddTimeToDayEntry()">Adicionar Tempo</button>
+            </div>
+        </div>
+    </div>
+
     <div class="tooltip" id="tooltip" style="position: fixed; background: rgba(0, 0, 0, 0.8); color: white; padding: 8px 12px; border-radius: 5px; font-size: 14px; pointer-events: none; display: none; z-index: 1000; white-space: nowrap; transition: opacity 0.2s;"></div>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -727,12 +800,19 @@
         let reportDatePicker = null;
         let reportsInitialized = false;
 
-        function getLocalDateString(date = new Date()) {
+       function getLocalDateString(date = new Date()) {
+            // Cria um novo objeto Date que representa o início do dia NA HORA LOCAL
+            const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            
+            // Formata esta data local para YYYY-MM-DD
             if (typeof dateFns !== 'undefined' && dateFns.format) {
-                return dateFns.format(date, 'yyyy-MM-dd');
+                return dateFns.format(localDate, 'yyyy-MM-dd');
             } else {
-                console.error("dateFns não está definido.");
-                return date.toISOString().split('T')[0];
+                // Fallback mais robusto para garantir a data local, se dateFns não estiver disponível
+                const year = localDate.getFullYear();
+                const month = (localDate.getMonth() + 1).toString().padStart(2, '0');
+                const day = localDate.getDate().toString().padStart(2, '0');
+                return `${year}-${month}-${day}`;
             }
         }
 
@@ -1091,6 +1171,156 @@
             document.getElementById('alertModal').style.display = 'flex';
         }
         function hideAlertModal() { document.getElementById('alertModal').style.display = 'none'; }
+        
+        let disciplineIdToAddTime = null; // Para armazenar o ID da disciplina que terá tempo adicionado
+
+        function openAddTimeModal(id) {
+            disciplineIdToAddTime = id;
+            const discipline = activeCycle.disciplines.find(d => d.id === id);
+            if (!discipline) return;
+
+            // Opcional: pré-preencher com 0, ou algum valor inicial se desejar
+            document.getElementById('addTimeHoursInput').value = 0;
+            document.getElementById('addTimeMinutesInput').value = 0;
+            document.getElementById('addTimeDisciplineId').value = id; // Garante que o ID esteja no input hidden
+            document.getElementById('addTimeModal').style.display = 'flex';
+        }
+
+        let selectedDateForManualAdd = null; // Armazena a data selecionada no calendário
+
+        function openAddTimeToDayModal(dateStr) {
+            selectedDateForManualAdd = dateStr;
+            document.getElementById('addTimeToDayModalDate').textContent = new Date(dateStr + 'T12:00:00').toLocaleDateString('pt-BR');
+            document.getElementById('addTimeToDaySelectedDate').value = dateStr;
+            
+            populateAddTimeToDayCycles();
+            
+            // Resetar campos
+            document.getElementById('addTimeToDayCycleSelect').value = '';
+            document.getElementById('addTimeToDayDisciplineSelect').innerHTML = '<option value="">-- Selecione um ciclo primeiro --</option>'; // Corrigido
+            document.getElementById('addTimeToDayHoursInput').value = 0;
+            document.getElementById('addTimeToDayMinutesInput').value = 0;
+
+            document.getElementById('addTimeToDayModal').style.display = 'flex';
+        }
+
+        function hideAddTimeToDayModal() {
+            document.getElementById('addTimeToDayModal').style.display = 'none';
+            selectedDateForManualAdd = null;
+        }
+
+        function populateAddTimeToDayCycles() {
+            const cycleSelect = document.getElementById('addTimeToDayCycleSelect');
+            cycleSelect.innerHTML = '<option value="">-- Selecione um ciclo --</option>';
+            const cycleIds = Object.keys(appData.cycles || {});
+            cycleIds.forEach(id => {
+                cycleSelect.innerHTML += `<option value="${id}">${id}</option>`;
+            });
+            // Opcional: pré-selecionar o ciclo ativo se houver
+            if (activeCycle) {
+                cycleSelect.value = activeCycle.id;
+                populateAddTimeToDayDisciplines(); // Popula disciplinas se um ciclo já foi selecionado
+            }
+        }
+
+        function populateAddTimeToDayDisciplines() {
+            const cycleId = document.getElementById('addTimeToDayCycleSelect').value;
+            const disciplineSelect = document.getElementById('addTimeToDayDisciplineSelect');
+            disciplineSelect.innerHTML = '<option value="">-- Selecione uma disciplina --</option>';
+
+            if (cycleId && appData.cycles[cycleId]) {
+                const cycle = appData.cycles[cycleId];
+                cycle.disciplines.forEach(d => {
+                    disciplineSelect.innerHTML += `<option value="${d.id}">${d.name}</option>`;
+                });
+            }
+        }
+
+function saveAddTimeToDayEntry() {
+            const dateStr = document.getElementById('addTimeToDaySelectedDate').value;
+            const cycleId = document.getElementById('addTimeToDayCycleSelect').value;
+            const disciplineId = parseInt(document.getElementById('addTimeToDayDisciplineSelect').value, 10);
+            const hoursToAdd = parseInt(document.getElementById('addTimeToDayHoursInput').value, 10) || 0;
+            const minutesToAdd = parseInt(document.getElementById('addTimeToDayMinutesInput').value, 10) || 0;
+            const secondsToAddInput = parseInt(document.getElementById('addTimeToDaySecondsInput').value, 10) || 0; // Nova linha
+            const totalSecondsToAdd = (hoursToAdd * 3600) + (minutesToAdd * 60) + secondsToAddInput; // Modificado
+
+            if (!dateStr || !cycleId || !disciplineId || totalSecondsToAdd <= 0) { // Modificado
+                showAlertModal('Dados Inválidos', 'Por favor, preencha todos os campos e insira um tempo válido.');
+                return;
+            }
+
+            const cycle = appData.cycles[cycleId];
+            if (!cycle) {
+                showAlertModal('Erro', 'Ciclo não encontrado.');
+                return;
+            }
+
+            const discipline = cycle.disciplines.find(d => d.id === disciplineId);
+            if (!discipline) {
+                showAlertModal('Erro', 'Disciplina não encontrada no ciclo selecionado.');
+                return;
+            }
+
+            // Atualiza o currentSeconds da disciplina (tempo total estudado para essa disciplina)
+            discipline.currentSeconds += totalSecondsToAdd; // Modificado
+
+            // Atualiza o histórico de estudo para a data específica
+            if (!cycle.studyHistory[dateStr]) {
+                cycle.studyHistory[dateStr] = {};
+            }
+            cycle.studyHistory[dateStr][String(discipline.id)] = (cycle.studyHistory[dateStr][String(discipline.id)] || 0) + totalSecondsToAdd; // Modificado
+
+            hideAddTimeToDayModal();
+            saveData();
+            selectDate(dateStr); // Re-renderiza a informação da data selecionada no calendário
+            if (activeCycle && activeCycle.id === cycleId) updateDisplay(); // Atualiza display principal se for o ciclo ativo
+            showAlertModal('Sucesso', `Tempo adicionado em "${discipline.name}" para ${new Date(dateStr + 'T12:00:00').toLocaleDateString('pt-BR')}.`);
+        }
+
+        function hideAddTimeModal() {
+            document.getElementById('addTimeModal').style.display = 'none';
+            disciplineIdToAddTime = null;
+        }
+
+function saveAddedTime() {
+            if (!disciplineIdToAddTime || !activeCycle) {
+                showAlertModal('Erro', 'Nenhuma disciplina selecionada para adicionar tempo.');
+                return;
+            }
+
+            const discipline = activeCycle.disciplines.find(d => d.id === disciplineIdToAddTime);
+            if (!discipline) {
+                showAlertModal('Erro', 'Disciplina não encontrada.');
+                return;
+            }
+
+            const hoursToAdd = parseInt(document.getElementById('addTimeHoursInput').value, 10) || 0;
+            const minutesToAdd = parseInt(document.getElementById('addTimeMinutesInput').value, 10) || 0;
+            const secondsToAddInput = parseInt(document.getElementById('addTimeSecondsInput').value, 10) || 0; // Nova linha
+            const totalSecondsToAdd = (hoursToAdd * 3600) + (minutesToAdd * 60) + secondsToAddInput; // Modificado
+
+            if (totalSecondsToAdd <= 0) { // Modificado
+                showAlertModal('Tempo Inválido', 'Por favor, insira um tempo válido (horas, minutos ou segundos) para adicionar.'); // Modificado
+                return;
+            }
+
+            // Adiciona ao currentSeconds da disciplina
+            discipline.currentSeconds += totalSecondsToAdd; // Modificado
+
+            // Atualiza o histórico de estudo do dia atual
+            const today = getLocalDateString();
+            if (!activeCycle.studyHistory[today]) {
+                activeCycle.studyHistory[today] = {};
+            }
+            const discIdStr = String(discipline.id);
+            activeCycle.studyHistory[today][discIdStr] = (activeCycle.studyHistory[today][discIdStr] || 0) + totalSecondsToAdd; // Modificado
+
+            hideAddTimeModal();
+            saveData();
+            updateDisplay();
+            showAlertModal('Sucesso', `Tempo adicionado com sucesso à disciplina "${discipline.name}".`);
+        }
 
         function showConfirmModal(title, message, callback) {
             document.getElementById('confirmModalTitle').textContent = title;
@@ -1190,18 +1420,26 @@
         
         function updateStats() {
             if (!activeCycle) return;
+
             document.getElementById('cycleCompletions').textContent = activeCycle.completions || 0;
             document.getElementById('totalDisciplines').textContent = activeCycle.disciplines.length;
+
             const today = getLocalDateString();
-            let totalSecondsToday = 0;
-            if(appData.cycles){
-                Object.values(appData.cycles).forEach(cycle => {
+            let totalSecondsStudiedTodayAllCycles = 0;
+
+            // Itera sobre TODOS os ciclos do appData
+            if (appData.cycles) {
+                for (const cycleId in appData.cycles) {
+                    const cycle = appData.cycles[cycleId];
                     if (cycle.studyHistory && cycle.studyHistory[today]) {
-                         totalSecondsToday += Object.values(cycle.studyHistory[today]).reduce((sum, s) => sum + s, 0);
+                        // Soma o tempo estudado para o dia atual em cada disciplina deste ciclo
+                        totalSecondsStudiedTodayAllCycles += Object.values(cycle.studyHistory[today]).reduce((sum, s) => sum + s, 0);
                     }
-                });
+                }
             }
-            document.getElementById('totalHours').textContent = formatTime(totalSecondsToday);
+
+            // Atualiza o display das horas estudadas hoje
+            document.getElementById('totalHours').textContent = formatTime(totalSecondsStudiedTodayAllCycles);
         }
 
         function updateDisciplinesList() {
@@ -1223,6 +1461,7 @@
                         </div>
                         <div class="timer-controls" style="display:flex; gap:8px; align-items:center;">
                             <button class="timer-btn ${d.isRunning ? 'stop' : ''}" onclick="toggleTimer(${d.id})">${d.isRunning ? 'Pausar' : 'Iniciar'}</button>
+                            <button class="secondary" onclick="openAddTimeModal(${d.id})">Add Tempo</button>
                             <button class="remove-btn secondary" onclick="removeDiscipline(${d.id})">Remover</button>
                         </div>
                     </div>`;
@@ -1438,16 +1677,19 @@
                 }
             });
 
-            const summaryHtml = `<div class="daily-total"><strong>Total do Dia:</strong> ${formatTime(dailyTotalSeconds)}</div>`;
+                const summaryHtml = `<div class="daily-total" style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span><strong>Total do Dia:</strong> ${formatTime(dailyTotalSeconds)}</span>
+                                        <button class="secondary" onclick="openAddTimeToDayModal('${dateStr}')">Adicionar Tempo</button>
+                                    </div>`; // Adicionado o botão aqui
 
-            if (!studiesFound) {
-                html += `<p style="margin-top: 10px;">Nenhum estudo registrado para este dia.</p>`;
-                infoEl.innerHTML = html;
-            } else {
-                infoEl.innerHTML = summaryHtml + html;
+                if (!studiesFound) {
+                    html += `<p style="margin-top: 10px;">Nenhum estudo registrado para este dia.</p>`;
+                    infoEl.innerHTML = summaryHtml + html; // Inclui o summaryHtml mesmo sem estudos
+                } else {
+                    infoEl.innerHTML = summaryHtml + html;
+                }
+                infoEl.style.display = 'block';
             }
-            infoEl.style.display = 'block';
-        }
         
         function deleteHistoryEntry(dateStr, cycleId, disciplineId) {
             showConfirmModal('Apagar Registro', 'Tem certeza? O tempo total da disciplina será recalculado.', () => {
