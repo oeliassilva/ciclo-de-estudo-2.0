@@ -340,6 +340,219 @@
             color: #6c757d;
         }
 
+        /* Estilos para Modais Específicos */
+        #addTimeToDayModal .modal-content {
+            max-width: 400px; /* Reduz a largura máxima do modal */
+            padding: 20px;   /* Reduz o padding geral do modal */
+            overflow-y: auto; /* Permite scroll se o conteúdo for muito alto */
+            max-height: 90vh; /* Limita a altura máxima para não estourar a tela */
+        }
+
+        /* Ajustes para os grupos de input de tempo dentro DOS MODAIS GERALMENTE */
+        .modal-content .time-input-container {
+            flex-wrap: wrap; 
+            justify-content: center;
+            gap: 3px; /* Reduz ainda mais o espaço entre os campos de tempo */
+            margin-bottom: 15px; /* Adiciona um espaço inferior */
+        }
+
+        .modal-content .time-input-group {
+            flex: 1 1 55px; /* Permite flexibilidade, com base de 55px */
+            max-width: 70px; /* Limita a largura máxima para cada HH/MM/SS */
+            min-width: 50px; /* Garante um tamanho mínimo menor */
+            align-items: center; /* Centraliza os itens dentro do grupo */
+        }
+
+        .modal-content .time-input-group label {
+            font-size: 0.7em; /* Reduz um pouco mais a fonte dos labels HH/MM/SS */
+            margin-bottom: 2px;
+            white-space: nowrap; /* Impede que o label quebre linha */
+        }
+
+        .modal-content .time-input-group input {
+            width: 100%; 
+            padding: 5px; /* Reduz o padding para economizar espaço */
+            font-size: 12px; /* Diminui a fonte do texto dentro do input */
+            height: 30px; /* Altura fixa ligeiramente menor para inputs de tempo */
+        }
+
+        .modal-content .time-input-separator {
+            font-size: 0.9em; /* Diminui o tamanho do separador ':' */
+            padding-bottom: 0;
+            margin-top: 10px; 
+        }
+
+        /* Ajuste para garantir que os selects (Projeto/Disciplina) não sejam muito largos */
+        .form-group-modal select {
+            width: 100%;
+            padding: 8px 12px; /* Reduz o padding dos selects */
+            font-size: 14px; /* Reduz a fonte dos selects */
+        }
+
+        /* Ajuste para os textareas e inputs de texto */
+        .form-group-modal textarea,
+        .form-group-modal input[type="text"] {
+            padding: 8px 10px; /* Reduz o padding */
+            font-size: 14px; /* Reduz a fonte */
+        }
+
+        /* Regra específica para o modal AddTimeToDay, para garantir a centralização dos botões */
+        #addTimeToDayModal .modal-buttons {
+            margin-top: 20px; /* Garante espaço acima dos botões */
+            gap: 10px; /* Reduz o espaço entre os botões */
+        }
+        #addTimeToDayModal .modal-buttons button {
+            padding: 10px 15px; /* Reduz o padding dos botões */
+            font-size: 14px; /* Reduz a fonte dos botões */
+        }
+
+        /* Media query para telas médias (já existia, só ajustar os valores se achar necessário) */
+        @media (max-width: 1440px) {
+            #addTimeToDayModal .modal-content {
+                max-width: 380px; /* Pode tentar reduzir para 380px ou 360px */
+                padding: 18px 20px; 
+            }
+        }
+
+        /* Media query para telas menores (smartphones, para ter certeza) */
+        @media (max-width: 768px) { /* Use 768px para atingir tablets e smartphones em landscape */
+            #addTimeToDayModal .modal-content {
+                max-width: 95%; /* Ocupa a maior parte da largura */
+                padding: 15px; /* Padding mínimo */
+            }
+            .modal-content .time-input-group {
+                flex: 1 1 60px; /* Mais flexibilidade */
+                min-width: 55px;
+            }
+            .modal-content .time-input-separator {
+                display: flex; /* Mantém o ':' mas pode ser removido em 480px se ainda apertar */
+            }
+        }
+
+        @media (max-width: 480px) {
+            #addTimeToDayModal .modal-content {
+                max-width: 98%; 
+                padding: 10px; /* Padding ainda menor */
+            }
+            .modal-content .time-input-group {
+                flex: 1 1 auto; /* Permite que ocupe o espaço que precisar, mas com min-width */
+                min-width: 45px; /* Min-width para cada campo HH/MM/SS */
+                max-width: none; /* Não tem max-width aqui, para encolher */
+            }
+            .modal-content .time-input-separator {
+                display: none; /* Esconde o ":" em telas muito pequenas para economizar espaço */
+            }
+            #addTimeToDayModal .modal-buttons {
+                flex-direction: column; /* Botões empilhados em telas muito pequenas */
+            }
+        }
+
+        /* Garante que os inputs dentro dos modais de tempo não sejam muito largos */
+        .modal-content input[type="text"],
+        .modal-content input[type="number"],
+        .modal-content textarea,
+        .modal-content select {
+            width: 100%; /* Garante que eles ocupem a largura disponível */
+            max-width: 100%; /* Impede que eles se estiquem além do contêiner */
+            box-sizing: border-box; /* Inclui padding e borda na largura total */
+        }
+
+        /* Ajustes para os grupos de input de tempo dentro DOS MODAIS GERALMENTE */
+        .modal-content .time-input-container {
+            /* Permite que os itens quebrem para a próxima linha se não houver espaço */
+            flex-wrap: wrap; 
+            justify-content: center; /* Centraliza os grupos quando quebram */
+            gap: 5px; /* Reduz o espaço entre os campos de tempo */
+        }
+
+        .modal-content .time-input-group {
+            /* Permite que cada grupo de input de tempo tenha uma largura flexível */
+            flex: 1 1 70px; /* Cresce e encolhe, com base de 70px */
+            max-width: 90px; /* Limita a largura máxima para cada HH/MM/SS */
+            min-width: 60px; /* Garante um tamanho mínimo */
+        }
+
+        .modal-content .time-input-group label {
+            font-size: 0.75em; /* Reduz um pouco mais a fonte dos labels HH/MM/SS */
+            margin-bottom: 2px;
+        }
+
+        .modal-content .time-input-group input {
+            width: 100%; /* Garante que o input preencha o grupo */
+            padding: 6px; /* Reduz o padding para economizar espaço */
+            font-size: 13px; /* Diminui a fonte do texto dentro do input */
+            height: 32px; /* Altura fixa para inputs de tempo */
+        }
+
+        .modal-content .time-input-separator {
+            font-size: 1em; /* Diminui o tamanho do separador ':' */
+            padding-bottom: 0; /* Remove padding que pode afetar alinhamento */
+            display: flex; /* Garante alinhamento vertical */
+            align-items: center; /* Alinha o ':' no centro vertical */
+            margin-top: 10px; /* Ajusta a posição vertical */
+        }
+
+        /* Regra específica para o modal AddTimeToDay, para garantir a centralização dos botões e campos */
+        #addTimeToDayModal .modal-content .modal-buttons,
+        #addTimeToDayModal .modal-content .form-group-modal {
+            max-width: 100%; /* Garante que não forcem largura extra */
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Media query para telas médias, entre 1024px e 1440px, que podem estar cortando */
+        @media (max-width: 1440px) {
+            #addTimeToDayModal .modal-content {
+                max-width: 420px; /* Reduz a largura máxima para telas médias */
+                padding: 20px 25px; /* Reduz o padding um pouco mais */
+            }
+        }
+
+        /* Media query para telas menores (smartphones, por exemplo), se as anteriores não forem suficientes */
+        @media (max-width: 480px) {
+            #addTimeToDayModal .modal-content {
+                max-width: 98%; /* Quase 100% da largura em telas muito pequenas */
+                padding: 15px; /* Padding mínimo */
+            }
+            .modal-content .time-input-container {
+                flex-wrap: wrap; /* Garante a quebra */
+            }
+            .modal-content .time-input-group {
+                flex: 1 1 80px; /* Permite mais espaço para cada input se necessário */
+                max-width: none; /* Remove limite de max-width aqui */
+            }
+            .modal-content .time-input-separator {
+                display: none; /* Esconde o ":" em telas muito pequenas para economizar espaço */
+            }
+        }
+
+
+        /* Media query para telas ainda menores (celulares, por exemplo) */
+        @media (max-width: 600px) {
+            #addTimeToDayModal .modal-content {
+                max-width: 95%; /* Ocupa quase toda a largura em telas muito pequenas */
+                margin: 20px auto; /* Centraliza verticalmente */
+                padding: 20px; /* Reduz ainda mais o padding */
+            }
+
+            .modal-content .time-input-container {
+                flex-wrap: wrap; /* Permite quebrar em várias linhas se não couber */
+                justify-content: center;
+            }
+
+            .modal-content .time-input-group {
+                width: calc(33% - 10px); /* Tenta manter 3 colunas em telas pequenas */
+                min-width: 80px; /* Garante um tamanho mínimo */
+            }
+             .modal-content .time-input-group input {
+                width: 100%;
+                max-width: none;
+            }
+            .modal-content .time-input-separator {
+                display: none; /* Esconde o ":" quando quebra a linha */
+            }
+        }
+
         @media (max-width: 992px) {
             .sidebar-nav { width: 70px; }
             .sidebar-nav .sidebar-header h1, .sidebar-nav .menu-text, .sidebar-nav .logout-text { display: none; }
@@ -593,7 +806,7 @@
     <div id="confirmModal" class="modal-overlay"> <div class="modal-content"> <h3 id="confirmModalTitle">Confirmar Ação</h3> <p id="confirmModalMessage"></p> <div class="modal-buttons"> <button class="secondary" onclick="hideConfirmModal()">Cancelar</button> <button class="danger" onclick="handleConfirmAction()">Confirmar</button> </div> </div> </div>
     <div id="editDisciplineModal" class="modal-overlay"> <div class="modal-content"> <h3>Editar Disciplina</h3> <input type="hidden" id="editDisciplineId"> <div class="form-group-modal"> <label for="editDisciplineName">Nome da Disciplina</label> <input type="text" id="editDisciplineName"> </div> <div class="form-group-modal"> <label>Meta de Tempo</label> <div class="time-input-container" style="justify-content: center;"> <div class="time-input-group"> <label for="editHoursInput">Horas</label> <input type="number" id="editHoursInput" min="0" placeholder="HH"> </div> <span class="time-input-separator">:</span> <div class="time-input-group"> <label for="editMinutesInput">Minutos</label> <input type="number" id="editMinutesInput" min="0" max="59" step="5" placeholder="MM"> </div> </div> </div> <div class="modal-buttons"> <button class="secondary" onclick="hideEditModal()">Cancelar</button> <button onclick="saveDisciplineChanges()">Salvar Alterações</button> </div> </div> </div>
 
-    <div id="addTimeModal" class="modal-overlay">
+<div id="addTimeModal" class="modal-overlay">
         <div class="modal-content">
             <h3>Adicionar Tempo Manualmente</h3>
             <input type="hidden" id="addTimeDisciplineId">
@@ -625,23 +838,10 @@
                 <label for="addTimeTagsInput">Tags (Opcional, separe por vírgulas ou espaços)</label>
                 <input type="text" id="addTimeTagsInput" placeholder="Ex: #javascript, #frontend">
             </div>
-            <div class="modal-buttons">
-                <button class="secondary" onclick="hideAddTimeModal()">Cancelar</button>
-                <button onclick="saveAddedTime()">Adicionar</button>
-            </div>
-        </div>
-    </div>
-    <div id="addTimeModal" class="modal-overlay">
-        <div class="modal-content">
-            <h3>Adicionar Tempo Manualmente</h3>
-            <input type="hidden" id="addTimeDisciplineId">
+
             <div class="form-group-modal">
-                <label for="addTimeHoursInput">Horas a Adicionar</label>
-                <input type="number" id="addTimeHoursInput" min="0" value="0">
-            </div>
-            <div class="form-group-modal">
-                <label for="addTimeMinutesInput">Minutos a Adicionar</label>
-                <input type="number" id="addTimeMinutesInput" min="0" max="59" step="5" value="0">
+                <label for="addTimeStopPoint">Ponto de parada do estudo (Opcional, até 500 caracteres)</label>
+                <textarea id="addTimeStopPoint" rows="4" maxlength="500" placeholder="Onde você parou?"></textarea>
             </div>
             <div class="modal-buttons">
                 <button class="secondary" onclick="hideAddTimeModal()">Cancelar</button>
@@ -649,6 +849,7 @@
             </div>
         </div>
     </div>
+
 
 <div id="addTimeToDayModal" class="modal-overlay">
         <div class="modal-content">
@@ -694,6 +895,11 @@
                 <label for="addTimeToDayTagsInput">Tags (Opcional, separe por vírgulas ou espaços)</label>
                 <input type="text" id="addTimeToDayTagsInput" placeholder="Ex: #algoritmos, #computacao">
             </div>
+
+            <div class="form-group-modal">
+                <label for="addTimeToDayStopPoint">Ponto de parada do estudo (Opcional, até 500 caracteres)</label>
+                <textarea id="addTimeToDayStopPoint" rows="4" maxlength="500" placeholder="Onde você parou?"></textarea>
+            </div>
             <div class="modal-buttons">
                 <button class="secondary" onclick="hideAddTimeToDayModal()">Cancelar</button>
                 <button onclick="saveAddTimeToDayEntry()">Adicionar Tempo</button>
@@ -730,9 +936,30 @@
                 <input type="text" id="startTimerTagsInput" placeholder="Ex: #python, #logica">
             </div>
 
+           
             <div class="modal-buttons">
                 <button class="secondary" onclick="hideStartTimerModal()">Cancelar</button>
                 <button onclick="confirmStartTimer()">Iniciar Timer</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="stopTimerModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Pausar Estudo: <span id="stopTimerDisciplineName"></span></h3>
+            <input type="hidden" id="stopTimerDisciplineId">
+            <input type="hidden" id="stopTimerStudyRecordIndex">
+            <input type="hidden" id="stopTimerStudyDate">
+            <input type="hidden" id="stopTimerStudyCycleId">
+
+            <div class="form-group-modal">
+                <label for="stopTimerStopPoint">Ponto de parada do estudo (Opcional, até 500 caracteres)</label>
+                <textarea id="stopTimerStopPoint" rows="4" maxlength="500" placeholder="Onde você parou?"></textarea>
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="secondary" onclick="cancelStopTimer()">Cancelar</button>
+                <button onclick="confirmStopTimer()">Pausar</button>
             </div>
         </div>
     </div>
@@ -934,7 +1161,7 @@
         let confirmCallback = null;
         let calendarViewMode = 'month';
         let selectedNewCycleColor = null; // Variável para armazenar a cor selecionada para o novo Projeto
-
+        let recordToStop = null; // Armazena a referência ao registro de estudo que será parado
         let durationBarChart = null;
         let distributionDonutChart = null;
         let reportStartDate, reportEndDate;
@@ -1547,7 +1774,14 @@
             // Opcional: pré-preencher com 0, ou algum valor inicial se desejar
             document.getElementById('addTimeHoursInput').value = 0;
             document.getElementById('addTimeMinutesInput').value = 0;
-            document.getElementById('addTimeDisciplineId').value = id; // Garante que o ID esteja no input hidden
+            document.getElementById('addTimeSecondsInput').value = 0;
+            document.getElementById('addTimeDisciplineId').value = id;
+            
+            document.getElementById('addTimeSubjectInput').value = '';
+            document.getElementById('addTimeTagsInput').value = '';
+            document.getElementById('addTimeStopPoint').value = ''; // Nova linha: Limpa o campo
+            
+            populateSubjectRecommendations();
             document.getElementById('addTimeModal').style.display = 'flex';
         }
 
@@ -1555,7 +1789,7 @@
             document.getElementById('addTimeModal').style.display = 'none';
             disciplineIdToAddTime = null;
         }
-
+        
         function saveAddedTime() {
             if (!disciplineIdToAddTime || !activeCycle) {
                 showAlertModal('Erro', 'Nenhuma disciplina selecionada para adicionar tempo.');
@@ -1570,23 +1804,42 @@
 
             const hoursToAdd = parseInt(document.getElementById('addTimeHoursInput').value, 10) || 0;
             const minutesToAdd = parseInt(document.getElementById('addTimeMinutesInput').value, 10) || 0;
-            const secondsToAdd = (hoursToAdd * 3600) + (minutesToAdd * 60);
+            const secondsToAddInput = parseInt(document.getElementById('addTimeSecondsInput').value, 10) || 0;
+            const totalSecondsToAdd = (hoursToAdd * 3600) + (minutesToAdd * 60) + secondsToAddInput;
+            
+            const subject = document.getElementById('addTimeSubjectInput').value.trim();
+            const tagsInput = document.getElementById('addTimeTagsInput').value.trim();
+            const tags = tagsInput.split(/[\s,]+/).filter(tag => tag !== '');
 
-            if (secondsToAdd <= 0) {
-                showAlertModal('Tempo Inválido', 'Por favor, insira um tempo válido (horas ou minutos) para adicionar.');
+            const stopPoint = document.getElementById('addTimeStopPoint').value.trim(); // Nova linha
+
+            if (totalSecondsToAdd <= 0) {
+                showAlertModal('Tempo Inválido', 'Por favor, insira um tempo válido (horas, minutos ou segundos) para adicionar.');
                 return;
             }
 
             // Adiciona ao currentSeconds da disciplina
-            discipline.currentSeconds += secondsToAdd;
+            discipline.currentSeconds += totalSecondsToAdd;
 
-            // Atualiza o histórico de estudo do dia atual
+            // Atualiza o histórico de estudo do dia atual com a nova estrutura
             const today = getLocalDateString();
             if (!activeCycle.studyHistory[today]) {
                 activeCycle.studyHistory[today] = {};
             }
             const discIdStr = String(discipline.id);
-            activeCycle.studyHistory[today][discIdStr] = (activeCycle.studyHistory[today][discIdStr] || 0) + secondsToAdd;
+            if (!activeCycle.studyHistory[today][discIdStr] || !Array.isArray(activeCycle.studyHistory[today][discIdStr])) {
+                activeCycle.studyHistory[today][discIdStr] = [];
+            }
+            activeCycle.studyHistory[today][discIdStr].push({ // Adiciona um objeto com tempo, assunto e tags
+                time: totalSecondsToAdd,
+                subject: subject,
+                tags: tags,
+                timestamp: Date.now(),
+                stopPoint: stopPoint // Nova propriedade
+            });
+            
+            // Armazena todos os assuntos e tags para recomendações futuras
+            updateAllSubjectsAndTags(subject, tags);
 
             hideAddTimeModal();
             saveData();
@@ -1594,7 +1847,79 @@
             showAlertModal('Sucesso', `Tempo adicionado com sucesso à disciplina "${discipline.name}".`);
         }
         let selectedDateForManualAdd = null; // Armazena a data selecionada no calendário
+        function openStopTimerModal(disciplineId, dateStr, recordIndex, cycleId) {
+            const discipline = activeCycle.disciplines.find(d => d.id === disciplineId);
+            if (!discipline) return;
 
+            // Encontra a referência ao registro específico que está sendo parado
+            const cycle = appData.cycles[cycleId];
+            if (!cycle || !cycle.studyHistory || !cycle.studyHistory[dateStr] || !cycle.studyHistory[dateStr][disciplineId]) return;
+            const records = cycle.studyHistory[dateStr][disciplineId];
+            if (!Array.isArray(records) || recordIndex < 0 || recordIndex >= records.length) return;
+
+            recordToStop = records[recordIndex]; // Salva a referência direta ao objeto no histórico
+
+            document.getElementById('stopTimerDisciplineName').textContent = discipline.name;
+            document.getElementById('stopTimerDisciplineId').value = disciplineId;
+            document.getElementById('stopTimerStudyRecordIndex').value = recordIndex; // Para referência futura
+            document.getElementById('stopTimerStudyDate').value = dateStr;
+            document.getElementById('stopTimerStudyCycleId').value = cycleId;
+
+            document.getElementById('stopTimerStopPoint').value = recordToStop.stopPoint || ''; // Preenche se já houver
+
+            document.getElementById('stopTimerModal').style.display = 'flex';
+        }
+
+        function hideStopTimerModal() {
+            document.getElementById('stopTimerModal').style.display = 'none';
+            recordToStop = null;
+        }
+
+        function cancelStopTimer() {
+            // Se o usuário cancelar a pausa, o timer continua rodando
+            hideStopTimerModal();
+        }
+
+        function confirmStopTimer() {
+            const id = parseInt(document.getElementById('stopTimerDisciplineId').value, 10);
+            const stopPoint = document.getElementById('stopTimerStopPoint').value.trim();
+            const recordIndex = parseInt(document.getElementById('stopTimerStudyRecordIndex').value, 10);
+            const dateStr = document.getElementById('stopTimerStudyDate').value;
+            const cycleId = document.getElementById('stopTimerStudyCycleId').value;
+
+            // Atualiza o stopPoint no registro de estudo
+            if (recordToStop) {
+                recordToStop.stopPoint = stopPoint;
+            } else {
+                // Fallback caso recordToStop por algum motivo não esteja setado (o que não deveria acontecer)
+                const cycle = appData.cycles[cycleId];
+                if (cycle && cycle.studyHistory && cycle.studyHistory[dateStr] && cycle.studyHistory[dateStr][id]) {
+                    const records = cycle.studyHistory[dateStr][id];
+                    if (Array.isArray(records) && records.length > recordIndex) {
+                        records[recordIndex].stopPoint = stopPoint;
+                    }
+                }
+            }
+
+            hideStopTimerModal();
+            realStopTimerForReal(id, true); // Chama a função que realmente para o timer e salva
+        }
+
+        // Renomeie sua função stopTimer existente para realStopTimerForReal
+        function realStopTimerForReal(id, doSave = true) {
+            if (!activeCycle || !timers[id]) return;
+            const discipline = activeCycle.disciplines.find(d => d.id === id);
+            clearInterval(timers[id]);
+            delete timers[id];
+            if (discipline) discipline.isRunning = false;
+
+            if (doSave && checkCycleCompletion()) {
+                showCompletionModal();
+            }
+
+            if (doSave) saveData();
+            updateDisciplinesList();
+        }
         function openAddTimeToDayModal(dateStr) {
             selectedDateForManualAdd = dateStr;
             document.getElementById('addTimeToDayModalDate').textContent = new Date(dateStr + 'T12:00:00').toLocaleDateString('pt-BR');
@@ -1607,13 +1932,13 @@
             document.getElementById('addTimeToDayDisciplineSelect').innerHTML = '<option value="">-- Selecione um Projeto primeiro --</option>';
             document.getElementById('addTimeToDayHoursInput').value = 0;
             document.getElementById('addTimeToDayMinutesInput').value = 0;
-            document.getElementById('addTimeToDaySecondsInput').value = 0; // Adicionado
+            document.getElementById('addTimeToDaySecondsInput').value = 0;
             
-            // Novos campos
-            document.getElementById('addTimeToDaySubjectInput').value = ''; // Adicionado
-            document.getElementById('addTimeToDayTagsInput').value = '';   // Adicionado
+            document.getElementById('addTimeToDaySubjectInput').value = '';
+            document.getElementById('addTimeToDayTagsInput').value = '';
+            document.getElementById('addTimeToDayStopPoint').value = ''; // Nova linha: Limpa o campo
 
-            populateSubjectRecommendations(); // Popula as recomendações
+            populateSubjectRecommendations();
             document.getElementById('addTimeToDayModal').style.display = 'flex';
         }
 
@@ -1661,9 +1986,11 @@ function saveAddTimeToDayEntry() {
             const secondsToAddInput = parseInt(document.getElementById('addTimeToDaySecondsInput').value, 10) || 0;
             const totalSecondsToAdd = (hoursToAdd * 3600) + (minutesToAdd * 60) + secondsToAddInput;
 
-            const subject = document.getElementById('addTimeToDaySubjectInput').value.trim(); // Nova linha
-            const tagsInput = document.getElementById('addTimeToDayTagsInput').value.trim();   // Nova linha
-            const tags = tagsInput.split(/[\s,]+/).filter(tag => tag !== '');          // Nova linha
+            const subject = document.getElementById('addTimeToDaySubjectInput').value.trim();
+            const tagsInput = document.getElementById('addTimeToDayTagsInput').value.trim();
+            const tags = tagsInput.split(/[\s,]+/).filter(tag => tag !== '');
+
+            const stopPoint = document.getElementById('addTimeToDayStopPoint').value.trim(); // Nova linha
 
             if (!dateStr || !cycleId || !disciplineId || totalSecondsToAdd <= 0) {
                 showAlertModal('Dados Inválidos', 'Por favor, preencha todos os campos e insira um tempo válido.');
@@ -1697,7 +2024,8 @@ function saveAddTimeToDayEntry() {
                 time: totalSecondsToAdd,
                 subject: subject,
                 tags: tags,
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                stopPoint: stopPoint // Nova propriedade
             });
             
             // Armazena todos os assuntos e tags para recomendações futuras
@@ -1811,10 +2139,16 @@ function saveAddedTime() {
 
             document.getElementById('startTimerDisciplineName').textContent = discipline.name;
             document.getElementById('startTimerDisciplineId').value = id;
-            document.getElementById('startTimerSubjectInput').value = ''; // Limpa o campo
-            document.getElementById('startTimerTagsInput').value = '';   // Limpa o campo
+            document.getElementById('startTimerSubjectInput').value = '';
+            document.getElementById('startTimerTagsInput').value = '';
+            
+            // Limpa o campo de ponto de parada, caso exista ou esteja em cache de alguma forma
+            const stopPointInput = document.getElementById('startTimerStopPoint');
+            if (stopPointInput) { // Verifica se o elemento existe antes de tentar acessar .value
+                stopPointInput.value = '';
+            }
 
-            populateSubjectRecommendations(); // Popula as recomendações de assunto
+            populateSubjectRecommendations();
             
             document.getElementById('startTimerModal').style.display = 'flex';
         }
@@ -1828,17 +2162,16 @@ function saveAddedTime() {
             const id = parseInt(document.getElementById('startTimerDisciplineId').value, 10);
             const subject = document.getElementById('startTimerSubjectInput').value.trim();
             const tagsInput = document.getElementById('startTimerTagsInput').value.trim();
-            const tags = tagsInput.split(/[\s,]+/).filter(tag => tag !== ''); // Divide por vírgula ou espaço
+            const tags = tagsInput.split(/[\s,]+/).filter(tag => tag !== '');
 
             hideStartTimerModal(); // Esconde o modal antes de iniciar o timer
-            
+
             // Agora, chame a função startTimer com os novos parâmetros
-            // Precisa ajustar startTimer para aceitar subject e tags
             realStartTimer(id, subject, tags); 
         }
 
         // Renomeie sua função startTimer existente para realStartTimer
-        function realStartTimer(id, subject = '', tags = []) { // Adicionados subject e tags
+function realStartTimer(id, subject = '', tags = []) { 
             if (!activeCycle) return;
             const discipline = activeCycle.disciplines.find(d => d.id === id);
             if (!discipline || discipline.isRunning) return;
@@ -1847,38 +2180,33 @@ function saveAddedTime() {
             discipline.isRunning = true;
             updateDisciplinesList();
 
-            // Adiciona o registro inicial no studyHistory com subject e tags
             const today = getLocalDateString();
             if (!activeCycle.studyHistory[today]) activeCycle.studyHistory[today] = {};
             const discIdStr = String(discipline.id);
 
-            // Se ainda não houver um array para esta disciplina no dia, crie-o
             if (!activeCycle.studyHistory[today][discIdStr] || !Array.isArray(activeCycle.studyHistory[today][discIdStr])) {
                 activeCycle.studyHistory[today][discIdStr] = [];
             }
-            
-            // Adiciona um novo registro de estudo para esta sessão do timer
+
             const newStudyRecord = {
-                time: 0, // Começa com 0 e será incrementado
+                time: 0, 
                 subject: subject,
                 tags: tags,
-                timestamp: Date.now() // Adiciona um timestamp para identificar a sessão
+                timestamp: Date.now(), 
+                stopPoint: '' // Inicializa vazio, será preenchido ao parar
             };
             activeCycle.studyHistory[today][discIdStr].push(newStudyRecord);
-            
-            // Armazena todos os assuntos e tags para recomendações futuras
+
             updateAllSubjectsAndTags(subject, tags);
 
-            // O timer agora incrementa o último registro adicionado
             timers[id] = setInterval(() => {
-                // Encontra a disciplina e o ÚLTIMO registro adicionado para essa disciplina no dia
                 const currentDisc = activeCycle.disciplines.find(d => d.id === id);
                 if (currentDisc && activeCycle.studyHistory[today] && activeCycle.studyHistory[today][discIdStr]) {
                     const records = activeCycle.studyHistory[today][discIdStr];
                     if (records.length > 0) {
                         const lastRecord = records[records.length - 1];
-                        lastRecord.time += 1; // Incrementa o tempo deste registro específico
-                        currentDisc.currentSeconds += 1; // Continua incrementando o total da disciplina
+                        lastRecord.time += 1; 
+                        currentDisc.currentSeconds += 1; 
                         updateTimerDisplay(currentDisc);
                     }
                 }
@@ -1930,7 +2258,25 @@ function saveAddedTime() {
             const discipline = activeCycle.disciplines.find(d => d.id === id);
             if (!discipline) return;
             if (discipline.isRunning) {
-                stopTimer(id);
+                // Obtém a data e o índice do último registro para abrir o modal de parada
+                const today = getLocalDateString();
+                const discIdStr = String(discipline.id);
+                let recordIndex = -1;
+                if (activeCycle.studyHistory[today] && activeCycle.studyHistory[today][discIdStr]) {
+                    const records = activeCycle.studyHistory[today][discIdStr];
+                    if (records.length > 0) {
+                        // Encontra o último registro que corresponde ao timer ativo
+                        // Pode ser necessário um critério mais robusto se múltiplos timers forem possíveis
+                        recordIndex = records.length - 1; // Assume que o último registro é o que está ativo
+                    }
+                }
+                if (recordIndex !== -1) {
+                     // Abre o modal de parada para coletar o ponto de parada
+                    openStopTimerModal(id, today, recordIndex, activeCycle.id);
+                } else {
+                    // Fallback: se não encontrar registro, para sem pedir ponto de parada (pode ser um erro)
+                    realStopTimerForReal(id, true);
+                }
             } else {
                 // Abre o modal para inserir assunto/tags antes de iniciar
                 openStartTimerModal(id);
@@ -2248,6 +2594,7 @@ function updateStats() {
                                                     <strong>${discipline.name}</strong> (${cycle.id}): ${formatTime(record.time || 0)}
                                                     ${record.subject ? `<br><small>Assunto: ${record.subject}</small>` : ''}
                                                     ${record.tags && record.tags.length > 0 ? `<br><small>Tags: ${record.tags.join(', ')}</small>` : ''}
+                                                    ${record.stopPoint ? `<br><small>Parada: ${record.stopPoint}</small>` : ''} 
                                                 </span> 
                                                 <button class="history-delete-btn" title="Apagar este registro" onclick="deleteHistoryEntry('${dateStr}', '${cycle.id}', '${discId}', ${index})">X</button> 
                                             </div>`;
