@@ -350,7 +350,12 @@
             overflow-y: auto; /* Permite scroll se o conteúdo for muito alto */
             max-height: 90vh; /* Limita a altura máxima para não estourar a tela */
         }
-
+        .study-history-item .edit-btn.secondary {
+            padding: 4px 8px; /* Reduz o padding */
+            font-size: 12px; /* Reduz o tamanho da fonte */
+            border-radius: 4px; /* Apenas uma leve borda */
+            min-width: 50px; /* Garante que não fique minúsculo */
+        }
         /* Ajustes para os grupos de input de tempo dentro DOS MODAIS GERALMENTE */
         .modal-content .time-input-container {
             flex-wrap: wrap; 
@@ -909,6 +914,59 @@
             </div>
         </div>
     </div>
+
+    <div id="editStudyRecordModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3>Editar Registro de Estudo</h3>
+        <input type="hidden" id="editRecordCycleId">
+        <input type="hidden" id="editRecordDateStr">
+        <input type="hidden" id="editRecordDisciplineId">
+        <input type="hidden" id="editRecordIndex">
+
+        <div class="form-group-modal">
+            <label for="editRecordDisciplineName">Disciplina</label>
+            <input type="text" id="editRecordDisciplineName" readonly style="background-color: #f8f9fa;">
+        </div>
+
+        <div class="form-group-modal">
+            <label>Tempo Estudado</label>
+            <div class="time-input-container" style="justify-content: center;">
+                <div class="time-input-group">
+                    <label for="editRecordHoursInput">Horas</label>
+                    <input type="number" id="editRecordHoursInput" min="0" value="0">
+                </div>
+                <span class="time-input-separator">:</span>
+                <div class="time-input-group">
+                    <label for="editRecordMinutesInput">Minutos</label>
+                    <input type="number" id="editRecordMinutesInput" min="0" max="59" step="5" value="0">
+                </div>
+                <span class="time-input-separator">:</span>
+                <div class="time-input-group">
+                    <label for="editRecordSecondsInput">Segundos</label>
+                    <input type="number" id="editRecordSecondsInput" min="0" max="59" step="1" value="0">
+                </div>
+            </div>
+        </div>
+        <div class="form-group-modal">
+            <label for="editRecordSubjectInput">Assunto (Opcional)</label>
+            <input type="text" id="editRecordSubjectInput" placeholder="Ex: Métodos em JS" list="subjectRecommendations">
+        </div>
+
+        <div class="form-group-modal">
+            <label for="editRecordTagsInput">Tags (Opcional, separe por vírgulas ou espaços)</label>
+            <input type="text" id="editRecordTagsInput" placeholder="Ex: #javascript, #frontend">
+        </div>
+
+        <div class="form-group-modal">
+            <label for="editRecordStopPoint">Ponto de parada do estudo (Opcional, até 500 caracteres)</label>
+            <textarea id="editRecordStopPoint" rows="4" maxlength="500" placeholder="Onde você parou?"></textarea>
+        </div>
+        <div class="modal-buttons">
+            <button class="secondary" onclick="hideEditStudyRecordModal()">Cancelar</button>
+            <button onclick="saveEditedStudyRecord()">Salvar Alterações</button>
+        </div>
+    </div>
+</div>
 
     <div class="tooltip" id="tooltip" style="position: fixed; background: rgba(0, 0, 0, 0.8); color: white; padding: 8px 12px; border-radius: 5px; font-size: 14px; pointer-events: none; display: none; z-index: 1000; white-space: nowrap; transition: opacity 0.2s;"></div>
     
@@ -1793,6 +1851,98 @@
             document.getElementById('addTimeModal').style.display = 'none';
             disciplineIdToAddTime = null;
         }
+
+        let currentRecordBeingEdited = null; // Armazena a referência ao registro no appData
+
+        function openEditStudyRecordModal(dateStr, cycleId, disciplineId, recordIndex) {
+            const cycle = appData.cycles[cycleId];
+            if (!cycle || !cycle.studyHistory || !cycle.studyHistory[dateStr] || !cycle.studyHistory[dateStr][disciplineId]) {
+                showAlertModal('Erro', 'Registro de estudo não encontrado.');
+                return;
+            }
+            const records = cycle.studyHistory[dateStr][disciplineId];
+            if (!Array.isArray(records) || recordIndex < 0 || recordIndex >= records.length) {
+                showAlertModal('Erro', 'Índice de registro inválido.');
+                return;
+            }
+
+            currentRecordBeingEdited = records[recordIndex]; // Salva a referência direta ao objeto
+            const discipline = cycle.disciplines.find(d => String(d.id) === disciplineId);
+
+            document.getElementById('editRecordCycleId').value = cycleId;
+            document.getElementById('editRecordDateStr').value = dateStr;
+            document.getElementById('editRecordDisciplineId').value = disciplineId;
+            document.getElementById('editRecordIndex').value = recordIndex;
+
+            document.getElementById('editRecordDisciplineName').value = discipline ? discipline.name : 'Desconhecida';
+
+            const totalSeconds = currentRecordBeingEdited.time || 0;
+            document.getElementById('editRecordHoursInput').value = Math.floor(totalSeconds / 3600);
+            document.getElementById('editRecordMinutesInput').value = Math.floor((totalSeconds % 3600) / 60);
+            document.getElementById('editRecordSecondsInput').value = Math.floor(totalSeconds % 60);
+            document.getElementById('editRecordSubjectInput').value = currentRecordBeingEdited.subject || '';
+            document.getElementById('editRecordTagsInput').value = (currentRecordBeingEdited.tags || []).join(', ');
+            document.getElementById('editRecordStopPoint').value = currentRecordBeingEdited.stopPoint || '';
+
+            populateSubjectRecommendations(); // Para que a datalist esteja atualizada
+            document.getElementById('editStudyRecordModal').style.display = 'flex';
+        }
+
+        function hideEditStudyRecordModal() {
+            document.getElementById('editStudyRecordModal').style.display = 'none';
+            currentRecordBeingEdited = null; // Limpa a referência
+        }
+
+        function saveEditedStudyRecord() {
+            if (!currentRecordBeingEdited) {
+                showAlertModal('Erro', 'Nenhum registro selecionado para edição.');
+                return;
+            }
+
+            const oldTime = currentRecordBeingEdited.time || 0;
+
+            const hours = parseInt(document.getElementById('editRecordHoursInput').value, 10) || 0;
+            const minutes = parseInt(document.getElementById('editRecordMinutesInput').value, 10) || 0;
+            const seconds = parseInt(document.getElementById('editRecordSecondsInput').value, 10) || 0;
+            const newTime = (hours * 3600) + (minutes * 60) + seconds;
+
+            const subject = document.getElementById('editRecordSubjectInput').value.trim();
+            const tagsInput = document.getElementById('editRecordTagsInput').value.trim();
+            const tags = tagsInput.split(/[\s,]+/).filter(tag => tag !== '');
+            const stopPoint = document.getElementById('editRecordStopPoint').value.trim();
+
+            if (newTime <= 0) {
+                showAlertModal('Tempo Inválido', 'O tempo de estudo deve ser maior que zero.');
+                return;
+            }
+
+            // Atualiza as propriedades do registro diretamente
+            currentRecordBeingEdited.time = newTime;
+            currentRecordBeingEdited.subject = subject;
+            currentRecordBeingEdited.tags = tags;
+            currentRecordBeingEdited.stopPoint = stopPoint;
+
+            // Recalcula o currentSeconds da disciplina associada
+            const cycleId = document.getElementById('editRecordCycleId').value;
+            const disciplineId = parseInt(document.getElementById('editRecordDisciplineId').value, 10);
+            const cycle = appData.cycles[cycleId];
+            const discipline = cycle.disciplines.find(d => d.id === disciplineId);
+
+            if (discipline) {
+                // Remove o tempo antigo e adiciona o novo tempo para recalcular o total
+                discipline.currentSeconds = Math.max(0, discipline.currentSeconds - oldTime + newTime);
+            }
+
+            updateAllSubjectsAndTags(subject, tags); // Revalida a lista de assuntos e tags
+
+            hideEditStudyRecordModal();
+            saveData();
+            selectDate(document.getElementById('editRecordDateStr').value); // Re-renderiza o histórico do dia
+            if (activeCycle && activeCycle.id === cycleId) {
+                updateDisplay(); // Atualiza display da tela "Timer" se for o ciclo ativo
+            }
+            showAlertModal('Sucesso', 'Registro de estudo atualizado!');
+        }
         
         function saveAddedTime() {
             if (!disciplineIdToAddTime || !activeCycle) {
@@ -2598,7 +2748,9 @@ function updateStats() {
                                                     ${record.tags && record.tags.length > 0 ? `<br><small>Tags: ${record.tags.join(', ')}</small>` : ''}
                                                     ${record.stopPoint ? `<br><small>Parada: ${record.stopPoint}</small>` : ''} 
                                                 </span> 
-                                                <button class="history-delete-btn" title="Apagar este registro" onclick="deleteHistoryEntry('${dateStr}', '${cycle.id}', '${discId}', ${index})">X</button> 
+                                                <div style="display: flex; gap: 5px;">
+                                                    <button class="edit-btn secondary" title="Editar este registro" onclick="openEditStudyRecordModal('${dateStr}', '${cycle.id}', '${discId}', ${index})">Editar</button> <button class="history-delete-btn" title="Apagar este registro" onclick="deleteHistoryEntry('${dateStr}', '${cycle.id}', '${discId}', ${index})">X</button> 
+                                                </div>
                                             </div>`;
                                     studiesFound = true;
                                     dailyTotalSeconds += (record.time || 0);
