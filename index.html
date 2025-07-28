@@ -177,15 +177,64 @@
         .calendar-day:hover { background-color: #f0f3f5; }
         .calendar-day.today { border-color: #ff6f61; }
         .calendar-day.selected { background-color: #0d253f; color: white; }
-        .calendar-day.has-studies { font-weight: 600; }
-        .calendar-day.has-studies::after { content: ''; position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); width: 5px; height: 5px; background-color: #0d253f; border-radius: 50%; }
-        .calendar-day.selected.has-studies::after { background-color: #ff6f61; }
+        .calendar-day.has-studies { font-weight: 600; }        
         .calendar-nav { background-color: #0d253f; }
         .calendar-summary { text-align: center; font-size: 1.1em; font-weight: 500; color: #0d253f; background-color: #e9f0f5; padding: 10px; border-radius: 8px; margin-bottom: 20px; }
         .study-history { border-top: 1px solid #dee2e6; margin-top: 20px; padding-top: 20px; }
         .daily-total { font-size: 1.1em; font-weight: 600; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #e9ecef; }
         .study-history-item { padding: 8px; margin-top: 5px; background: #fdfdff; border-left: 3px solid #0d253f; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
         .history-delete-btn { background: #e74c3c; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-size: 14px; line-height: 24px; text-align: center; padding: 0; }
+
+        /* Novos estilos para os ícones de status no calendário */
+        .calendar-day {
+            position: relative; /* Necessário para posicionar o ícone */
+            display: flex; /* Para alinhar o número do dia e o ícone */
+            flex-direction: column; /* Coloca o número acima do ícone */
+            justify-content: center;
+            align-items: center;
+            padding-top: 5px; /* Ajuste para dar espaço ao número */
+        }
+
+        .calendar-day .day-number {
+            font-size: 14px;
+            font-weight: 500;
+            color: #2c3e50;
+            margin-bottom: 2px; /* Espaço entre o número e o ícone */
+        }
+        .calendar-day.selected .day-number { /* Se o dia selecionado, número branco */
+            color: white;
+        }
+
+        .calendar-day .status-icon {
+            font-size: 18px; /* Tamanho dos ícones */
+            position: absolute; /* Posição absoluta para o ícone */
+            bottom: 5px; /* Alinha na parte inferior do dia */
+            /* left: 50%; */ /* Remova ou ajuste esta propriedade para centralizar melhor */
+            /* transform: translateX(-50%); */ /* Remova ou ajuste esta propriedade */
+        }
+
+        .calendar-day .status-success {
+            color: #28a745; /* Verde para 'certo' */
+        }
+
+        .calendar-day .status-danger {
+            color: #e74c3c; /* Vermelho para 'x' */
+        }
+
+        /* Ajustes para alinhar o conteúdo interno do calendar-day */
+        .calendar-day {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative; /* Garante que o ícone possa ser posicionado */
+        }
+
+        .calendar-day.has-studies .day-number {
+             /* Estilo para o número do dia quando há estudos */
+            font-weight: 600;
+        }
+
 
         /* --- TELA DE RELATÓRIOS --- */
         .reports-filter-bar { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 20px; margin-bottom: 30px; }
@@ -2683,8 +2732,26 @@ function updateStats() {
                     let classes = 'calendar-day';
                     if (isoDate === getLocalDateString()) classes += ' today';
                     if (selectedDate === isoDate) classes += ' selected';
-                    if (dailyTotal > 0) classes += ' has-studies';
-                    grid.insertAdjacentHTML('beforeend', `<div class="${classes}" onclick="selectDate('${isoDate}')">${i}</div>`);
+                    let statusIcon = '';
+                    if (dailyTotal > 0) {
+                        statusIcon = '<span class="material-icons-outlined status-icon status-success">check_circle</span>';
+                        classes += ' has-studies'; // Manter esta classe para estilos futuros se necessário
+                    } else {
+                        // Se não houver estudos para o dia E for um dia que não está no futuro
+                        const todayLocal = new Date(getLocalDateString() + 'T12:00:00');
+                        const currentDateLocal = new Date(isoDate + 'T12:00:00');
+                        if (currentDateLocal < todayLocal) { // Apenas adiciona o 'X' para dias passados sem estudo
+                            statusIcon = '<span class="material-icons-outlined status-icon status-danger">cancel</span>';
+                        }
+                    }
+
+                    // Adicione a classe 'active-day' para ter estilos mais específicos
+                    grid.insertAdjacentHTML('beforeend', `
+                        <div class="calendar-day active-day ${classes}" onclick="selectDate('${isoDate}')">
+                            <span class="day-number">${i}</span>
+                            ${statusIcon}
+                        </div>
+                    `);
                 }
                 summaryEl.innerHTML = `Total no Mês: <strong>${formatTime(monthlyTotalSeconds)}</strong>`;
 
@@ -2718,8 +2785,25 @@ function updateStats() {
                     let classes = 'calendar-day';
                     if (isoDate === getLocalDateString()) classes += ' today';
                     if (selectedDate === isoDate) classes += ' selected';
-                    if (dailyTotal > 0) classes += ' has-studies';
-                    grid.insertAdjacentHTML('beforeend', `<div class="${classes}" onclick="selectDate('${isoDate}')">${date.getDate()}</div>`);
+                    let statusIcon = '';
+                    if (dailyTotal > 0) {
+                        statusIcon = '<span class="material-icons-outlined status-icon status-success">check_circle</span>';
+                        classes += ' has-studies';
+                    } else {
+                        // Se não houver estudos para o dia E for um dia que não está no futuro
+                        const todayLocal = new Date(getLocalDateString() + 'T12:00:00');
+                        const currentDateLocal = new Date(isoDate + 'T12:00:00');
+                        if (currentDateLocal < todayLocal) { // Apenas adiciona o 'X' para dias passados sem estudo
+                            statusIcon = '<span class="material-icons-outlined status-icon status-danger">cancel</span>';
+                        }
+                    }
+
+                    grid.insertAdjacentHTML('beforeend', `
+                        <div class="calendar-day active-day ${classes}" onclick="selectDate('${isoDate}')">
+                            <span class="day-number">${date.getDate()}</span>
+                            ${statusIcon}
+                        </div>
+                    `);
                 }
                  summaryEl.innerHTML = `Total na Semana: <strong>${formatTime(weeklyTotalSeconds)}</strong>`;
             }
