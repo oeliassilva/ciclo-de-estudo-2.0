@@ -103,9 +103,7 @@
             background-color: rgba(255, 255, 255, 0.1);
             color: #fff;
         }
-        /* -- FIM DA NAVEGAÇÃO LATERAL -- */
         
-        /* --- ÁREA DE CONTEÚDO PRINCIPAL --- */
         .main-content {
             margin-left: 260px; /* Largura da sidebar */
             width: calc(100% - 260px);
@@ -116,7 +114,6 @@
         .view { display: none; }
         .view.active { display: block; }
         
-        /* --- TELAS DE TELA CHEIA (LOGIN, CARREGANDO) --- */
         .fullscreen-view { 
             text-align: center; 
             padding: 60px 20px; 
@@ -211,8 +208,14 @@
         .breakdown-row.cycle-row { font-weight: 500; cursor: pointer; }
         .breakdown-row.cycle-row:hover { background-color: #f8f9fa; }
         .cycle-name-cell { display: flex; align-items: center; gap: 8px; }
-        .cycle-color-dot { width: 10px; height: 10px; border-radius: 50%; }
-        .toggle-arrow { transition: transform 0.2s; }
+        .cycle-color-dot { 
+            width: 10px; 
+            height: 10px; 
+            border-radius: 50%; 
+            display: inline-block; 
+            margin-right: 8px; 
+            vertical-align: middle; 
+        }        .toggle-arrow { transition: transform 0.2s; }
         .cycle-row.expanded .toggle-arrow { transform: rotate(90deg); }
         .discipline-rows-wrapper { display: none; }
         .cycle-row.expanded + .discipline-rows-wrapper { display: block; }
@@ -1240,7 +1243,7 @@
             });
 
             // Filtra e agrupa os resultados
-            const filteredAndGrouped = {}; // { tag: [ { studyRecord }, ... ] }
+            const filteredAndGrouped = {}; 
             const uniqueTagsMatchingSearch = new Set(); // Para mostrar apenas as tags relevantes
 
             allStudyRecords.forEach(study => {
@@ -1276,9 +1279,7 @@
                         }
                     });
 
-                    // Se não houver filtro de tag ou busca por tag, mas o estudo corresponder à busca geral (por assunto/disciplina/ciclo)
                     if (study.tags.length === 0 && matchesSearchInput && (searchInput && !activeTagFilter)) {
-                         // Cria uma categoria "Sem Tags" ou mostra-o diretamente
                          if (!filteredAndGrouped['Sem Tags']) {
                             filteredAndGrouped['Sem Tags'] = [];
                          }
@@ -1297,25 +1298,27 @@
                     const tagStudies = filteredAndGrouped[tag].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // Ordena por data mais recente
                     let totalTimeForTag = tagStudies.reduce((sum, s) => sum + s.time, 0);
 
-                    // Renderiza o cabeçalho da tag (se houver resultados ou se for uma tag que queremos destacar)
-                    if (tagStudies.length > 0 || (searchInput && uniqueTagsMatchingSearch.has(tag))) {
-                        const tagHeader = document.createElement('div');
-                        tagHeader.className = 'breakdown-row cycle-row'; // Reusa o estilo, mas é para tags
-                        tagHeader.innerHTML = `<div class="cycle-name-cell">
-                                                <span class="material-icons-outlined toggle-arrow" onclick="toggleCycleDetails(this.parentNode.parentNode)">chevron_right</span>
-                                                <span class="cycle-color-dot" style="background-color:${activeCycle ? activeCycle.color : '#CCCCCC'};"></span>
-                                                <span>${tag}</span>
-                                            </div>
-                                            <span class="d-right">${formatTime(totalTimeForTag)}</span>`;
-                        tagResultsBody.appendChild(tagHeader);
+                    const tagHeader = document.createElement('div');
+                    tagHeader.className = 'breakdown-row cycle-row';
+                    tagHeader.innerHTML = `
+                        <div class="cycle-name-cell" onclick="toggleCycleDetails(this.parentNode)">
+                            <span class="material-icons-outlined toggle-arrow">chevron_right</span>
+                            <span>${tag}</span> 
+                        </div>
+                        <span class="d-right">${formatTime(totalTimeForTag)}</span>
+                        <span></span> `;
+                    tagResultsBody.appendChild(tagHeader);
 
-                        const studiesWrapper = document.createElement('div');
-                        studiesWrapper.className = 'discipline-rows-wrapper'; // Reusa a classe para esconder/mostrar
+                    const studiesWrapper = document.createElement('div');
+                        studiesWrapper.className = 'discipline-rows-wrapper'; 
                         tagStudies.forEach(study => {
+                            console.log('Study:', study.subject, 'Cycle Color:', study.cycleColor); 
                             studiesWrapper.innerHTML += `
                                 <div class="tag-study-item">
                                     <div class="study-details">
-                                        <span class="main-info">${study.subject || 'Sem Assunto'}</span>
+                                        <span class="main-info">
+                                            <span class="cycle-color-dot" style="background-color:${study.cycleColor};"></span> ${study.subject || 'Sem Assunto'}
+                                        </span>
                                         <span class="sub-info">${study.disciplineName} (${study.cycleId}) - ${new Date(study.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
                                     </div>
                                     <span class="d-right">${formatTime(study.time)}</span>
@@ -1323,12 +1326,13 @@
                             `;
                         });
                         tagResultsBody.appendChild(studiesWrapper);
-                        studiesFound = true;
-                    }
+                    studiesFound = true;
                 });
             }
 
-            if (!studiesFound && sortedTags.length === 0) {
+            if (!studiesFound && sortedTags.length === 0 && !searchInput && !activeTagFilter) { // Se não houver filtros, mostrar mensagem inicial
+                tagResultsBody.innerHTML = '<p style="text-align:center; padding: 20px; color: #6c757d;">Nenhum resultado para exibir. Use a busca acima ou clique em uma tag.</p>';
+            } else if (!studiesFound) { // Se houver filtros, mas nenhum resultado
                 tagResultsBody.innerHTML = '<p style="text-align:center; padding: 20px; color: #6c757d;">Nenhum resultado encontrado para o filtro atual.</p>';
             }
         }
@@ -2265,8 +2269,6 @@ function realStartTimer(id, subject = '', tags = []) {
                 if (activeCycle.studyHistory[today] && activeCycle.studyHistory[today][discIdStr]) {
                     const records = activeCycle.studyHistory[today][discIdStr];
                     if (records.length > 0) {
-                        // Encontra o último registro que corresponde ao timer ativo
-                        // Pode ser necessário um critério mais robusto se múltiplos timers forem possíveis
                         recordIndex = records.length - 1; // Assume que o último registro é o que está ativo
                     }
                 }
@@ -2305,7 +2307,7 @@ function realStartTimer(id, subject = '', tags = []) {
                 if (!reportsInitialized) initializeReportFilters();
                 renderReportsView(); 
             }
-            if (viewName === 'tags') { // NOVO
+            if (viewName === 'tags') { 
                 renderAllTags();
                 filterTagsAndStudies(); // Carrega todos os estudos inicialmente ou com filtro padrão
             }
@@ -2705,7 +2707,8 @@ function updateStats() {
 
         function processReportData(startDate, endDate, selectedCycle) {
             let totalSeconds = 0;
-            const durationByDay = {}; // Sum total for each day
+            // Altere durationByDay para armazenar tempos por ciclo por dia
+            const durationByDay = {}; // { 'YYYY-MM-DD': { 'CycleA': seconds, 'CycleB': seconds, ... } }
             const distributionByCycle = {};
             const breakdown = {};
             let studyDaysCount = 0;
@@ -2713,25 +2716,39 @@ function updateStats() {
             const normalizedStartDate = getLocalDateString(startDate);
             const normalizedEndDate = getLocalDateString(endDate);
 
-            // Initialize all days in the period with 0 to ensure continuity in charts
+            // Inicialize todos os dias no período com objetos vazios para os ciclos
             for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-                durationByDay[getLocalDateString(d)] = 0;
+                durationByDay[getLocalDateString(d)] = {}; // Cada dia tem um objeto para ciclos
             }
 
             Object.values(appData.cycles).forEach(cycle => {
                 if (selectedCycle !== 'all' && cycle.id !== selectedCycle) return;
                 if (!cycle.studyHistory) return;
 
+                // Garante que cada ciclo tenha uma entrada (mesmo que 0) para cada dia no range
+                for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                    const dateStr = getLocalDateString(d);
+                    if (!durationByDay[dateStr][cycle.id]) {
+                        durationByDay[dateStr][cycle.id] = 0;
+                    }
+                }
+
                 Object.entries(cycle.studyHistory).forEach(([date, disciplineEntries]) => {
                     if (date >= normalizedStartDate && date <= normalizedEndDate) {
-                        let dailySecondsFromRecords = 0; // Total for this day from all disciplines
-
+                        let dailySecondsFromRecords = 0; // Total para este dia deste ciclo
+                        
                         Object.entries(disciplineEntries).forEach(([discId, records]) => {
                             if (Array.isArray(records)) {
                                 records.forEach(record => {
                                     const seconds = record.time || 0;
-                                    dailySecondsFromRecords += seconds; // Add to daily total
+                                    dailySecondsFromRecords += seconds;
                                     
+                                    // Adiciona tempo ao ciclo específico para este dia
+                                    if (!durationByDay[date][cycle.id]) {
+                                        durationByDay[date][cycle.id] = 0;
+                                    }
+                                    durationByDay[date][cycle.id] += seconds;
+
                                     // Update overall distribution by cycle
                                     distributionByCycle[cycle.id] = (distributionByCycle[cycle.id] || 0) + seconds;
 
@@ -2742,22 +2759,22 @@ function updateStats() {
                                 });
                             }
                         });
-                        
-                        // Only count as a "study day" if there was actual study time recorded
-                        if (dailySecondsFromRecords > 0 && !(getLocalDateString(new Date(date)) in durationByDay && durationByDay[getLocalDateString(new Date(date))] > 0)) {
-                           studyDaysCount++; // Only increment if it's the first study on this day
-                        }
-                        durationByDay[date] = (durationByDay[date] || 0) + dailySecondsFromRecords;
                         totalSeconds += dailySecondsFromRecords;
                     }
                 });
             });
 
-            // Adjust studyDaysCount for ranges where days might have studies from multiple cycles
-            // This is crucial for average calculation.
+            // Recalculando actualStudyDays com base na nova estrutura
             let actualStudyDays = 0;
             for(const dateStr in durationByDay) {
-                if (durationByDay[dateStr] > 0) {
+                let dayHasStudy = false;
+                for(const cycleId in durationByDay[dateStr]) {
+                    if (durationByDay[dateStr][cycleId] > 0) {
+                        dayHasStudy = true;
+                        break;
+                    }
+                }
+                if (dayHasStudy) {
                     actualStudyDays++;
                 }
             }
@@ -2766,25 +2783,73 @@ function updateStats() {
             return { totalSeconds, dailyAverage, durationByDay, distributionByCycle, breakdown };
         }
 
-        function renderDurationBarChart(data) {
+       function renderDurationBarChart(data) {
             const ctx = document.getElementById('durationBarChart');
             if (!ctx) return;
             const context = ctx.getContext('2d');
+
             const labels = Object.keys(data).map(dateStr => {
                 const date = new Date(dateStr + 'T12:00:00');
                 let day = date.toLocaleDateString('pt-BR', { weekday: 'short' });
                 return day.charAt(0).toUpperCase() + day.slice(1).replace('.', '');
             });
-            const values = Object.values(data);
+
+            // Coleta todos os IDs de ciclos únicos que apareceram nos dados
+            const allCycleIds = new Set();
+            Object.values(data).forEach(dayData => {
+                Object.keys(dayData).forEach(cycleId => allCycleIds.add(cycleId));
+            });
+
+            const datasets = Array.from(allCycleIds).map(cycleId => {
+                const cycle = appData.cycles[cycleId];
+                const cycleColor = cycle ? cycle.color : '#CCCCCC'; // Cor do ciclo
+                const datasetData = labels.map(dateLabel => {
+                    const dateStrFromLabel = Object.keys(data).find(key => {
+                        const d = new Date(key + 'T12:00:00');
+                        let day = d.toLocaleDateString('pt-BR', { weekday: 'short' });
+                        return (day.charAt(0).toUpperCase() + day.slice(1).replace('.', '')) === dateLabel;
+                    });
+                    
+                    return data[dateStrFromLabel] && data[dateStrFromLabel][cycleId] ? data[dateStrFromLabel][cycleId] : 0;
+                });
+                return {
+                    label: cycle.id, // Nome do ciclo
+                    data: datasetData,
+                    backgroundColor: cycleColor,
+                    borderRadius: 4,
+                    stack: 'dailyStudies', // Importante para empilhar
+                };
+            });
+            
             if (durationBarChart) durationBarChart.destroy();
             if (typeof Chart === 'undefined') { console.error("Chart.js não está definido."); return; }
             durationBarChart = new Chart(context, {
                 type: 'bar',
-                data: { labels: labels, datasets: [{ label: 'Duração', data: values, backgroundColor: REPORT_RESERVED_COLOR, borderRadius: 4, barThickness: 25 }] },
+                data: { labels: labels, datasets: datasets }, // Use os datasets gerados
                 options: {
                     responsive: true, maintainAspectRatio: false,
-                    scales: { x: { type: 'category', grid: { display: false } }, y: { beginAtZero: true, ticks: { callback: (value) => formatTime(value).substring(0, 5) } } },
-                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `Duração: ${formatTime(ctx.raw)}` } } }
+                    scales: { 
+                        x: { 
+                            type: 'category', 
+                            stacked: true, // Habilita o empilhamento no eixo X
+                            grid: { display: false } 
+                        }, 
+                        y: { 
+                            beginAtZero: true, 
+                            stacked: true, // Habilita o empilhamento no eixo Y
+                            ticks: { callback: (value) => formatTime(value).substring(0, 5) } 
+                        } 
+                    },
+                    plugins: { 
+                        legend: { display: true, position: 'top' }, // Exibir legenda para ciclos
+                        tooltip: { 
+                            mode: 'index', // Mostrar todos os itens empilhados
+                            intersect: false, // Mostrar tooltip mesmo se não interseccionar diretamente
+                            callbacks: { 
+                                label: (ctx) => `${ctx.dataset.label}: ${formatTime(ctx.raw)}` 
+                            } 
+                        } 
+                    }
                 }
             });
         }
