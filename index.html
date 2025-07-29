@@ -893,7 +893,8 @@
 
             <div class="form-group-modal">
                 <label for="addTimeTagsInput">Tags (Opcional, separe por vírgulas ou espaços)</label>
-                <input type="text" id="addTimeTagsInput" placeholder="Ex: #javascript, #frontend">
+                <input type="text" id="addTimeTagsInput" placeholder="Ex: #javascript, #frontend" list="tagRecommendations">
+                <datalist id="tagRecommendations"></datalist>
             </div>
 
             <div class="form-group-modal">
@@ -950,7 +951,7 @@
 
             <div class="form-group-modal">
                 <label for="addTimeToDayTagsInput">Tags (Opcional, separe por vírgulas ou espaços)</label>
-                <input type="text" id="addTimeToDayTagsInput" placeholder="Ex: #algoritmos, #computacao">
+                <input type="text" id="addTimeToDayTagsInput" placeholder="Ex: #algoritmos, #computacao" list="tagRecommendations">
             </div>
 
             <div class="form-group-modal">
@@ -1003,7 +1004,7 @@
 
         <div class="form-group-modal">
             <label for="editRecordTagsInput">Tags (Opcional, separe por vírgulas ou espaços)</label>
-            <input type="text" id="editRecordTagsInput" placeholder="Ex: #javascript, #frontend">
+            <input type="text" id="editRecordTagsInput" placeholder="Ex: #javascript, #frontend" list="tagRecommendations">
         </div>
 
         <div class="form-group-modal">
@@ -1043,7 +1044,7 @@
 
             <div class="form-group-modal">
                 <label for="startTimerTagsInput">Tags (Opcional, separe por vírgulas ou espaços)</label>
-                <input type="text" id="startTimerTagsInput" placeholder="Ex: #python, #logica">
+                <input type="text" id="startTimerTagsInput" placeholder="Ex: #python, #logica" list="tagRecommendations">
             </div>
 
            
@@ -1478,7 +1479,7 @@
                         unsubscribe = null; 
                     }
                     activeCycle = null;
-                    appData = { cycles: {}, activeCycleId: null };
+                    appData = { cycles: {}, activeCycleId: null, allSubjects: [], allTags: [] }; // Reset allSubjects and allTags
                     Object.values(timers).forEach(clearInterval);
                     timers = {};
                     reportsInitialized = false;
@@ -1576,7 +1577,8 @@
                 allSubjects.add(subject);
             }
             tags.forEach(tag => allTags.add(tag));
-            
+            populateSubjectRecommendations(); // Update subject datalist immediately
+            populateTagRecommendations(); // Update tag datalist immediately
         }
 
         function recalculateAllSubjectsAndTags() {
@@ -1611,6 +1613,18 @@
             Array.from(allSubjects).sort().forEach(subject => {
                 const option = document.createElement('option');
                 option.value = subject;
+                datalist.appendChild(option);
+            });
+        }
+
+        function populateTagRecommendations() {
+            const datalist = document.getElementById('tagRecommendations');
+            if (!datalist) return;
+            datalist.innerHTML = '';
+            // Converte o Set para Array e ordena alfabeticamente
+            Array.from(allTags).sort().forEach(tag => {
+                const option = document.createElement('option');
+                option.value = tag;
                 datalist.appendChild(option);
             });
         }
@@ -1815,21 +1829,8 @@
             );
         }
 
-        function startTimer(id) {
-            if (!activeCycle) return;
-            const discipline = activeCycle.disciplines.find(d => d.id === id);
-            if (!discipline || discipline.isRunning) return;
-            activeCycle.disciplines.forEach(d => { if (d.isRunning) stopTimer(d.id, false); });
-            discipline.isRunning = true;
-            updateDisciplinesList();
-            timers[id] = setInterval(() => {
-                discipline.currentSeconds += 1;
-                const today = getLocalDateString();
-                if (!activeCycle.studyHistory[today]) activeCycle.studyHistory[today] = {};
-                const discIdStr = String(discipline.id);
-                activeCycle.studyHistory[today][discIdStr] = (activeCycle.studyHistory[today][discIdStr] || 0) + 1; 
-                updateTimerDisplay(discipline);
-            }, 1000);
+        function startTimer(id) { // This function is now superseded by openStartTimerModal and realStartTimer
+            console.warn("`startTimer(id)` is deprecated. Use `openStartTimerModal(id)` instead.");
         }
 
         function stopTimer(id, doSave = true) {
@@ -1893,6 +1894,7 @@
             document.getElementById('addTimeStopPoint').value = ''; // Nova linha: Limpa o campo
             
             populateSubjectRecommendations();
+            populateTagRecommendations(); // Populate tag datalist
             document.getElementById('addTimeModal').style.display = 'flex';
         }
 
@@ -1934,6 +1936,7 @@
             document.getElementById('editRecordStopPoint').value = currentRecordBeingEdited.stopPoint || '';
 
             populateSubjectRecommendations(); // Para que a datalist esteja atualizada
+            populateTagRecommendations(); // Populate tag datalist
             document.getElementById('editStudyRecordModal').style.display = 'flex';
         }
 
@@ -2142,6 +2145,7 @@
             document.getElementById('addTimeToDayStopPoint').value = ''; // Nova linha: Limpa o campo
 
             populateSubjectRecommendations();
+            populateTagRecommendations(); // Populate tag datalist
             document.getElementById('addTimeToDayModal').style.display = 'flex';
         }
 
@@ -2151,7 +2155,6 @@
         }
 
         
-
 
         function populateAddTimeToDayCycles() {
             const cycleSelect = document.getElementById('addTimeToDayCycleSelect');
@@ -2241,12 +2244,16 @@ function saveAddTimeToDayEntry() {
             showAlertModal('Sucesso', `Tempo adicionado em "${discipline.name}" para ${new Date(dateStr + 'T12:00:00').toLocaleDateString('pt-BR')}.`);
         }
 
+        // This function is a duplicate of saveAddedTime and can be removed or refactored.
+        // Keeping it for now as it's directly referenced in the original HTML.
         function hideAddTimeModal() {
             document.getElementById('addTimeModal').style.display = 'none';
             disciplineIdToAddTime = null;
         }
 
-function saveAddedTime() {
+        // This function is a duplicate of saveAddedTime and can be removed or refactored.
+        // Keeping it for now as it's directly referenced in the original HTML.
+        function saveAddedTime() {
             if (!disciplineIdToAddTime || !activeCycle) {
                 showAlertModal('Erro', 'Nenhuma disciplina selecionada para adicionar tempo.');
                 return;
@@ -2263,10 +2270,12 @@ function saveAddedTime() {
             const secondsToAddInput = parseInt(document.getElementById('addTimeSecondsInput').value, 10) || 0;
             const totalSecondsToAdd = (hoursToAdd * 3600) + (minutesToAdd * 60) + secondsToAddInput;
             
-            const subject = document.getElementById('addTimeSubjectInput').value.trim(); // Nova linha
-            const tagsInput = document.getElementById('addTimeTagsInput').value.trim();   // Nova linha
-            const tags = tagsInput.split(/[\s,]+/).filter(tag => tag !== '');          // Nova linha
+            const subject = document.getElementById('addTimeSubjectInput').value.trim(); 
+            const tagsInput = document.getElementById('addTimeTagsInput').value.trim();   
+            const tags = tagsInput.split(/[\s,]+/).filter(tag => tag !== '');          
 
+            const stopPoint = document.getElementById('addTimeStopPoint').value.trim(); // New line
+            
             if (totalSecondsToAdd <= 0) {
                 showAlertModal('Tempo Inválido', 'Por favor, insira um tempo válido (horas, minutos ou segundos) para adicionar.');
                 return;
@@ -2288,7 +2297,8 @@ function saveAddedTime() {
                 time: totalSecondsToAdd,
                 subject: subject,
                 tags: tags,
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                stopPoint: stopPoint // New property
             });
             
             // Armazena todos os assuntos e tags para recomendações futuras
@@ -2352,6 +2362,7 @@ function saveAddedTime() {
             }
 
             populateSubjectRecommendations();
+            populateTagRecommendations(); // Populate tag datalist
             
             document.getElementById('startTimerModal').style.display = 'flex';
         }
