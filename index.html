@@ -2634,7 +2634,7 @@ function updateStats() {
             }
             
             const totalStudied = activeCycle.disciplines.reduce((sum, d) => sum + d.currentSeconds, 0);
-            const totalTarget = activeCycle.disciplines.reduce((sum, d => sum + d.targetSeconds, 0);
+            const totalTarget = activeCycle.disciplines.reduce((sum, d) => sum + d.targetSeconds, 0);
             let startAngle = -90;
             const gapDegrees = 2;
 
