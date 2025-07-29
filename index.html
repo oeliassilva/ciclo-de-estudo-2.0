@@ -561,36 +561,6 @@
             .add-discipline-form button { flex-grow: 1; }
             .stats { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
         }
-
-        /* Estilos adicionais para o componente de autocompletar de tags */
-        .tag-suggestions {
-            border: 1px solid #ced4da;
-            border-top: none;
-            max-height: 150px;
-            overflow-y: auto;
-            position: absolute; /* Para que apareça sobre o conteúdo */
-            z-index: 1001; /* Acima do modal */
-            background-color: white;
-            width: calc(100% - 2px); /* Largura do input - borda */
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            display: none; /* Inicia oculto */
-            left: 1px; /* Ajuste para alinhar com o input */
-            top: calc(100% + 2px); /* Abaixo do input */
-            border-radius: 0 0 8px 8px;
-        }
-
-        .tag-suggestions .suggestion-item {
-            padding: 8px 12px;
-            cursor: pointer;
-            font-size: 0.9em;
-            color: #343a40;
-        }
-
-        .tag-suggestions .suggestion-item:hover,
-        .tag-suggestions .suggestion-item.active { /* Para navegação com teclado */
-            background-color: #f0f3f5;
-            color: #0d253f;
-        }
     </style>
 </head>
 <body>
@@ -793,7 +763,7 @@
                     </div>
                     
                     <div class="tag-results" id="tagSearchResults">
-                        <h4 style="margin-bottom: 15px; color: #0d253f;">G. Resultados da Busca</h4>
+                        <h4 style="margin-bottom: 15px; color: #0d253f;">Resultados da Busca</h4>
                         <div class="breakdown-header">
                             <span>Assunto / Disciplina / Ciclo</span>
                             <span class="d-right">DURAÇÃO</span>
@@ -1395,9 +1365,8 @@
 
                     const tagHeader = document.createElement('div');
                     tagHeader.className = 'breakdown-row cycle-row';
-                    tagHeader.setAttribute('onclick', `toggleCycleDetails(this)`); // Alterado para 'this'
                     tagHeader.innerHTML = `
-                        <div class="cycle-name-cell">
+                        <div class="cycle-name-cell" onclick="toggleCycleDetails(this.parentNode)">
                             <span class="material-icons-outlined toggle-arrow">chevron_right</span>
                             <span>${tag}</span> 
                         </div>
@@ -1514,7 +1483,7 @@
                     // Carrega assuntos e tags do Firestore
                     allSubjects = new Set(appData.allSubjects || []);
                     allTags = new Set(appData.allTags || []);
-                    initializeTagAutocompletes(); // Chame aqui para inicializar os autocompletes com as tags carregadas
+                    // initializeTagAutocompletes(); // Removido daqui
 
                     Object.values(timers).forEach(clearInterval);
                     timers = {};
@@ -1612,342 +1581,43 @@
                 datalist.appendChild(option);
             });
         }
-        
-        // As funções populateTagRecommendations, extractCurrentTagInput e handleTagInput
-        // foram substituídas pela classe TagAutocomplete
-        // REMOVA-AS SE AINDA EXISTIREM NO SEU CÓDIGO
-        /*
-        function populateTagRecommendations(filterPrefix = '') { ... }
-        function extractCurrentTagInput(inputElement) { ... }
-        function handleTagInput(inputElement) { ... }
-        */
 
-        // Nova classe ou objeto para o gerenciador de autocompletar de tags
-        class TagAutocomplete {
-            constructor(inputId, suggestionsId) {
-                this.input = document.getElementById(inputId);
-                this.suggestionsContainer = document.getElementById(suggestionsId);
-                this.allAvailableTags = new Set(); // Será populado por 'allTags' global
-                this.currentSuggestions = [];
-                this.selectedIndex = -1; // Para navegação com teclado
+        // Modificada para aceitar um prefixo de filtro
+        function populateTagRecommendations(filterPrefix = '') {
+            const datalist = document.getElementById('tagRecommendations');
+            if (!datalist) return;
+            datalist.innerHTML = '';
+            const lowerCaseFilter = filterPrefix.toLowerCase();
 
-                this.setupListeners();
-            }
-
-            setupListeners() {
-                if (!this.input || !this.suggestionsContainer) {
-                    console.warn(`TagAutocomplete: Elementos não encontrados para inputId: ${this.input.id} ou suggestionsId: ${this.suggestionsContainer.id}`);
-                    return;
-                }
-
-                this.input.addEventListener('input', () => this.onInput());
-                this.input.addEventListener('keydown', (e) => this.onKeydown(e));
-                this.input.addEventListener('focus', () => this.onFocus()); // Mostra sugestões ao focar
-                this.input.addEventListener('blur', () => this.onBlur()); // Esconde sugestões ao desfocar
-                this.suggestionsContainer.addEventListener('click', (e) => this.onClickSuggestion(e));
-            }
-
-            // Popula as tags disponíveis do seu `allTags` global
-            setAvailableTags(tags) {
-                this.allAvailableTags = new Set(tags);
-            }
-
-            onInput() {
-                const currentTerm = this.getCurrentTagTerm();
-                this.filterSuggestions(currentTerm);
-            }
-
-            onKeydown(e) {
-                // Se o container estiver oculto, e não for uma tecla de navegação, apenas retorne
-                if (this.suggestionsContainer.style.display === 'none' && (e.key !== 'ArrowDown' && e.key !== 'ArrowUp' && e.key !== 'Enter')) {
-                    return;
-                }
-            
-                switch (e.key) {
-                    case 'ArrowDown':
-                        e.preventDefault(); // Evita que o cursor vá para o final do input
-                        if (this.currentSuggestions.length > 0) {
-                            this.selectedIndex = (this.selectedIndex + 1) % this.currentSuggestions.length;
-                            this.highlightSuggestion();
-                        }
-                        break;
-                    case 'ArrowUp':
-                        e.preventDefault(); // Evita que o cursor vá para o início do input
-                        if (this.currentSuggestions.length > 0) {
-                            this.selectedIndex = (this.selectedIndex - 1 + this.currentSuggestions.length) % this.currentSuggestions.length;
-                            this.highlightSuggestion();
-                        }
-                        break;
-                    case 'Enter':
-                        e.preventDefault(); // Evita submeter formulário
-                        if (this.selectedIndex > -1 && this.currentSuggestions.length > 0) {
-                            this.selectSuggestion(this.currentSuggestions[this.selectedIndex]);
-                        } else {
-                            // Se não houver sugestão selecionada, adicione a tag digitada (sem vírgula automática)
-                            this.addCurrentTagToInput(false); 
-                            this.hideSuggestions();
-                        }
-                        break;
-                    case ',':
-                    case ' ': // Espaço como separador
-                        // Permite que o separador seja digitado, depois tenta adicionar a tag
-                        setTimeout(() => { // Pequeno atraso para o caractere aparecer no input
-                            this.addCurrentTagToInput(true); // Indica que foi digitado um separador
-                            this.filterSuggestions(''); // Reseta sugestões para a próxima tag
-                            // Move o cursor para o final após o separador
-                            this.input.setSelectionRange(this.input.value.length, this.input.value.length);
-                        }, 0);
-                        break;
-                    case 'Backspace':
-                        // Se o campo estiver vazio e o backspace for pressionado, remover a última tag
-                        if (this.input.value.trim() === '') {
-                            this.removeLastTag();
-                            this.onInput(); // Atualiza sugestões
-                        } else if (this.input.value.endsWith(', ') || this.input.value.endsWith(' ')) {
-                             // Se o último caractere é um separador, apenas remova-o
-                             this.input.value = this.input.value.slice(0, -1);
-                             this.onInput();
-                        }
-                        break;
-                    default:
-                        // Qualquer outra tecla, re-filtrar (já coberto pelo 'input' event)
-                        break;
-                }
-            }
-
-            onFocus() {
-                // Ao focar, se o campo não estiver vazio e não terminar em separador, filtra.
-                // Se estiver vazio, NÃO mostra todas as tags imediatamente.
-                // O usuário precisa digitar algo para ver as sugestões.
-                if (this.input.value.trim() !== '' && !this.input.value.endsWith(', ') && !this.input.value.endsWith(' ')) {
-                    this.filterSuggestions(this.getCurrentTagTerm());
-                } else {
-                    this.hideSuggestions(); // Esconde sugestões se o campo está vazio ou só tem separadores
-                }
-            }
-
-            onBlur() {
-                // Pequeno atraso para permitir clique na sugestão antes de esconder
-                setTimeout(() => {
-                    this.hideSuggestions();
-                }, 150);
-            }
-
-            onClickSuggestion(e) {
-                const item = e.target.closest('.suggestion-item');
-                if (item) {
-                    const selectedTag = item.dataset.value;
-                    this.selectSuggestion(selectedTag);
-                }
-            }
-
-            getCurrentTagTerm() {
-                const value = this.input.value;
-                // Encontra a última vírgula ou espaço para pegar o último termo
-                const lastCommaIndex = value.lastIndexOf(',');
-                const lastSpaceIndex = value.lastIndexOf(' ');
-                
-                let lastSeparatorIndex = -1;
-                // Determina qual é o último separador significativo
-                if (lastCommaIndex > lastSpaceIndex) {
-                    lastSeparatorIndex = lastCommaIndex;
-                } else if (lastSpaceIndex > lastCommaIndex) {
-                    lastSeparatorIndex = lastSpaceIndex;
-                }
-
-                if (lastSeparatorIndex === -1) {
-                    return value.trim();
-                } else {
-                    // Garante que pega o termo após o último separador, mesmo que haja múltiplos espaços ou vírgulas.
-                    return value.substring(lastSeparatorIndex + 1).trim();
-                }
-            }
-
-            // `addSeparator` é um novo parâmetro para controlar a vírgula automática
-            addCurrentTagToInput(addSeparator = false) {
-                // Filtra tags existentes para evitar duplicatas e limpar vazios
-                let tags = this.input.value.split(/[, ]+/).filter(t => t.trim() !== '');
-                let currentTerm = this.getCurrentTagTerm(); // O termo que o usuário está digitando AGORA
-                
-                // Se o termo atual é vazio e não foi acionado por um separador,
-                // significa que o usuário só deu "Enter" no final de uma tag existente
-                // ou no final de uma vírgula/espaço que ele digitou.
-                // Nesse caso, apenas garantimos que o input está formatado e saímos.
-                if (currentTerm === '' && !addSeparator) {
-                    this.input.value = tags.map(tag => tag.trim()).join(', ');
-                    // Se houver tags e não terminar com um separador, adicione um para o próximo input
-                    if (this.input.value.length > 0 && !this.input.value.endsWith(', ') && !this.input.value.endsWith(' ')) {
-                         this.input.value += ', '; 
-                    }
-                    this.input.focus();
-                    this.input.setSelectionRange(this.input.value.length, this.input.value.length);
-                    this.selectedIndex = -1;
-                    this.hideSuggestions();
-                    return;
-                }
-
-                // Se houver um termo atual e ele ainda não estiver na lista de tags, adicione-o
-                if (currentTerm && !tags.some(tag => tag.toLowerCase() === currentTerm.toLowerCase())) {
-                    tags.push(currentTerm.trim());
-                }
-                
-                // Reconstrói a string do input
-                this.input.value = tags.map(tag => tag.trim()).join(', ');
-                
-                // Se foi acionado por um separador (vírgula/espaço) e o input não está vazio,
-                // adicione uma vírgula e espaço para a próxima tag.
-                if (addSeparator && this.input.value.length > 0) {
-                     this.input.value += ', ';
-                }
-                
-                this.input.focus();
-                // Move o cursor para o final do input
-                this.input.setSelectionRange(this.input.value.length, this.input.value.length);
-                this.selectedIndex = -1;
-                this.filterSuggestions(''); // Reseta as sugestões para a próxima tag
-            }
-
-            selectSuggestion(selectedTag) {
-                let currentTags = this.input.value.split(/[, ]+/).filter(t => t.trim() !== '');
-                const currentTerm = this.getCurrentTagTerm();
-
-                // Se existe um termo parcial sendo digitado, remove ele das tags atuais
-                // para evitar duplicatas antes de adicionar a tag selecionada.
-                if (currentTerm) {
-                    currentTags = currentTags.filter(tag => tag.toLowerCase() !== currentTerm.toLowerCase());
-                }
-
-                // Adiciona a tag selecionada se ela ainda não estiver na lista
-                if (!currentTags.some(tag => tag.toLowerCase() === selectedTag.toLowerCase())) {
-                    currentTags.push(selectedTag);
-                }
-                
-                // Reconstrói o valor do input com todas as tags, separadas por ', '
-                this.input.value = currentTags.map(tag => tag.trim()).join(', ');
-                
-                // Adiciona um espaço no final para facilitar a inserção de mais tags
-                // APENAS se houver tags e o input não terminar com espaço
-                if (this.input.value.length > 0 && !this.input.value.endsWith(' ')) { 
-                    this.input.value += ' '; 
-                }
-
-                this.hideSuggestions();
-                this.input.focus();
-                // Move o cursor para o final do input para continuar digitando
-                this.input.setSelectionRange(this.input.value.length, this.input.value.length);
-                this.selectedIndex = -1;
-                this.filterSuggestions(''); // Limpa ou reseta as sugestões
-            }
-
-            filterSuggestions(term) {
-                // Expressão regular para remover a maioria dos emojis e caracteres Unicode de símbolo
-                // Esta regex pode precisar de ajustes se você tiver outros caracteres especiais que deseja manter.
-                const emojiRegex = /(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])/g;
-
-                const lowerCaseTerm = term.toLowerCase().replace(emojiRegex, ''); // Remove emojis do termo de busca
-                
-                this.currentSuggestions = Array.from(this.allAvailableTags)
-                    .filter(tag => {
-                        const tagWithoutEmoji = tag.toLowerCase().replace(emojiRegex, ''); // Remove emojis da tag para comparação
-                        return tagWithoutEmoji.startsWith(lowerCaseTerm);
-                    })
-                    .sort();
-
-                this.renderSuggestions();
-                // Mostra sugestões apenas se o termo não é vazio E houver sugestões filtradas.
-                // A lista não deve aparecer se o termo for vazio (campo limpo ou após um separador)
-                // a menos que o usuário comece a digitar novamente.
-                if (term !== '' && this.currentSuggestions.length > 0) {
-                    this.showSuggestions();
-                } else {
-                    this.hideSuggestions();
-                }
-            }
-
-            renderSuggestions() {
-                this.suggestionsContainer.innerHTML = '';
-                if (this.currentSuggestions.length === 0) {
-                    this.hideSuggestions();
-                    return;
-                }
-
-                this.currentSuggestions.forEach((tag, index) => {
-                    const div = document.createElement('div');
-                    div.className = 'suggestion-item';
-                    div.textContent = tag;
-                    div.dataset.value = tag; // Armazena o valor real da tag
-                    if (index === this.selectedIndex) {
-                        div.classList.add('active');
-                    }
-                    this.suggestionsContainer.appendChild(div);
+            Array.from(allTags)
+                .sort()
+                .filter(tag => tag.toLowerCase().startsWith(lowerCaseFilter))
+                .forEach(tag => {
+                    const option = document.createElement('option');
+                    option.value = tag;
+                    datalist.appendChild(option);
                 });
-                this.showSuggestions();
-            }
+        }
 
-            highlightSuggestion() {
-                this.suggestionsContainer.querySelectorAll('.suggestion-item').forEach((item, idx) => {
-                    item.classList.toggle('active', idx === this.selectedIndex);
-                });
-                // Opcional: scroll para a sugestão ativa
-                const activeItem = this.suggestionsContainer.querySelector('.suggestion-item.active');
-                if (activeItem) {
-                    activeItem.scrollIntoView({ block: 'nearest' });
-                }
-            }
+        // Nova função para extrair a última tag sendo digitada
+        function extractCurrentTagInput(inputElement) {
+            const inputValue = inputElement.value;
+            const lastSeparatorIndex = Math.max(
+                inputValue.lastIndexOf(','),
+                inputValue.lastIndexOf(' ')
+            );
 
-            showSuggestions() {
-                this.suggestionsContainer.style.display = 'block';
-            }
-
-            hideSuggestions() {
-                this.suggestionsContainer.style.display = 'none';
-                this.selectedIndex = -1;
-            }
-            
-            removeLastTag() {
-                let tags = this.input.value.split(/[, ]+/).filter(t => t.trim() !== '');
-                if (tags.length > 0) {
-                    tags.pop(); // Remove a última tag
-                    this.input.value = tags.map(tag => tag.trim()).join(', ');
-                    if (this.input.value.length > 0 && !this.input.value.endsWith(', ') && !this.input.value.endsWith(' ')) { // Garante vírgula se não houver
-                        this.input.value += ', '; 
-                    }
-                } else {
-                    this.input.value = ''; // Se não houver tags, apenas limpa
-                }
-                 // Após remover a tag, re-filtrar sugestões
-                this.filterSuggestions(this.getCurrentTagTerm());
+            if (lastSeparatorIndex === -1) {
+                return inputValue.trim();
+            } else {
+                return inputValue.substring(lastSeparatorIndex + 1).trim();
             }
         }
 
-        // Variáveis globais para as instâncias de TagAutocomplete
-        let addTimeTagsAutocomplete;
-        let addTimeToDayTagsAutocomplete;
-        let editRecordTagsAutocomplete;
-        let startTimerTagsAutocomplete;
-
-        // Variável global para a cor selecionada no modal de edição de disciplina
-        function initializeTagAutocompletes() {
-            // Inicializa as instâncias apenas uma vez
-            if (!addTimeTagsAutocomplete) {
-                addTimeTagsAutocomplete = new TagAutocomplete('addTimeTagsInput', 'addTimeTagSuggestions');
-            }
-            if (!addTimeToDayTagsAutocomplete) {
-                addTimeToDayTagsAutocomplete = new TagAutocomplete('addTimeToDayTagsInput', 'addTimeToDayTagSuggestions');
-            }
-            if (!editRecordTagsAutocomplete) {
-                editRecordTagsAutocomplete = new TagAutocomplete('editRecordTagsInput', 'editRecordTagSuggestions');
-            }
-            if (!startTimerTagsAutocomplete) {
-                startTimerTagsAutocomplete = new TagAutocomplete('startTimerTagsInput', 'startTimerTagSuggestions');
-            }
-
-            // Garante que os autocomplete conheçam as tags disponíveis
-            const currentAllTags = Array.from(allTags);
-            addTimeTagsAutocomplete.setAvailableTags(currentAllTags);
-            addTimeToDayTagsAutocomplete.setAvailableTags(currentAllTags);
-            editRecordTagsAutocomplete.setAvailableTags(currentAllTags);
-            startTimerTagsAutocomplete.setAvailableTags(currentAllTags);
+        // Nova função para lidar com o input no campo de tags
+        function handleTagInput(inputElement) {
+            const currentTag = extractCurrentTagInput(inputElement);
+            populateTagRecommendations(currentTag);
         }
         
         function returnToCycleSelection() {
@@ -2108,17 +1778,24 @@
                 'Apagar Ciclo',
                 `Tem certeza que deseja apagar o Ciclo '${activeCycle.id}'? Esta ação é irreversível.`,
                 () => {
-                    Object.keys(timers).forEach(id => stopTimer(id, false));
-                    // Apaga registros de estudo da disciplina excluída
-                    if (appData.cycles[activeCycle.id] && appData.cycles[activeCycle.id].studyHistory) {
-                        for (const dateStr in appData.cycles[activeCycle.id].studyHistory) {
-                            delete appData.cycles[activeCycle.id].studyHistory[dateStr];
-                        }
+                    Object.keys(timers).forEach(clearInterval); // Stop all timers for this cycle
+                    // Manually clear all relevant data for the cycle
+                    for (const dateStr in activeCycle.studyHistory) {
+                        delete activeCycle.studyHistory[dateStr];
                     }
+                    activeCycle.disciplines = [];
+                    activeCycle.disciplineColors = {};
+
                     delete appData.cycles[activeCycle.id];
                     appData.activeCycleId = null;
                     activeCycle = null;
                     saveData();
+                    // After deletion, ensure UI is correctly updated and fallback to selection
+                    renderCalendar(); 
+                    document.getElementById('selectedDateInfo').style.display = 'none'; // Hide daily info
+                    renderReportsView(); // Update reports
+                    updateDisplay(); // Update current view (will show empty or switch if no cycle active)
+                    switchView('cycle-selection'); // Go to cycle selection after deletion
                 }
             );
         }
@@ -2291,11 +1968,15 @@
             document.getElementById('addTimeDisciplineId').value = id;
             
             document.getElementById('addTimeSubjectInput').value = '';
+            document.getElementById('addTimeTagsInput').value = '';
             document.getElementById('addTimeStopPoint').value = ''; // Nova linha: Limpa o campo
             
             populateSubjectRecommendations();
-            // Popula e exibe as sugestões de tags para o modal de adicionar tempo
-            addTimeTagsAutocomplete.setAvailableTags(Array.from(allTags)); // Atualiza as tags disponíveis
+            // Inicializa TagAutocomplete para este modal, se ainda não foi.
+            if (!addTimeTagsAutocomplete) {
+                addTimeTagsAutocomplete = new TagAutocomplete('addTimeTagsInput', 'addTimeTagSuggestions');
+            }
+            addTimeTagsAutocomplete.setAvailableTags(Array.from(allTags)); // Garante tags atualizadas
             addTimeTagsAutocomplete.input.value = ''; // Limpa o campo
             addTimeTagsAutocomplete.filterSuggestions(''); // Força a exibição de todas as sugestões
             document.getElementById('addTimeModal').style.display = 'flex';
@@ -2335,12 +2016,12 @@
             document.getElementById('editRecordMinutesInput').value = Math.floor((totalSeconds % 3600) / 60);
             document.getElementById('editRecordSecondsInput').value = Math.floor(totalSeconds % 60);
             document.getElementById('editRecordSubjectInput').value = currentRecordBeingEdited.subject || '';
-            document.getElementById('editRecordTagsInput').value = (currentRecordBeingEdited.tags || []).join(', ');
-            document.getElementById('editRecordStopPoint').value = currentRecordBeingEdited.stopPoint || '';
-
-            populateSubjectRecommendations(); // Para que a datalist esteja atualizada
-            // Popula e exibe as sugestões de tags para o modal de edição de registro
-            editRecordTagsAutocomplete.setAvailableTags(Array.from(allTags)); // Atualiza as tags disponíveis
+            
+            // Inicializa TagAutocomplete para este modal, se ainda não foi.
+            if (!editRecordTagsAutocomplete) {
+                editRecordTagsAutocomplete = new TagAutocomplete('editRecordTagsInput', 'editRecordTagSuggestions');
+            }
+            editRecordTagsAutocomplete.setAvailableTags(Array.from(allTags)); // Garante tags atualizadas
             editRecordTagsAutocomplete.input.value = (currentRecordBeingEdited.tags || []).join(', '); // Preenche o campo
             editRecordTagsAutocomplete.filterSuggestions(editRecordTagsAutocomplete.getCurrentTagTerm()); // Filtra sugestões com base no termo atual
             document.getElementById('editStudyRecordModal').style.display = 'flex';
@@ -2365,8 +2046,7 @@
             const newTime = (hours * 3600) + (minutes * 60) + seconds;
 
             const subject = document.getElementById('editRecordSubjectInput').value.trim();
-            // Processa as tags do input do componente TagAutocomplete
-            const tagsInput = editRecordTagsAutocomplete.input.value.trim();
+            const tagsInput = document.getElementById('editRecordTagsInput').value.trim();
             const tags = tagsInput.split(/[, ]+/).filter(tag => tag.trim() !== '');
             const stopPoint = document.getElementById('editRecordStopPoint').value.trim();
 
@@ -2421,9 +2101,8 @@
             const totalSecondsToAdd = (hoursToAdd * 3600) + (minutesToAdd * 60) + secondsToAddInput;
             
             const subject = document.getElementById('addTimeSubjectInput').value.trim();
-            // Processa as tags do input do componente TagAutocomplete
-            const tagsInput = addTimeTagsAutocomplete.input.value.trim();
-            const tags = tagsInput.split(/[, ]+/).filter(tag => tag.trim() !== '');
+            const tagsInput = document.getElementById('addTimeTagsInput').value.trim();
+            const tags = tagsInput.split(/[\s,]+/).filter(tag => tag !== '');
 
             const stopPoint = document.getElementById('addTimeStopPoint').value.trim(); // Nova linha
 
@@ -2549,11 +2228,15 @@
             document.getElementById('addTimeToDaySecondsInput').value = 0;
             
             document.getElementById('addTimeToDaySubjectInput').value = '';
+            document.getElementById('addTimeToDayTagsInput').value = '';
             document.getElementById('addTimeToDayStopPoint').value = ''; // Nova linha: Limpa o campo
 
             populateSubjectRecommendations();
-            // Popula e exibe as sugestões de tags para o modal de adicionar tempo ao dia
-            addTimeToDayTagsAutocomplete.setAvailableTags(Array.from(allTags)); // Atualiza as tags disponíveis
+            // Inicializa TagAutocomplete para este modal, se ainda não foi.
+            if (!addTimeToDayTagsAutocomplete) {
+                addTimeToDayTagsAutocomplete = new TagAutocomplete('addTimeToDayTagsInput', 'addTimeToDayTagSuggestions');
+            }
+            addTimeToDayTagsAutocomplete.setAvailableTags(Array.from(allTags)); // Garante tags atualizadas
             addTimeToDayTagsAutocomplete.input.value = ''; // Limpa o campo
             addTimeToDayTagsAutocomplete.filterSuggestions(''); // Força a exibição de todas as sugestões
             document.getElementById('addTimeToDayModal').style.display = 'flex';
@@ -2603,9 +2286,8 @@ function saveAddTimeToDayEntry() {
             const totalSecondsToAdd = (hoursToAdd * 3600) + (minutesToAdd * 60) + secondsToAddInput;
 
             const subject = document.getElementById('addTimeToDaySubjectInput').value.trim();
-            // Processa as tags do input do componente TagAutocomplete
-            const tagsInput = addTimeToDayTagsAutocomplete.input.value.trim();
-            const tags = tagsInput.split(/[, ]+/).filter(tag => tag.trim() !== '');
+            const tagsInput = document.getElementById('addTimeToDayTagsInput').value.trim();
+            const tags = tagsInput.split(/[, ]+/).filter(tag => tag !== '');
 
             const stopPoint = document.getElementById('addTimeToDayStopPoint').value.trim(); // Nova linha
 
@@ -2706,13 +2388,17 @@ function saveAddTimeToDayEntry() {
             document.getElementById('startTimerDisciplineName').textContent = discipline.name;
             document.getElementById('startTimerDisciplineId').value = id;
             document.getElementById('startTimerSubjectInput').value = '';
-            document.getElementById('startTimerStopPoint').value = ''; // Limpa o campo
+            document.getElementById('startTimerTagsInput').value = '';
             
+            // Limpa o campo de ponto de parada, caso exista ou esteja em cache de alguma forma
+            const stopPointInput = document.getElementById('startTimerStopPoint');
+            if (stopPointInput) { // Verifica se o elemento existe antes de tentar acessar .value
+                stopPointInput.value = '';
+            }
+
             populateSubjectRecommendations();
-            // Popula e exibe as sugestões de tags para o modal de iniciar timer
-            startTimerTagsAutocomplete.setAvailableTags(Array.from(allTags)); // Atualiza as tags disponíveis
-            startTimerTagsAutocomplete.input.value = ''; // Limpa o campo
-            startTimerTagsAutocomplete.filterSuggestions(''); // Força a exibição de todas as sugestões
+            populateTagRecommendations(''); // Popula com todas as tags ao abrir o modal
+            
             document.getElementById('startTimerModal').style.display = 'flex';
         }
 
@@ -2724,9 +2410,8 @@ function saveAddTimeToDayEntry() {
         function confirmStartTimer() {
             const id = parseInt(document.getElementById('startTimerDisciplineId').value, 10);
             const subject = document.getElementById('startTimerSubjectInput').value.trim();
-            // Processa as tags do input do componente TagAutocomplete
-            const tagsInput = startTimerTagsAutocomplete.input.value.trim();
-            const tags = tagsInput.split(/[, ]+/).filter(tag => tag.trim() !== '');
+            const tagsInput = document.getElementById('startTimerTagsInput').value.trim();
+            const tags = tagsInput.split(/[\s,]+/).filter(tag => tag !== '');
 
             hideStartTimerModal(); // Esconde o modal antes de iniciar o timer
 
@@ -3258,9 +2943,15 @@ function updateStats() {
         
         function initializeReportFilters() {
             const today = new Date();
-            // Garante que estamos trabalhando com datas no início do dia
-            reportStartDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-            reportEndDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            // Calcula o início da semana (Domingo)
+            reportStartDate = new Date(today);
+            reportStartDate.setDate(today.getDate() - today.getDay()); 
+            reportStartDate.setHours(0, 0, 0, 0); // Zera hora para o início do dia
+
+            // Calcula o fim da semana (Sábado)
+            reportEndDate = new Date(reportStartDate);
+            reportEndDate.setDate(reportStartDate.getDate() + 6);
+            reportEndDate.setHours(23, 59, 59, 999); // Ajusta para o final do dia
 
             if (typeof Litepicker !== 'undefined') {
                 reportDatePicker = new Litepicker({
@@ -3270,9 +2961,9 @@ function updateStats() {
                     format: 'DD/MM/YYYY', startDate: reportStartDate, endDate: reportEndDate,
                     setup: (picker) => {
                         picker.on('selected', (date1, date2) => {
-                            // Normaliza as datas para o início do dia
+                            // Normaliza as datas para o início e fim do dia selecionado
                             reportStartDate = new Date(date1.dateInstance.getFullYear(), date1.dateInstance.getMonth(), date1.dateInstance.getDate());
-                            reportEndDate = new Date(date2.dateInstance.getFullYear(), date2.dateInstance.getMonth(), date2.dateInstance.getDate());
+                            reportEndDate = new Date(date2.dateInstance.getFullYear(), date2.dateInstance.getMonth(), date2.dateInstance.getDate(), 23, 59, 59, 999);
                             renderReportsView();
                         });
                     }
@@ -3305,22 +2996,22 @@ function updateStats() {
 
         function processReportData(startDate, endDate, selectedCycle) {
             let totalSeconds = 0;
-            // Altere durationByDay para armazenar tempos por ciclo por dia
-            const durationByDay = {}; // { 'YYYY-MM-DD': { 'CycleA': seconds, 'CycleB': seconds, ... } }
+            const durationByDay = {}; 
             const distributionByCycle = {};
             const breakdown = {};
-            // studyDaysCount agora é calculado mais precisamente
-            // let studyDaysCount = 0; // Removido, será calculado no final.
 
-            // Inicialize durationByDay para todos os dias no período, com 0 para cada ciclo
+            // Garante que as datas de início e fim sejam normalizadas para comparação ISO
+            const normalizedStartDateISO = getLocalDateString(startDate);
+            const normalizedEndDateISO = getLocalDateString(endDate);
+
+            // Popula durationByDay com todos os dias do período e inicializa com 0 para cada ciclo
             for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
                 const dateStr = getLocalDateString(d);
-                durationByDay[dateStr] = {}; // Inicializa o objeto para cada dia
+                durationByDay[dateStr] = {};
 
-                // Garante que cada ciclo tenha uma entrada (mesmo que 0) para cada dia no range
                 Object.values(appData.cycles).forEach(cycle => {
                     if (selectedCycle === 'all' || cycle.id === selectedCycle) {
-                        durationByDay[dateStr][cycle.id] = 0; // Inicializa com 0 para cada ciclo naquele dia
+                        durationByDay[dateStr][cycle.id] = 0; 
                     }
                 });
             }
@@ -3330,40 +3021,37 @@ function updateStats() {
                 if (selectedCycle !== 'all' && cycle.id !== selectedCycle) return;
                 if (!cycle.studyHistory) return;
 
-                Object.entries(cycle.studyHistory).forEach(([date, disciplineEntries]) => {
-                    // Verifica se a data está dentro do período selecionado
-                    if (date >= getLocalDateString(startDate) && date <= getLocalDateString(endDate)) {
-                        let dailySecondsForThisCycle = 0; // Total para este dia DESTE ciclo
-                        
+                Object.entries(cycle.studyHistory).forEach(([dateStr, disciplineEntries]) => {
+                    // Verifica se a data do histórico está dentro do período selecionado
+                    if (dateStr >= normalizedStartDateISO && dateStr <= normalizedEndDateISO) {
                         Object.entries(disciplineEntries).forEach(([discId, records]) => {
                             if (Array.isArray(records)) {
                                 records.forEach(record => {
                                     const seconds = record.time || 0;
-                                    dailySecondsForThisCycle += seconds;
                                     
-                                    // Adiciona tempo ao ciclo específico para este dia no durationByDay
-                                    if (!durationByDay[date][cycle.id]) {
-                                        durationByDay[date][cycle.id] = 0;
+                                    // Adiciona tempo para o dia e ciclo específico
+                                    if (!durationByDay[dateStr][cycle.id]) {
+                                        durationByDay[dateStr][cycle.id] = 0; // Garante inicialização
                                     }
-                                    durationByDay[date][cycle.id] += seconds;
+                                    durationByDay[dateStr][cycle.id] += seconds;
 
-                                    // Update overall distribution by cycle
+                                    // Atualiza a distribuição geral por ciclo
                                     distributionByCycle[cycle.id] = (distributionByCycle[cycle.id] || 0) + seconds;
 
-                                    // Update breakdown structure
+                                    // Atualiza a estrutura de detalhamento (breakdown)
                                     if (!breakdown[cycle.id]) breakdown[cycle.id] = { totalSeconds: 0, disciplines: {} };
                                     breakdown[cycle.id].totalSeconds += seconds;
-                                    // Adiciona ou soma o tempo para a disciplina específica
                                     breakdown[cycle.id].disciplines[discId] = (breakdown[cycle.id].disciplines[discId] || 0) + seconds;
                                 });
                             }
                         });
-                        totalSeconds += dailySecondsForThisCycle; // Soma para o total geral
+                        // Soma para o total geral do período (este é o total dos estudos visíveis no relatório)
+                        totalSeconds += Object.values(disciplineEntries).flat().reduce((sum, rec) => sum + (rec.time || 0), 0);
                     }
                 });
             });
 
-            // Recalculando actualStudyDays com base na nova estrutura
+            // Recalcula actualStudyDays com base nos dias que realmente tiveram estudo no período e filtros
             let actualStudyDays = 0;
             for(const dateStr in durationByDay) {
                 let dayHasStudy = false;
@@ -3387,24 +3075,23 @@ function updateStats() {
             if (!ctx) return;
             const context = ctx.getContext('2d');
 
-            const labels = Object.keys(data).map(dateStr => {
-                const date = new Date(dateStr + 'T12:00:00'); // Garante que é um objeto Date válido
-                let day = date.toLocaleDateString('pt-BR', { weekday: 'short' });
-                return day.charAt(0).toUpperCase() + day.slice(1).replace('.', ''); // Ex: Seg, Ter
-            }).sort((a,b) => { // Garante a ordenação correta dos dias da semana
-                const daysOrder = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-                return daysOrder.indexOf(a) - daysOrder.indexOf(b);
-            });
-            // Ajuste para garantir que as datas do gráfico estejam no formato correto e ordenadas
-            const sortedDates = Object.keys(data).sort(); // Ordena as datas ISO (YYYY-MM-DD)
+            // Gerar labels para todos os dias no período, mesmo que não haja dados
+            const allDatesInPeriod = [];
+            let currentDate = new Date(reportStartDate);
+            while (currentDate <= reportEndDate) {
+                allDatesInPeriod.push(getLocalDateString(currentDate));
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+            allDatesInPeriod.sort(); // Garante a ordem cronológica
 
-            const chartLabels = sortedDates.map(dateStr => {
-                const date = new Date(dateStr + 'T12:00:00');
-                return date.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric' }); // Ex: Sáb 29
+            const chartLabels = allDatesInPeriod.map(dateStr => {
+                const date = new Date(dateStr + 'T12:00:00'); // Garante que é um objeto Date válido
+                // Formato "Dia da Semana Abreviado Dia do Mês" (ex: Ter 29)
+                return date.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric' }); 
             });
 
             // Coleta todos os IDs de ciclos únicos que apareceram nos dados
-            allCycleIds = new Set(); // Declarar para evitar redeclaração
+            const allCycleIds = new Set();
             Object.values(data).forEach(dayData => {
                 Object.keys(dayData).forEach(cycleId => allCycleIds.add(cycleId));
             });
@@ -3412,7 +3099,8 @@ function updateStats() {
             const datasets = Array.from(allCycleIds).map(cycleId => {
                 const cycle = appData.cycles[cycleId];
                 const cycleColor = cycle ? cycle.color : '#CCCCCC'; // Cor do ciclo
-                const datasetData = sortedDates.map(dateStr => { // Mapeia para as datas ordenadas
+                const datasetData = allDatesInPeriod.map(dateStr => { // Mapeia para TODAS as datas do período
+                    // Retorna o tempo de estudo para a disciplina naquele dia, ou 0 se não houver
                     return data[dateStr] && data[dateStr][cycleId] ? data[dateStr][cycleId] : 0;
                 });
                 return {
