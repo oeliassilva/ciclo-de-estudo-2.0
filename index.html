@@ -893,7 +893,7 @@
 
             <div class="form-group-modal">
                 <label for="addTimeTagsInput">Tags (Opcional, separe por vírgulas ou espaços)</label>
-                <input type="text" id="addTimeTagsInput" placeholder="Ex: #javascript, #frontend" list="tagRecommendations">
+                <input type="text" id="addTimeTagsInput" placeholder="Ex: #javascript, #frontend" list="tagRecommendations" oninput="handleTagInput(this)">
                 <datalist id="tagRecommendations"></datalist>
             </div>
 
@@ -951,7 +951,7 @@
 
             <div class="form-group-modal">
                 <label for="addTimeToDayTagsInput">Tags (Opcional, separe por vírgulas ou espaços)</label>
-                <input type="text" id="addTimeToDayTagsInput" placeholder="Ex: #algoritmos, #computacao" list="tagRecommendations">
+                <input type="text" id="addTimeToDayTagsInput" placeholder="Ex: #algoritmos, #computacao" list="tagRecommendations" oninput="handleTagInput(this)">
             </div>
 
             <div class="form-group-modal">
@@ -1004,7 +1004,7 @@
 
         <div class="form-group-modal">
             <label for="editRecordTagsInput">Tags (Opcional, separe por vírgulas ou espaços)</label>
-            <input type="text" id="editRecordTagsInput" placeholder="Ex: #javascript, #frontend" list="tagRecommendations">
+            <input type="text" id="editRecordTagsInput" placeholder="Ex: #javascript, #frontend" list="tagRecommendations" oninput="handleTagInput(this)">
         </div>
 
         <div class="form-group-modal">
@@ -1044,7 +1044,7 @@
 
             <div class="form-group-modal">
                 <label for="startTimerTagsInput">Tags (Opcional, separe por vírgulas ou espaços)</label>
-                <input type="text" id="startTimerTagsInput" placeholder="Ex: #python, #logica" list="tagRecommendations">
+                <input type="text" id="startTimerTagsInput" placeholder="Ex: #python, #logica" list="tagRecommendations" oninput="handleTagInput(this)">
             </div>
 
            
@@ -1172,7 +1172,7 @@
 
             // Converte RGB para hex
             rgbToHex(r, g, b) {
-                return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+                return `#${r.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}`;
             }
 
             // Gera cor vibrante usando HSL
@@ -1578,7 +1578,7 @@
             }
             tags.forEach(tag => allTags.add(tag));
             populateSubjectRecommendations(); // Update subject datalist immediately
-            populateTagRecommendations(); // Update tag datalist immediately
+            // populateTagRecommendations(); // This call is now handled by handleTagInput for better dynamic filtering
         }
 
         function recalculateAllSubjectsAndTags() {
@@ -1617,16 +1617,42 @@
             });
         }
 
-        function populateTagRecommendations() {
+        // Modificada para aceitar um prefixo de filtro
+        function populateTagRecommendations(filterPrefix = '') {
             const datalist = document.getElementById('tagRecommendations');
             if (!datalist) return;
             datalist.innerHTML = '';
-            // Converte o Set para Array e ordena alfabeticamente
-            Array.from(allTags).sort().forEach(tag => {
-                const option = document.createElement('option');
-                option.value = tag;
-                datalist.appendChild(option);
-            });
+            const lowerCaseFilter = filterPrefix.toLowerCase();
+
+            Array.from(allTags)
+                .sort()
+                .filter(tag => tag.toLowerCase().startsWith(lowerCaseFilter))
+                .forEach(tag => {
+                    const option = document.createElement('option');
+                    option.value = tag;
+                    datalist.appendChild(option);
+                });
+        }
+
+        // Nova função para extrair a última tag sendo digitada
+        function extractCurrentTagInput(inputElement) {
+            const inputValue = inputElement.value;
+            const lastSeparatorIndex = Math.max(
+                inputValue.lastIndexOf(','),
+                inputValue.lastIndexOf(' ')
+            );
+
+            if (lastSeparatorIndex === -1) {
+                return inputValue.trim();
+            } else {
+                return inputValue.substring(lastSeparatorIndex + 1).trim();
+            }
+        }
+
+        // Nova função para lidar com o input no campo de tags
+        function handleTagInput(inputElement) {
+            const currentTag = extractCurrentTagInput(inputElement);
+            populateTagRecommendations(currentTag);
         }
         
         function returnToCycleSelection() {
@@ -1894,7 +1920,7 @@
             document.getElementById('addTimeStopPoint').value = ''; // Nova linha: Limpa o campo
             
             populateSubjectRecommendations();
-            populateTagRecommendations(); // Populate tag datalist
+            populateTagRecommendations(''); // Popula com todas as tags ao abrir o modal
             document.getElementById('addTimeModal').style.display = 'flex';
         }
 
@@ -1936,7 +1962,7 @@
             document.getElementById('editRecordStopPoint').value = currentRecordBeingEdited.stopPoint || '';
 
             populateSubjectRecommendations(); // Para que a datalist esteja atualizada
-            populateTagRecommendations(); // Populate tag datalist
+            populateTagRecommendations(''); // Popula tag datalist com todas as tags
             document.getElementById('editStudyRecordModal').style.display = 'flex';
         }
 
@@ -2145,7 +2171,7 @@
             document.getElementById('addTimeToDayStopPoint').value = ''; // Nova linha: Limpa o campo
 
             populateSubjectRecommendations();
-            populateTagRecommendations(); // Populate tag datalist
+            populateTagRecommendations(''); // Popula tag datalist com todas as tags
             document.getElementById('addTimeToDayModal').style.display = 'flex';
         }
 
@@ -2362,7 +2388,7 @@ function saveAddTimeToDayEntry() {
             }
 
             populateSubjectRecommendations();
-            populateTagRecommendations(); // Populate tag datalist
+            populateTagRecommendations(''); // Popula com todas as tags ao abrir o modal
             
             document.getElementById('startTimerModal').style.display = 'flex';
         }
@@ -2608,7 +2634,7 @@ function updateStats() {
             }
             
             const totalStudied = activeCycle.disciplines.reduce((sum, d) => sum + d.currentSeconds, 0);
-            const totalTarget = activeCycle.disciplines.reduce((sum, d) => sum + d.targetSeconds, 0);
+            const totalTarget = activeCycle.disciplines.reduce((sum, d => sum + d.targetSeconds, 0);
             let startAngle = -90;
             const gapDegrees = 2;
 
