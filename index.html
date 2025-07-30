@@ -368,7 +368,6 @@
             color: white;
         }
 
-        /* Estilo para as sugestões de tags (NOVO) */
         .tag-suggestions {
             position: absolute;
             background-color: #fff;
@@ -391,7 +390,7 @@
         }
 
         .tag-suggestion-item:hover,
-        .tag-suggestion-item.active { /* Adicionado para navegação com teclado */
+        .tag-suggestion-item.active { 
             background-color: #f0f3f5;
         }
 
@@ -699,7 +698,12 @@
                         </div>
 
                         <div class="chart-container" id="chartContainer"><svg id="wheelChart" width="400" height="400" viewBox="0 0 400 400"></svg></div>
+                        
+                        <h3 style="margin-top: 30px; margin-bottom: 15px; color: #0d253f;">Disciplinas Ativas</h3>
                         <div class="discipline-list" id="disciplinesList"></div>
+                        
+                        <h3 style="margin-top: 30px; margin-bottom: 15px; color: #0d253f;">Disciplinas Arquivadas</h3>
+                        <div class="discipline-list" id="archivedDisciplinesList"></div>
 
                         <div id="mainControls" style="display:flex; flex-wrap: wrap; gap:10px; justify-content:center; margin-top:30px;">
                             <button class="secondary" onclick="returnToCycleSelection()">Trocar de Ciclo</button>
@@ -1688,6 +1692,13 @@
                     // Isso é importante para edição e exclusão de registros individuais no calendário.
                     // Percorre todos os ciclos, dias e disciplinas para adicionar um ID se ele não existir.
                     Object.values(appData.cycles || {}).forEach(cycle => {
+                        if (cycle.disciplines) { // Garante que isArchived seja inicializado
+                            cycle.disciplines.forEach(discipline => {
+                                if (typeof discipline.isArchived === 'undefined') {
+                                    discipline.isArchived = false; // Define como não arquivada por padrão
+                                }
+                            });
+                        }
                         if (cycle.studyHistory) {
                             Object.values(cycle.studyHistory).forEach(dailyRecordsMap => {
                                 Object.entries(dailyRecordsMap).forEach(([discId, recordsArray]) => {
@@ -2035,7 +2046,8 @@
                 name: disciplineName, 
                 currentSeconds: 0, 
                 targetSeconds: targetSeconds, 
-                isRunning: false 
+                isRunning: false,
+                isArchived: false // Nova propriedade: não arquivada por padrão
             });
             
             // Gera uma cor aleatória para a nova disciplina
@@ -2126,7 +2138,8 @@
 
         function checkCycleCompletion() {
             if (!activeCycle || activeCycle.disciplines.length === 0) return false;
-            return activeCycle.disciplines.every(d => d.currentSeconds >= d.targetSeconds);
+            // A completude do ciclo agora depende apenas das disciplinas ATIVAS.
+            return activeCycle.disciplines.filter(d => !d.isArchived).every(d => d.currentSeconds >= d.targetSeconds);
         }
 
         function showCompletionModal() { document.getElementById('completionModal').style.display = 'flex'; }
@@ -2414,7 +2427,7 @@
             }
 
             hideStopTimerModal();
-            realStopTimerForReal(id, true); 
+            stopTimer(id, true); 
         }
 
         function realStopTimerForReal(id, doSave = true) {
@@ -2780,7 +2793,8 @@ function updateStats() {
             if (!activeCycle) return;
 
             document.getElementById('cycleCompletions').textContent = activeCycle.completions || 0;
-            document.getElementById('totalDisciplines').textContent = activeCycle.disciplines.length;
+            // O total de disciplinas agora considera apenas as ativas para este contador
+            document.getElementById('totalDisciplines').textContent = activeCycle.disciplines.filter(d => !d.isArchived).length;
 
             const today = getLocalDateString();
             let totalSecondsStudiedTodayAllCycles = 0;
@@ -2809,12 +2823,25 @@ function updateStats() {
 
         function updateDisciplinesList() {
             if (!activeCycle) return;
-            const listEl = document.getElementById('disciplinesList');
-            if (!listEl) return;
-            listEl.innerHTML = activeCycle.disciplines.map((d, i) => {
+            const activeListEl = document.getElementById('disciplinesList');
+            const archivedListEl = document.getElementById('archivedDisciplinesList');
+            if (!activeListEl || !archivedListEl) return;
+
+            activeListEl.innerHTML = '';
+            archivedListEl.innerHTML = '';
+
+            const activeDisciplines = activeCycle.disciplines.filter(d => !d.isArchived);
+            const archivedDisciplines = activeCycle.disciplines.filter(d => d.isArchived);
+
+            if (activeDisciplines.length === 0 && archivedDisciplines.length === 0) {
+                activeListEl.innerHTML = '<p style="text-align:center; padding: 20px; color: #6c757d;">Nenhuma disciplina adicionada ainda.</p>';
+                return;
+            }
+
+            activeDisciplines.forEach(d => {
                 const isCompleted = d.targetSeconds > 0 && d.currentSeconds >= d.targetSeconds;
                 const disciplineColor = getDisciplineColor(d.id, activeCycle.id);
-                return `
+                activeListEl.innerHTML += `
                     <div class="discipline-item ${isCompleted ? 'completed' : ''}" id="discipline-${d.id}" style="border-left-color: ${disciplineColor};">
                         <div class="discipline-name-group">
                             <button class="edit-btn" title="Editar disciplina" onclick="openEditModal(${d.id})"><span class="material-icons-outlined">edit</span></button>
@@ -2827,12 +2854,54 @@ function updateStats() {
                         <div class="timer-controls" style="display:flex; gap:8px; align-items:center;">
                             <button class="timer-btn ${d.isRunning ? 'stop' : ''}" onclick="toggleTimer(${d.id})">${d.isRunning ? 'Pausar' : 'Iniciar'}</button>
                             <button class="secondary" onclick="openAddTimeModal(${d.id})">Add Tempo</button>
-                            <button class="remove-btn secondary" onclick="removeDiscipline(${d.id})">Remover</button>
+                            <button class="secondary" onclick="toggleArchiveDiscipline(${d.id})">Arquivar</button>
+                            <button class="remove-btn danger" onclick="removeDiscipline(${d.id})">Remover</button>
                         </div>
                     </div>`;
-            }).join('');
+            });
+
+            if (archivedDisciplines.length === 0) {
+                archivedListEl.innerHTML = '<p style="text-align:center; padding: 10px; color: #6c757d;">Nenhuma disciplina arquivada.</p>';
+            } else {
+                archivedDisciplines.forEach(d => {
+                    const disciplineColor = getDisciplineColor(d.id, activeCycle.id);
+                    archivedListEl.innerHTML += `
+                        <div class="discipline-item archived" id="discipline-${d.id}" style="border-left-color: ${disciplineColor}; opacity: 0.7;">
+                            <div class="discipline-name-group">
+                                <button class="edit-btn" title="Editar disciplina" onclick="openEditModal(${d.id})"><span class="material-icons-outlined">edit</span></button>
+                                <span>${d.name} (Arquivada)</span>
+                            </div>
+                            <div style="display: flex; flex-direction: column; align-items: center; min-width: 100px;">
+                                <span class="time-current">${formatTime(d.currentSeconds)}</span>
+                                <span style="font-size: 12px; color: #666;">Meta: ${formatTime(d.targetSeconds)}</span>
+                            </div>
+                            <div class="timer-controls" style="display:flex; gap:8px; align-items:center;">
+                                <button class="secondary" onclick="toggleArchiveDiscipline(${d.id})">Desarquivar</button>
+                                <button class="remove-btn danger" onclick="removeDiscipline(${d.id})">Remover</button>
+                            </div>
+                        </div>`;
+                });
+            }
         }
         
+        // Nova função para arquivar/desarquivar disciplinas
+        function toggleArchiveDiscipline(id) {
+            if (!activeCycle) return;
+            const discipline = activeCycle.disciplines.find(d => d.id === id);
+            if (discipline) {
+                discipline.isArchived = !discipline.isArchived; // Alterna o estado
+                
+                // Se a disciplina for arquivada e estiver rodando um timer, pare-o
+                if (discipline.isArchived && timers[id]) {
+                    stopTimer(id, false); // Pare o timer sem salvar novamente, pois saveData será chamado logo em seguida
+                }
+
+                saveData(); // Salva a alteração
+                updateDisciplinesList(); // Atualiza a lista para refletir a mudança
+                showAlertModal('Disciplina Arquivada', `A disciplina "${discipline.name}" foi ${discipline.isArchived ? 'arquivada' : 'desarquivada'}.`);
+            }
+        }
+
         function updateTimerDisplay(discipline) {
             const itemEl = document.getElementById(`discipline-${discipline.id}`);
             if (!itemEl) return;
@@ -2852,14 +2921,15 @@ function updateStats() {
                 return;
             }
             
-            const totalStudied = activeCycle.disciplines.reduce((sum, d) => sum + d.currentSeconds, 0);
-            const totalTarget = activeCycle.disciplines.reduce((sum, d) => sum + d.targetSeconds, 0);
+            const activeDisciplines = activeCycle.disciplines.filter(d => !d.isArchived); // Considera apenas disciplinas ativas para o gráfico
+            const totalStudied = activeDisciplines.reduce((sum, d) => sum + d.currentSeconds, 0);
+            const totalTarget = activeDisciplines.reduce((sum, d) => sum + d.targetSeconds, 0);
             let startAngle = -90;
             const gapDegrees = 2;
 
-            if (totalTarget === 0 && activeCycle.disciplines.length > 0) {
-                const equalSliceAngle = 360 / activeCycle.disciplines.length;
-                activeCycle.disciplines.forEach((d, i) => {
+            if (totalTarget === 0 && activeDisciplines.length > 0) {
+                const equalSliceAngle = 360 / activeDisciplines.length;
+                activeDisciplines.forEach((d, i) => {
                     let sliceAngle = equalSliceAngle;
                     let endAngle = startAngle + sliceAngle;
                     if (sliceAngle > gapDegrees) {
@@ -2880,10 +2950,10 @@ function updateStats() {
                     startAngle = endAngle;
                 });
             } else {
-                activeCycle.disciplines.forEach((d, i) => {
+                activeDisciplines.forEach((d, i) => {
                     let sliceAngle = totalTarget > 0 ? (d.targetSeconds / totalTarget) * 360 : 0;
                     if (sliceAngle === 0 && d.targetSeconds > 0) {
-                        sliceAngle = 360 / activeCycle.disciplines.length;
+                        sliceAngle = 360 / activeDisciplines.length;
                     }
                     let endAngle = startAngle + sliceAngle;
 
@@ -3255,6 +3325,7 @@ function updateStats() {
                 durationByDay[dateStr] = {};
 
                 Object.values(appData.cycles).forEach(cycle => {
+                    // Inclui disciplinas arquivadas no relatório por padrão
                     if (selectedCycle === 'all' || cycle.id === selectedCycle) {
                         durationByDay[dateStr][cycle.id] = 0; 
                     }
@@ -3301,8 +3372,7 @@ function updateStats() {
             for(const dateStr in durationByDay) {
                 let dayHasStudy = false;
                 for(const cycleId in durationByDay[dateStr]) {
-                    // Verifica se o dia teve algum estudo para o ciclo atual (ou todos os ciclos se for 'all')
-                    if ((selectedCycle === 'all' || cycleId === selectedCycle) && durationByDay[dateStr][cycleId] > 0) {
+                    if (durationByDay[dateStr][cycleId] > 0) {
                         dayHasStudy = true;
                         break;
                     }
