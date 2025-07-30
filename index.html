@@ -159,7 +159,7 @@
         .discipline-item { display: flex; align-items: center; gap: 15px; padding: 15px; margin: 10px 0; background: #fdfdff; border-radius: 10px; border: 1px solid #e9ecef; transition: all 0.3s; flex-wrap: wrap; border-left: 5px solid; }
         .discipline-item.completed { border-left-color: #28a745 !important; background-color: #f6fff8; }
         .discipline-name-group { flex: 1; display: flex; align-items: center; gap: 10px; font-weight: 500; min-width: 150px; }
-        .edit-btn { background: none; border: none; color: #6c757d; cursor: pointer; padding: 4px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .edit-btn { background: none; border: none; color: #6c757d; cursor: pointer; padding: 4px; border-radius: 50%; display: flex; align-items: center; justify: center; }
         .edit-btn:hover { background-color: #e9ecef; color: #0d253f; }
         .timer-btn { background-color: #28a745; font-size: 14px; padding: 10px 16px; }
         .timer-btn.stop { background-color: #ff6f61; }
@@ -368,6 +368,34 @@
             color: white;
         }
 
+        /* Estilo para as sugestões de tags (NOVO) */
+        .tag-suggestions {
+            position: absolute;
+            background-color: #fff;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            max-height: 150px;
+            overflow-y: auto;
+            width: 100%;
+            z-index: 100;
+            margin-top: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: none; /* Escondido por padrão */
+        }
+
+        .tag-suggestion-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 0.9em;
+            text-align: left;
+        }
+
+        .tag-suggestion-item:hover,
+        .tag-suggestion-item.active { /* Adicionado para navegação com teclado */
+            background-color: #f0f3f5;
+        }
+
+
         .tag-results .breakdown-header {
             grid-template-columns: 2fr 100px; /* Ajuste para assunto/disciplina/Ciclo e duração */
         }
@@ -508,26 +536,26 @@
         /* Media query para telas ainda menores (celulares, por exemplo) */
         @media (max-width: 600px) {
             #addTimeToDayModal .modal-content {
-                max-width: 95%; /* Ocupa quase toda a largura em telas muito pequenas */
-                margin: 20px auto; /* Centraliza verticalmente */
-                padding: 20px; /* Reduz ainda mais o padding */
+                max-width: 95%; 
+                margin: 20px auto; 
+                padding: 20px; 
             }
 
             .modal-content .time-input-container {
-                flex-wrap: wrap; /* Permite quebrar em várias linhas se não couber */
+                flex-wrap: wrap; 
                 justify-content: center;
             }
 
             .modal-content .time-input-group {
-                width: calc(33% - 10px); /* Tenta manter 3 colunas em telas pequenas */
-                min-width: 80px; /* Garante um tamanho mínimo */
+                width: calc(33% - 10px); 
+                min-width: 80px; 
             }
              .modal-content .time-input-group input {
                 width: 100%;
                 max-width: none;
             }
             .modal-content .time-input-separator {
-                display: none; /* Esconde o ":" quando quebra a linha */
+                display: none; 
             }
         }
 
@@ -547,9 +575,8 @@
         }
 
         @media (max-width: 600px) {
-            .sidebar-nav { display: none; } /* Esconde a sidebar em telas muito pequenas */
-            .main-content { margin-left: 0; width: 100%; } /* Conteúdo ocupa toda a tela */
-            /* Futuramente, pode-se adicionar um botão 'hamburger' para mostrar/esconder a sidebar */
+            .sidebar-nav { display: none; } 
+            .main-content { margin-left: 0; width: 100%; } 
             .calendar-header { flex-direction: column; gap: 15px; }
             body { padding: 5px; }
             .main-content { padding: 10px; }
@@ -674,7 +701,7 @@
                         <div class="chart-container" id="chartContainer"><svg id="wheelChart" width="400" height="400" viewBox="0 0 400 400"></svg></div>
                         <div class="discipline-list" id="disciplinesList"></div>
 
-                        <div id="mainControls" style="display:flex; flex-wrap: wrap; gap:10px; margin-top:30px; justify-content:center;">
+                        <div id="mainControls" style="display:flex; flex-wrap: wrap; gap:10px; justify-content:center; margin-top:30px;">
                             <button class="secondary" onclick="returnToCycleSelection()">Trocar de Ciclo</button>
                             <button class="secondary" onclick="manuallyEndCycle()">Encerrar Ciclo</button>
                             <button class="danger" onclick="deleteCurrentCycle()">Apagar Ciclo Atual</button>
@@ -919,12 +946,9 @@
     <div id="editStudyRecordModal" class="modal-overlay">
     <div class="modal-content">
         <h3>Editar Registro de Estudo</h3>
-        <input type="hidden" id="editRecordCycleId">
-        <input type="hidden" id="editRecordDateStr">
+        <input type="hidden" id="editRecordStudyId"> <input type="hidden" id="editRecordDateStr">
         <input type="hidden" id="editRecordDisciplineId">
-        <input type="hidden" id="editRecordIndex">
-
-        <div class="form-group-modal">
+        <input type="hidden" id="editRecordCycleId"> <div class="form-group-modal">
             <label for="editRecordDisciplineName">Disciplina</label>
             <input type="text" id="editRecordDisciplineName" readonly style="background-color: #f8f9fa;">
         </div>
@@ -1071,6 +1095,12 @@
             '#8A2BE2'   // Violeta Elétrico
         ];
 
+        // Função para remover emojis de uma string
+        function removeEmojis(str) {
+            // Expressão regular para remover a maioria dos emojis Unicode.
+            // Pode precisar de ajustes dependendo da gama de emojis que você encontrar.
+            return str.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
+        }
         
         // Gerador de cores aleatórias que evita a cor reservada (para disciplinas)
         class ColorGenerator {
@@ -1233,6 +1263,161 @@
 
         let activeTagFilter = ''; // Para armazenar a tag ativa que está sendo filtrada
 
+        class TagAutocomplete {
+            constructor(inputId, suggestionsContainerId) {
+                this.input = document.getElementById(inputId);
+                this.suggestionsContainer = document.getElementById(suggestionsContainerId);
+                this.availableTags = [];
+
+                if (this.input) {
+                    this.input.addEventListener('input', this.handleInput.bind(this));
+                    this.input.addEventListener('keydown', this.handleKeyDown.bind(this));
+                    this.input.addEventListener('focus', this.handleFocus.bind(this));
+                    this.input.addEventListener('blur', this.handleBlur.bind(this));
+                }
+            }
+
+            setAvailableTags(tags) {
+                // Armazena as tags originais para seleção e suas versões normalizadas para busca
+                this.availableTags = tags.map(tag => ({
+                    original: tag,
+                    normalized: removeEmojis(tag).toLowerCase()
+                }));
+                this.filterSuggestions(this.getCurrentTagTerm());
+            }
+
+            getCurrentTagTerm() {
+                const inputValue = this.input.value;
+                const lastCommaIndex = inputValue.lastIndexOf(',');
+                const lastSpaceIndex = inputValue.lastIndexOf(' ');
+                
+                let lastSeparatorIndex = -1;
+                if (lastCommaIndex > lastSpaceIndex) {
+                    lastSeparatorIndex = lastCommaIndex;
+                } else if (lastSpaceIndex !== -1) {
+                    lastSeparatorIndex = lastSpaceIndex;
+                }
+
+                if (lastSeparatorIndex === -1) {
+                    return removeEmojis(inputValue).trim().toLowerCase(); // Normaliza o termo atual
+                } else {
+                    return removeEmojis(inputValue.substring(lastSeparatorIndex + 1)).trim().toLowerCase(); // Normaliza o termo atual
+                }
+            }
+
+            handleInput() {
+                const currentTerm = this.getCurrentTagTerm();
+                this.filterSuggestions(currentTerm);
+            }
+
+            filterSuggestions(term) {
+                this.suggestionsContainer.innerHTML = '';
+                this.suggestionsContainer.style.display = 'none';
+
+                if (term.length === 0 && (this.input.value.endsWith(',') || this.input.value.endsWith(' '))) {
+                    // Não mostra sugestões imediatamente após uma vírgula ou espaço se não houver novo termo
+                    return;
+                }
+
+                // Filtra as tags com base na versão normalizada
+                const filtered = this.availableTags.filter(tagObj => tagObj.normalized.startsWith(term));
+
+                if (filtered.length > 0) {
+                    filtered.forEach(tagObj => {
+                        const suggestionItem = document.createElement('div');
+                        suggestionItem.textContent = tagObj.original; // Exibe a tag original com emoji
+                        suggestionItem.classList.add('tag-suggestion-item');
+                        // Ao clicar, seleciona a tag original
+                        suggestionItem.addEventListener('mousedown', (e) => {
+                            e.preventDefault(); // Evita que o blur feche as sugestões antes do click
+                            this.selectSuggestion(tagObj.original); 
+                        });
+                        this.suggestionsContainer.appendChild(suggestionItem);
+                    });
+                    this.suggestionsContainer.style.display = 'block';
+                }
+            }
+
+            selectSuggestion(tag) {
+                const inputValue = this.input.value;
+                const lastCommaIndex = inputValue.lastIndexOf(',');
+                const lastSpaceIndex = inputValue.lastIndexOf(' ');
+                
+                let lastSeparatorIndex = -1;
+                if (lastCommaIndex > lastSpaceIndex) {
+                    lastSeparatorIndex = lastCommaIndex;
+                } else if (lastSpaceIndex !== -1) {
+                    lastSeparatorIndex = lastSpaceIndex;
+                }
+
+                let newValue;
+                // Ao selecionar, NÃO adiciona a vírgula automaticamente
+                if (lastSeparatorIndex === -1) {
+                    newValue = tag; // Substitui o que está digitado pela tag selecionada
+                } else {
+                    const prefix = inputValue.substring(0, lastSeparatorIndex + 1);
+                    newValue = prefix + tag; // Adiciona a tag após o último delimitador
+                }
+                this.input.value = newValue;
+                this.input.focus();
+                this.suggestionsContainer.style.display = 'none';
+            }
+
+            handleKeyDown(e) {
+                const items = this.suggestionsContainer.querySelectorAll('.tag-suggestion-item');
+                if (items.length === 0) return;
+
+                let currentIndex = -1;
+                items.forEach((item, index) => {
+                    if (item.classList.contains('active')) {
+                        currentIndex = index;
+                    }
+                });
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    currentIndex = (currentIndex + 1) % items.length;
+                    this.setActiveSuggestion(items, currentIndex);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    currentIndex = (currentIndex - 1 + items.length) % items.length;
+                    this.setActiveSuggestion(items, currentIndex);
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (currentIndex !== -1) {
+                        this.selectSuggestion(items[currentIndex].textContent);
+                    }
+                }
+            }
+
+            setActiveSuggestion(items, index) {
+                items.forEach((item, i) => {
+                    if (i === index) {
+                        item.classList.add('active');
+                    } else {
+                        item.classList.remove('active');
+                    }
+                });
+            }
+
+            handleFocus() {
+                this.filterSuggestions(this.getCurrentTagTerm());
+            }
+
+            handleBlur() {
+                // Delay hiding to allow mousedown on suggestions to fire
+                setTimeout(() => {
+                    this.suggestionsContainer.style.display = 'none';
+                }, 100);
+            }
+        }
+
+        let addTimeTagsAutocomplete;
+        let addTimeToDayTagsAutocomplete;
+        let editRecordTagsAutocomplete;
+        let startTimerTagsAutocomplete;
+
+
         function renderAllTags() {
             const allTagsListEl = document.getElementById('allTagsList');
             allTagsListEl.innerHTML = ''; // Limpa a lista existente
@@ -1242,11 +1427,12 @@
                 return;
             }
 
-            // Converte o Set para Array, ordena alfabeticamente e renderiza
-            Array.from(allTags).sort((a, b) => a.localeCompare(b)).forEach(tag => {
+            // Converte o Set para Array, ordena alfabeticamente pela versão normalizada e renderiza
+            Array.from(allTags).sort((a, b) => removeEmojis(a).localeCompare(removeEmojis(b))).forEach(tag => {
                 const tagItem = document.createElement('span');
                 tagItem.className = 'tag-item';
-                if (tag === activeTagFilter) {
+                // Compara a tag normalizada para definir o estado ativo
+                if (removeEmojis(tag).toLowerCase() === removeEmojis(activeTagFilter).toLowerCase()) {
                     tagItem.classList.add('active');
                 }
                 tagItem.textContent = tag;
@@ -1256,10 +1442,14 @@
         }
 
         function selectTagForFilter(tag) {
-            if (activeTagFilter === tag) {
+            // Normaliza a tag selecionada para comparação
+            const normalizedTag = removeEmojis(tag).toLowerCase();
+            const normalizedActiveTagFilter = removeEmojis(activeTagFilter).toLowerCase();
+
+            if (normalizedActiveTagFilter === normalizedTag) {
                 activeTagFilter = ''; // Desseleciona a tag se for clicada novamente
             } else {
-                activeTagFilter = tag; // Seleciona a nova tag
+                activeTagFilter = tag; // Seleciona a tag original (com emoji)
             }
             document.getElementById('tagSearchInput').value = ''; // Limpa a busca textual
             renderAllTags(); // Re-renderiza para atualizar o estado ativo
@@ -1267,8 +1457,8 @@
         }
 
         function filterTagsAndStudies() {
-            const searchInput = document.getElementById('tagSearchInput').value.trim().toLowerCase();
-            const tagResultsBody = document.getElementById('tagResultsBody');
+            const searchInput = removeEmojis(document.getElementById('tagSearchInput').value).trim().toLowerCase(); // Normaliza o input de busca
+            const tagResultsBody = document.getElementById('tagSearchResults');
             tagResultsBody.innerHTML = '';
             
             let studiesFound = false;
@@ -1292,7 +1482,8 @@
                                             date: dateStr,
                                             time: record.time || 0,
                                             subject: record.subject || '',
-                                            tags: record.tags || []
+                                            tags: record.tags || [],
+                                            timestamp: record.timestamp || null // Pega o timestamp
                                         });
                                     });
                                 }
@@ -1309,12 +1500,12 @@
             allStudyRecords.forEach(study => {
                 let matchesSearchInput = true;
                 if (searchInput) {
-                    // Busca por assunto, disciplina, Ciclo, ou tags
-                    const searchLower = searchInput.toLowerCase();
-                    const subjectLower = study.subject.toLowerCase();
-                    const disciplineLower = study.disciplineName.toLowerCase();
-                    const cycleLower = study.cycleId.toLowerCase();
-                    const tagsLower = study.tags.map(t => t.toLowerCase()).join(' ');
+                    // Busca por assunto, disciplina, Ciclo, ou tags (todos normalizados)
+                    const searchLower = searchInput; 
+                    const subjectLower = study.subject ? removeEmojis(study.subject).toLowerCase() : ''; 
+                    const disciplineLower = study.disciplineName ? removeEmojis(study.disciplineName).toLowerCase() : ''; 
+                    const cycleLower = study.cycleId ? removeEmojis(study.cycleId).toLowerCase() : ''; 
+                    const tagsLower = study.tags.map(t => removeEmojis(t).toLowerCase()).join(' '); 
 
                     if (!subjectLower.includes(searchLower) && 
                         !disciplineLower.includes(searchLower) && 
@@ -1326,15 +1517,17 @@
 
                 if (matchesSearchInput) {
                     study.tags.forEach(tag => {
-                        const tagLower = tag.toLowerCase();
-                        if (!activeTagFilter || tagLower === activeTagFilter.toLowerCase() || searchInput && tagLower.includes(searchInput)) {
+                        const tagLowerNormalized = removeEmojis(tag).toLowerCase(); 
+                        const activeTagFilterNormalized = removeEmojis(activeTagFilter).toLowerCase(); 
+
+                        if (!activeTagFilter || tagLowerNormalized === activeTagFilterNormalized || (searchInput && tagLowerNormalized.includes(searchInput))) {
                              // Considera a tag se ela corresponde ao filtro ativo OU à busca textual
-                            if (!filteredAndGrouped[tag]) {
+                            if (!filteredAndGrouped[tag]) { // Agrupa pela tag ORIGINAL (com emoji)
                                 filteredAndGrouped[tag] = [];
                             }
                             filteredAndGrouped[tag].push(study);
                             if(activeTagFilter || searchInput) {
-                                uniqueTagsMatchingSearch.add(tag); // Adiciona apenas tags que são relevantes para a busca/filtro
+                                uniqueTagsMatchingSearch.add(tag); // Adiciona apenas tags que são relevantes para a busca/filtro (originais)
                             }
                         }
                     });
@@ -1349,13 +1542,14 @@
                 }
             });
 
-            const sortedTags = Array.from(Object.keys(filteredAndGrouped)).sort((a,b) => a.localeCompare(b));
+            // Ordena as tags agrupadas pela versão normalizada
+            const sortedTags = Array.from(Object.keys(filteredAndGrouped)).sort((a,b) => removeEmojis(a).localeCompare(removeEmojis(b)));
             
             if (sortedTags.length === 0) {
                 tagResultsBody.innerHTML = '<p style="text-align:center; padding: 20px; color: #6c757d;">Nenhum resultado encontrado para o filtro atual.</p>';
                 return; // Adicionado para sair da função se não houver resultados
             } 
-
+            
             if (sortedTags.length === 0) {
                 tagResultsBody.innerHTML = '<p style="text-align:center; padding: 20px; color: #6c757d;">Nenhum resultado encontrado para o filtro atual.</p>';
             } else {
@@ -1377,14 +1571,14 @@
                     const studiesWrapper = document.createElement('div');
                         studiesWrapper.className = 'discipline-rows-wrapper'; 
                         tagStudies.forEach(study => {
-                            console.log('Study:', study.subject, 'Cycle Color:', study.cycleColor); 
+                            const recordTime = study.timestamp ? formatTimestampToHHMM(study.timestamp) : '';
                             studiesWrapper.innerHTML += `
                                 <div class="tag-study-item">
                                     <div class="study-details">
                                         <span class="main-info">
                                             <span class="cycle-color-dot" style="background-color:${study.cycleColor};"></span> ${study.subject || 'Sem Assunto'}
                                         </span>
-                                        <span class="sub-info">${study.disciplineName} (${study.cycleId}) - ${new Date(study.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
+                                        <span class="sub-info">${study.disciplineName} (${study.cycleId}) - ${new Date(study.date + 'T12:00:00').toLocaleDateString('pt-BR')} ${recordTime ? `às ${recordTime}` : ''}</span>
                                     </div>
                                     <span class="d-right">${formatTime(study.time)}</span>
                                 </div>
@@ -1417,6 +1611,15 @@
                 const day = localDate.getDate().toString().padStart(2, '0');
                 return `${year}-${month}-${day}`;
             }
+        }
+
+        // Nova função para formatar timestamp para HH:MM
+        function formatTimestampToHHMM(timestamp) {
+            if (!timestamp) return '';
+            const date = new Date(timestamp);
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            return `${hours}:${minutes}`;
         }
 
         async function handleAuth() {
@@ -1465,6 +1668,7 @@
                 console.error("signOutUser: Erro ao deslogar:", error);
                 showAlertModal('Erro ao Sair', `Não foi possível sair. Erro: ${error.message}`);
             });
+            reportsInitialized = false; // Reinicia o estado dos relatórios ao deslogar
         }
 
         async function loadUserData(userId) {
@@ -1480,17 +1684,58 @@
                     if (!snapshot.exists) return;
                     appData = snapshot.data();
                     
+                    // Garante que cada sub-registro de estudo tenha um ID único.
+                    // Isso é importante para edição e exclusão de registros individuais no calendário.
+                    // Percorre todos os ciclos, dias e disciplinas para adicionar um ID se ele não existir.
+                    Object.values(appData.cycles || {}).forEach(cycle => {
+                        if (cycle.studyHistory) {
+                            Object.values(cycle.studyHistory).forEach(dailyRecordsMap => {
+                                Object.entries(dailyRecordsMap).forEach(([discId, recordsArray]) => {
+                                    if (Array.isArray(recordsArray)) {
+                                        dailyRecordsMap[discId] = recordsArray.map(record => {
+                                            if (!record.id) {
+                                                // Cria um ID único, combinando timestamp e um número aleatório para evitar colisões
+                                                return { ...record, id: Date.now() + Math.random() };
+                                            }
+                                            return record;
+                                        });
+                                    }
+                                });
+                            });
+                        }
+                    });
+
                     // Carrega assuntos e tags do Firestore
                     allSubjects = new Set(appData.allSubjects || []);
                     allTags = new Set(appData.allTags || []);
-                    // initializeTagAutocompletes(); // Removido daqui
+                    
+                    // Inicializa os autocompletes após carregar os dados
+                    if (!addTimeTagsAutocomplete) {
+                        addTimeTagsAutocomplete = new TagAutocomplete('addTimeTagsInput', 'addTimeTagSuggestions');
+                    }
+                    if (!addTimeToDayTagsAutocomplete) {
+                        addTimeToDayTagsAutocomplete = new TagAutocomplete('addTimeToDayTagsInput', 'addTimeToDayTagSuggestions');
+                    }
+                    if (!editRecordTagsAutocomplete) {
+                        editRecordTagsAutocomplete = new TagAutocomplete('editRecordTagsInput', 'editRecordTagSuggestions');
+                    }
+                     if (!startTimerTagsAutocomplete) {
+                        startTimerTagsAutocomplete = new TagAutocomplete('startTimerTagsInput', 'startTimerTagSuggestions');
+                    }
+                    // Atualiza as tags disponíveis em todos os autocompletes
+                    const currentAllTags = Array.from(allTags);
+                    addTimeTagsAutocomplete.setAvailableTags(currentAllTags);
+                    addTimeToDayTagsAutocomplete.setAvailableTags(currentAllTags);
+                    editRecordTagsAutocomplete.setAvailableTags(currentAllTags);
+                    startTimerTagsAutocomplete.setAvailableTags(currentAllTags);
+
 
                     Object.values(timers).forEach(clearInterval);
                     timers = {};
                     if (appData.activeCycleId && appData.cycles[appData.activeCycleId]) {
                         activeCycle = appData.cycles[appData.activeCycleId];
                         switchView('current');
-                        updateDisplay();
+                        updateDisplay(); // Este é o único ponto de atualização da UI após onSnapshot
                     } else {
                         activeCycle = null; 
                         populateCycleSelector();
@@ -1517,7 +1762,7 @@
                 }
                 
                 // Recalcula allSubjects e allTags ANTES de salvar
-                recalculateAllSubjectsAndTags(); // <--- CHAME AQUI
+                recalculateAllSubjectsAndTags();
                 
                 // Salva os sets de assuntos e tags como arrays
                 dataToSave.allSubjects = Array.from(allSubjects);
@@ -1527,6 +1772,8 @@
                     console.error("saveData: Erro ao salvar dados:", error);
                     showAlertModal('Erro ao Salvar', 'Não foi possível salvar suas alterações.');
                 });
+                // Não chame updateDisplay() ou renderCalendar() aqui diretamente.
+                // O listener onSnapshot em loadUserData() cuidará disso quando o dado for atualizado no Firestore.
             }
         }
 
@@ -1581,55 +1828,18 @@
                 datalist.appendChild(option);
             });
         }
-
-        // Modificada para aceitar um prefixo de filtro
-        function populateTagRecommendations(filterPrefix = '') {
-            const datalist = document.getElementById('tagRecommendations');
-            if (!datalist) return;
-            datalist.innerHTML = '';
-            const lowerCaseFilter = filterPrefix.toLowerCase();
-
-            Array.from(allTags)
-                .sort()
-                .filter(tag => tag.toLowerCase().startsWith(lowerCaseFilter))
-                .forEach(tag => {
-                    const option = document.createElement('option');
-                    option.value = tag;
-                    datalist.appendChild(option);
-                });
-        }
-
-        // Nova função para extrair a última tag sendo digitada
-        function extractCurrentTagInput(inputElement) {
-            const inputValue = inputElement.value;
-            const lastSeparatorIndex = Math.max(
-                inputValue.lastIndexOf(','),
-                inputValue.lastIndexOf(' ')
-            );
-
-            if (lastSeparatorIndex === -1) {
-                return inputValue.trim();
-            } else {
-                return inputValue.substring(lastSeparatorIndex + 1).trim();
-            }
-        }
-
-        // Nova função para lidar com o input no campo de tags
-        function handleTagInput(inputElement) {
-            const currentTag = extractCurrentTagInput(inputElement);
-            populateTagRecommendations(currentTag);
-        }
         
         function returnToCycleSelection() {
-            Object.keys(timers).forEach(id => stopTimer(id, false));
+            Object.keys(timers).forEach(clearInterval); // Clear all active timers
             if (appData.activeCycleId !== null) {
                 appData.activeCycleId = null;
-                saveData();
+                saveData(); // Will trigger onSnapshot and update UI
+            } else {
+                populateCycleSelector();
+                renderCycleColorPalette();
+                renderExistingCyclesDisplay();
+                switchView('cycle-selection');
             }
-            populateCycleSelector();
-            renderCycleColorPalette(); // Renderiza a paleta de cores novamente
-            renderExistingCyclesDisplay(); // Exibe os Ciclos existentes com suas cores
-            switchView('cycle-selection');
         }
 
         function populateCycleSelector() {
@@ -1739,7 +1949,7 @@
             const selectedId = document.getElementById('existingCycleSelector').value;
             if (selectedId && appData.cycles[selectedId]) {
                 appData.activeCycleId = selectedId;
-                saveData(); 
+                saveData(); // Will trigger onSnapshot and update UI
             } else {
                 showAlertModal('Seleção Inválida', 'Por favor, selecione um Ciclo válido para carregar.');
             }
@@ -1769,7 +1979,7 @@
                 color: selectedNewCycleColor // Armazena a cor escolhida para o Ciclo
             };
             appData.activeCycleId = newName;
-            saveData();
+            saveData(); // Will trigger onSnapshot and update UI
         }
 
         function deleteCurrentCycle() {
@@ -1778,24 +1988,23 @@
                 'Apagar Ciclo',
                 `Tem certeza que deseja apagar o Ciclo '${activeCycle.id}'? Esta ação é irreversível.`,
                 () => {
-                    Object.keys(timers).forEach(clearInterval); // Stop all timers for this cycle
-                    // Manually clear all relevant data for the cycle
-                    for (const dateStr in activeCycle.studyHistory) {
-                        delete activeCycle.studyHistory[dateStr];
+                    Object.keys(timers).forEach(clearInterval); // Stop all active timers
+                    // Manually clear all relevant data for the cycle to prevent lingering issues
+                    // This data will eventually be removed by Firestore rules, but local cleanup is good.
+                    if (activeCycle.studyHistory) {
+                        for (const dateStr in activeCycle.studyHistory) {
+                            delete activeCycle.studyHistory[dateStr];
+                        }
                     }
                     activeCycle.disciplines = [];
                     activeCycle.disciplineColors = {};
 
                     delete appData.cycles[activeCycle.id];
-                    appData.activeCycleId = null;
-                    activeCycle = null;
-                    saveData();
-                    // After deletion, ensure UI is correctly updated and fallback to selection
-                    renderCalendar(); 
-                    document.getElementById('selectedDateInfo').style.display = 'none'; // Hide daily info
-                    renderReportsView(); // Update reports
-                    updateDisplay(); // Update current view (will show empty or switch if no cycle active)
-                    switchView('cycle-selection'); // Go to cycle selection after deletion
+                    appData.activeCycleId = null; // Ensure no active cycle ID after deletion
+                    activeCycle = null; // Clear active cycle object
+                    saveData(); // Save changes. This will trigger onSnapshot and refresh UI.
+                    // No direct calls to renderCalendar(), renderReportsView(), updateDisplay(), switchView() here.
+                    // The onSnapshot listener in loadUserData() handles the final UI state.
                 }
             );
         }
@@ -1835,7 +2044,7 @@
             nameInput.value = '';
             document.getElementById('hoursInput').value = '1';
             document.getElementById('minutesInput').value = '0';
-            saveData();
+            saveData(); // Will trigger onSnapshot and update UI
         }
         
         function removeDiscipline(id) {
@@ -1877,20 +2086,9 @@
                     }
                     activeCycle.studyHistory = newStudyHistory; // Atribui o histórico limpo
 
-                    saveData();
-                    // Atualiza a exibição do calendário e relatórios para refletir a exclusão
-                    renderCalendar(); 
-                    if (document.getElementById('selectedDateInfo').style.display === 'block') {
-                        // Se o painel de informações do dia estiver aberto, atualiza-o
-                        const currentSelectedDate = document.getElementById('addTimeToDaySelectedDate').value;
-                        if (currentSelectedDate) {
-                            selectDate(currentSelectedDate);
-                        } else { // Se não houver data selecionada, apenas oculta
-                            document.getElementById('selectedDateInfo').style.display = 'none';
-                        }
-                    }
-                    renderReportsView();
-                    updateDisplay(); // Para atualizar o gráfico de rosca e a lista de disciplinas na tela principal
+                    saveData(); // Will trigger onSnapshot and update UI
+                    // No direct calls to renderCalendar(), renderReportsView(), updateDisplay() here.
+                    // The onSnapshot listener in loadUserData() handles the final UI state.
                 }
             );
         }
@@ -1939,9 +2137,9 @@
             hideCompletionModal();
             activeCycle.completions = (activeCycle.completions || 0) + 1;
             activeCycle.disciplines.forEach(d => { d.currentSeconds = 0; });
-            saveData();
-            updateDisplay();
-            showCelebrationModal();
+            saveData(); // Will trigger onSnapshot and update UI
+            // No direct calls to updateDisplay() or showCelebrationModal() here.
+            // The onSnapshot listener in loadUserData() handles the final UI state.
         }
 
         function handleContinueCycle() { hideCompletionModal(); }
@@ -1968,17 +2166,16 @@
             document.getElementById('addTimeDisciplineId').value = id;
             
             document.getElementById('addTimeSubjectInput').value = '';
-            document.getElementById('addTimeTagsInput').value = '';
-            document.getElementById('addTimeStopPoint').value = ''; // Nova linha: Limpa o campo
-            
-            populateSubjectRecommendations();
             // Inicializa TagAutocomplete para este modal, se ainda não foi.
             if (!addTimeTagsAutocomplete) {
                 addTimeTagsAutocomplete = new TagAutocomplete('addTimeTagsInput', 'addTimeTagSuggestions');
             }
             addTimeTagsAutocomplete.setAvailableTags(Array.from(allTags)); // Garante tags atualizadas
             addTimeTagsAutocomplete.input.value = ''; // Limpa o campo
-            addTimeTagsAutocomplete.filterSuggestions(''); // Força a exibição de todas as sugestões
+            addTimeTagsAutocomplete.filterSuggestions(''); // Força a exibição de todas as sugestões ao abrir o modal.
+            document.getElementById('addTimeStopPoint').value = ''; // Nova linha: Limpa o campo
+            
+            populateSubjectRecommendations();
             document.getElementById('addTimeModal').style.display = 'flex';
         }
 
@@ -1989,25 +2186,31 @@
 
         let currentRecordBeingEdited = null; // Armazena a referência ao registro no appData
 
-        function openEditStudyRecordModal(dateStr, cycleId, disciplineId, recordIndex) {
+        // openEditStudyRecordModal agora recebe o ID do registro de estudo (studyId) em vez do index
+        function openEditStudyRecordModal(dateStr, cycleId, disciplineId, studyId) {
             const cycle = appData.cycles[cycleId];
             if (!cycle || !cycle.studyHistory || !cycle.studyHistory[dateStr] || !cycle.studyHistory[dateStr][disciplineId]) {
                 showAlertModal('Erro', 'Registro de estudo não encontrado.');
                 return;
             }
             const records = cycle.studyHistory[dateStr][disciplineId];
-            if (!Array.isArray(records) || recordIndex < 0 || recordIndex >= records.length) {
-                showAlertModal('Erro', 'Índice de registro inválido.');
+            
+            // Encontra o registro pelo ID único
+            const recordToEdit = records.find(rec => rec.id === studyId);
+
+            if (!recordToEdit) {
+                showAlertModal('Erro', 'Registro de estudo não encontrado para edição.');
                 return;
             }
 
-            currentRecordBeingEdited = records[recordIndex]; // Salva a referência direta ao objeto
+            currentRecordBeingEdited = recordToEdit; // Salva a referência direta ao objeto
             const discipline = cycle.disciplines.find(d => String(d.id) === disciplineId);
 
-            document.getElementById('editRecordCycleId').value = cycleId;
+            // Armazena todos os IDs necessários para referenciar o registro
+            document.getElementById('editRecordStudyId').value = studyId; // O ID único do registro
             document.getElementById('editRecordDateStr').value = dateStr;
             document.getElementById('editRecordDisciplineId').value = disciplineId;
-            document.getElementById('editRecordIndex').value = recordIndex;
+            document.getElementById('editRecordCycleId').value = cycleId; // Novo campo para o CycleId
 
             document.getElementById('editRecordDisciplineName').value = discipline ? discipline.name : 'Desconhecida';
 
@@ -2017,13 +2220,15 @@
             document.getElementById('editRecordSecondsInput').value = Math.floor(totalSeconds % 60);
             document.getElementById('editRecordSubjectInput').value = currentRecordBeingEdited.subject || '';
             
-            // Inicializa TagAutocomplete para este modal, se ainda não foi.
             if (!editRecordTagsAutocomplete) {
                 editRecordTagsAutocomplete = new TagAutocomplete('editRecordTagsInput', 'editRecordTagSuggestions');
             }
-            editRecordTagsAutocomplete.setAvailableTags(Array.from(allTags)); // Garante tags atualizadas
-            editRecordTagsAutocomplete.input.value = (currentRecordBeingEdited.tags || []).join(', '); // Preenche o campo
-            editRecordTagsAutocomplete.filterSuggestions(editRecordTagsAutocomplete.getCurrentTagTerm()); // Filtra sugestões com base no termo atual
+            editRecordTagsAutocomplete.setAvailableTags(Array.from(allTags)); 
+            editRecordTagsAutocomplete.input.value = (currentRecordBeingEdited.tags || []).join(', '); 
+            editRecordTagsAutocomplete.filterSuggestions(editRecordTagsAutocomplete.getCurrentTagTerm()); 
+            document.getElementById('editRecordStopPoint').value = currentRecordBeingEdited.stopPoint || '';
+            
+            populateSubjectRecommendations();
             document.getElementById('editStudyRecordModal').style.display = 'flex';
         }
 
@@ -2062,20 +2267,32 @@
             currentRecordBeingEdited.stopPoint = stopPoint;
 
             // Recalcula o currentSeconds da disciplina associada
+            // Pega os IDs do registro editado (que já estão nos inputs hidden)
             const cycleId = document.getElementById('editRecordCycleId').value;
-            const disciplineId = parseInt(document.getElementById('editRecordDisciplineId').value, 10);
+            const disciplineId = document.getElementById('editRecordDisciplineId').value;
             const cycle = appData.cycles[cycleId];
-            const discipline = cycle.disciplines.find(d => d.id === disciplineId);
+            const discipline = cycle.disciplines.find(d => String(d.id) === disciplineId); // Converte para string para comparação consistente
 
             if (discipline) {
-                // Remove o tempo antigo e adiciona o novo tempo para recalcular o total
-                discipline.currentSeconds = Math.max(0, discipline.currentSeconds - oldTime + newTime);
+                // Para recalcular corretamente, somamos o tempo de TODOS os registros
+                // daquela disciplina e subtraímos o tempo antigo e adicionamos o novo tempo
+                let totalDisciplineTime = 0;
+                if (cycle.studyHistory) {
+                    Object.values(cycle.studyHistory).forEach(dailyRecords => {
+                        if (dailyRecords[disciplineId]) {
+                            dailyRecords[disciplineId].forEach(rec => {
+                                totalDisciplineTime += rec.time || 0;
+                            });
+                        }
+                    });
+                }
+                discipline.currentSeconds = totalDisciplineTime;
             }
 
-            updateAllSubjectsAndTags(subject, tags); // Revalida a lista de assuntos e tags
+            updateAllSubjectsAndTags(subject, tags); 
 
             hideEditStudyRecordModal();
-            saveData();
+            saveData(); 
             selectDate(document.getElementById('editRecordDateStr').value); // Re-renderiza o histórico do dia
             if (activeCycle && activeCycle.id === cycleId) {
                 updateDisplay(); // Atualiza display da tela "Timer" se for o ciclo ativo
@@ -2102,9 +2319,9 @@
             
             const subject = document.getElementById('addTimeSubjectInput').value.trim();
             const tagsInput = document.getElementById('addTimeTagsInput').value.trim();
-            const tags = tagsInput.split(/[\s,]+/).filter(tag => tag !== '');
+            const tags = tagsInput.split(/[, ]+/).filter(tag => tag.trim() !== '');
 
-            const stopPoint = document.getElementById('addTimeStopPoint').value.trim(); // Nova linha
+            const stopPoint = document.getElementById('addTimeStopPoint').value.trim();
 
             if (totalSecondsToAdd <= 0) {
                 showAlertModal('Tempo Inválido', 'Por favor, insira um tempo válido (horas, minutos ou segundos) para adicionar.');
@@ -2124,37 +2341,43 @@
                 activeCycle.studyHistory[today][discIdStr] = [];
             }
             activeCycle.studyHistory[today][discIdStr].push({ // Adiciona um objeto com tempo, assunto e tags
+                id: Date.now() + Math.random(), // ID único para o sub-registro
                 time: totalSecondsToAdd,
                 subject: subject,
                 tags: tags,
-                timestamp: Date.now(),
-                stopPoint: stopPoint // Nova propriedade
+                timestamp: Date.now(), 
+                stopPoint: stopPoint
             });
             
             // Armazena todos os assuntos e tags para recomendações futuras
             updateAllSubjectsAndTags(subject, tags);
 
             hideAddTimeModal();
-            saveData();
-            updateDisplay();
+            saveData(); 
             showAlertModal('Sucesso', `Tempo adicionado com sucesso à disciplina "${discipline.name}".`);
         }
         let selectedDateForManualAdd = null; // Armazena a data selecionada no calendário
-        function openStopTimerModal(disciplineId, dateStr, recordIndex, cycleId) {
+        function openStopTimerModal(disciplineId, dateStr, recordIndex, cycleId) { // recordIndex será o studyId aqui
             const discipline = activeCycle.disciplines.find(d => d.id === disciplineId);
             if (!discipline) return;
 
             // Encontra a referência ao registro específico que está sendo parado
             const cycle = appData.cycles[cycleId];
             if (!cycle || !cycle.studyHistory || !cycle.studyHistory[dateStr] || !cycle.studyHistory[dateStr][disciplineId]) return;
+            // Procurar pelo ID do estudo (que é passado como recordIndex)
+            const studyIdToStop = recordIndex; // Renomeado para clareza
             const records = cycle.studyHistory[dateStr][disciplineId];
-            if (!Array.isArray(records) || recordIndex < 0 || recordIndex >= records.length) return;
+            
+            recordToStop = records.find(rec => rec.id === studyIdToStop); // Encontra o registro pelo ID
 
-            recordToStop = records[recordIndex]; // Salva a referência direta ao objeto no histórico
+            if (!recordToStop) {
+                console.error("Registro de estudo não encontrado para parar o timer:", studyIdToStop);
+                return;
+            }
 
             document.getElementById('stopTimerDisciplineName').textContent = discipline.name;
             document.getElementById('stopTimerDisciplineId').value = disciplineId;
-            document.getElementById('stopTimerStudyRecordIndex').value = recordIndex; // Para referência futura
+            document.getElementById('stopTimerStudyRecordIndex').value = recordToStop.id; // Agora armazena o ID do registro
             document.getElementById('stopTimerStudyDate').value = dateStr;
             document.getElementById('stopTimerStudyCycleId').value = cycleId;
 
@@ -2176,29 +2399,24 @@
         function confirmStopTimer() {
             const id = parseInt(document.getElementById('stopTimerDisciplineId').value, 10);
             const stopPoint = document.getElementById('stopTimerStopPoint').value.trim();
-            const recordIndex = parseInt(document.getElementById('stopTimerStudyRecordIndex').value, 10);
+            const studyId = parseFloat(document.getElementById('stopTimerStudyRecordIndex').value); // Converte de volta para número
             const dateStr = document.getElementById('stopTimerStudyDate').value;
             const cycleId = document.getElementById('stopTimerStudyCycleId').value;
 
             // Atualiza o stopPoint no registro de estudo
-            if (recordToStop) {
-                recordToStop.stopPoint = stopPoint;
-            } else {
-                // Fallback caso recordToStop por algum motivo não esteja setado (o que não deveria acontecer)
-                const cycle = appData.cycles[cycleId];
-                if (cycle && cycle.studyHistory && cycle.studyHistory[dateStr] && cycle.studyHistory[dateStr][id]) {
-                    const records = cycle.studyHistory[dateStr][id];
-                    if (Array.isArray(records) && records.length > recordIndex) {
-                        records[recordIndex].stopPoint = stopPoint;
-                    }
+            const cycle = appData.cycles[cycleId];
+            if (cycle && cycle.studyHistory && cycle.studyHistory[dateStr] && cycle.studyHistory[dateStr][id]) {
+                const records = cycle.studyHistory[dateStr][id];
+                const record = records.find(rec => rec.id === studyId);
+                if (record) {
+                    record.stopPoint = stopPoint;
                 }
             }
 
             hideStopTimerModal();
-            realStopTimerForReal(id, true); // Chama a função que realmente para o timer e salva
+            realStopTimerForReal(id, true); 
         }
 
-        // Renomeie sua função stopTimer existente para realStopTimerForReal
         function realStopTimerForReal(id, doSave = true) {
             if (!activeCycle || !timers[id]) return;
             const discipline = activeCycle.disciplines.find(d => d.id === id);
@@ -2210,8 +2428,7 @@
                 showCompletionModal();
             }
             
-            if (doSave) saveData();
-            updateDisciplinesList();
+            if (doSave) saveData(); 
         }
         function openAddTimeToDayModal(dateStr) {
             selectedDateForManualAdd = dateStr;
@@ -2287,7 +2504,7 @@ function saveAddTimeToDayEntry() {
 
             const subject = document.getElementById('addTimeToDaySubjectInput').value.trim();
             const tagsInput = document.getElementById('addTimeToDayTagsInput').value.trim();
-            const tags = tagsInput.split(/[, ]+/).filter(tag => tag !== '');
+            const tags = tagsInput.split(/[, ]+/).filter(tag => tag.trim() !== '');
 
             const stopPoint = document.getElementById('addTimeToDayStopPoint').value.trim(); // Nova linha
 
@@ -2320,6 +2537,7 @@ function saveAddTimeToDayEntry() {
                 cycle.studyHistory[dateStr][discIdStr] = [];
             }
             cycle.studyHistory[dateStr][discIdStr].push({ // Adiciona um objeto com tempo, assunto e tags
+                id: Date.now() + Math.random(), // ID único para o sub-registro
                 time: totalSecondsToAdd,
                 subject: subject,
                 tags: tags,
@@ -2331,15 +2549,9 @@ function saveAddTimeToDayEntry() {
             updateAllSubjectsAndTags(subject, tags);
 
             hideAddTimeToDayModal();
-            saveData();
-            selectDate(dateStr);
-            if (activeCycle && activeCycle.id === cycleId) updateDisplay();
+            saveData(); 
             showAlertModal('Sucesso', `Tempo adicionado em "${discipline.name}" para ${new Date(dateStr + 'T12:00:00').toLocaleDateString('pt-BR')}.`);
         }
-
-        // REMOVIDA: A função saveAddedTime duplicada foi removida,
-        // mantendo apenas a implementação correta de saveAddedTime.
-        // A função hideAddTimeModal já existia e não duplicava, então foi mantida.
 
         function showConfirmModal(title, message, callback) {
             document.getElementById('confirmModalTitle').textContent = title;
@@ -2392,12 +2604,17 @@ function saveAddTimeToDayEntry() {
             
             // Limpa o campo de ponto de parada, caso exista ou esteja em cache de alguma forma
             const stopPointInput = document.getElementById('startTimerStopPoint');
-            if (stopPointInput) { // Verifica se o elemento existe antes de tentar acessar .value
+            if (stopPointInput) { 
                 stopPointInput.value = '';
             }
 
             populateSubjectRecommendations();
-            populateTagRecommendations(''); // Popula com todas as tags ao abrir o modal
+            // Popula com todas as tags ao abrir o modal
+            if(startTimerTagsAutocomplete) {
+                startTimerTagsAutocomplete.setAvailableTags(Array.from(allTags));
+                startTimerTagsAutocomplete.input.value = ''; 
+                startTimerTagsAutocomplete.filterSuggestions(''); 
+            }
             
             document.getElementById('startTimerModal').style.display = 'flex';
         }
@@ -2411,16 +2628,14 @@ function saveAddTimeToDayEntry() {
             const id = parseInt(document.getElementById('startTimerDisciplineId').value, 10);
             const subject = document.getElementById('startTimerSubjectInput').value.trim();
             const tagsInput = document.getElementById('startTimerTagsInput').value.trim();
-            const tags = tagsInput.split(/[\s,]+/).filter(tag => tag !== '');
+            const tags = tagsInput.split(/[, ]+/).filter(tag => tag.trim() !== '');
 
-            hideStartTimerModal(); // Esconde o modal antes de iniciar o timer
+            hideStartTimerModal(); 
 
-            // Agora, chame a função startTimer com os novos parâmetros
             realStartTimer(id, subject, tags); 
         }
 
-        // Renomeie sua função startTimer existente para realStartTimer
-function realStartTimer(id, subject = '', tags = []) { 
+        function realStartTimer(id, subject = '', tags = []) { 
             if (!activeCycle) return;
             const discipline = activeCycle.disciplines.find(d => d.id === id);
             if (!discipline || discipline.isRunning) return;
@@ -2438,11 +2653,12 @@ function realStartTimer(id, subject = '', tags = []) {
             }
 
             const newStudyRecord = {
+                id: Date.now() + Math.random(), // ID único para o sub-registro
                 time: 0, 
                 subject: subject,
                 tags: tags,
                 timestamp: Date.now(), 
-                stopPoint: '' // Inicializa vazio, será preenchido ao parar
+                stopPoint: '' 
             };
             activeCycle.studyHistory[today][discIdStr].push(newStudyRecord);
 
@@ -2462,7 +2678,6 @@ function realStartTimer(id, subject = '', tags = []) {
             }, 1000);
         }
 
-        // Adapte a função stopTimer para não mais usar o currentSeconds do studyHistory diretamente
         function stopTimer(id, doSave = true) {
             if (!activeCycle || !timers[id]) return;
             const discipline = activeCycle.disciplines.find(d => d.id === id);
@@ -2498,7 +2713,7 @@ function realStartTimer(id, subject = '', tags = []) {
                 if (activeCycle.disciplineColors) {
                     activeCycle.disciplineColors[discipline.id] = selectedEditDisciplineColor;
                 }
-                saveData();
+                saveData(); 
                 updateDisplay();
                 hideEditModal();
             }
@@ -2508,25 +2723,19 @@ function realStartTimer(id, subject = '', tags = []) {
             const discipline = activeCycle.disciplines.find(d => d.id === id);
             if (!discipline) return;
             if (discipline.isRunning) {
-                // Obtém a data e o índice do último registro para abrir o modal de parada
                 const today = getLocalDateString();
                 const discIdStr = String(discipline.id);
-                let recordIndex = -1;
-                if (activeCycle.studyHistory[today] && activeCycle.studyHistory[today][discIdStr]) {
-                    const records = activeCycle.studyHistory[today][discIdStr];
-                    if (records.length > 0) {
-                        recordIndex = records.length - 1; // Assume que o último registro é o que está ativo
-                    }
-                }
-                if (recordIndex !== -1) {
-                     // Abre o modal de parada para coletar o ponto de parada
-                    openStopTimerModal(id, today, recordIndex, activeCycle.id);
+                
+                // Pega o último registro adicionado (que deve ser o ativo)
+                const records = activeCycle.studyHistory[today] && activeCycle.studyHistory[today][discIdStr] ? activeCycle.studyHistory[today][discIdStr] : [];
+                const lastRecord = records.length > 0 ? records[records.length - 1] : null;
+
+                if (lastRecord && lastRecord.id) { // Verifica se há um último registro e se ele tem um ID
+                    openStopTimerModal(id, today, lastRecord.id, activeCycle.id); // Passa o ID do registro
                 } else {
-                    // Fallback: se não encontrar registro, para sem pedir ponto de parada (pode ser um erro)
-                    realStopTimerForReal(id, true);
+                    stopTimer(id, true);
                 }
             } else {
-                // Abre o modal para inserir assunto/tags antes de iniciar
                 openStartTimerModal(id);
             }
         }
@@ -2560,7 +2769,7 @@ function realStartTimer(id, subject = '', tags = []) {
         }
 
         function updateDisplay() {
-            if (!activeCycle) return;
+            if (!activeCycle) return; 
             document.getElementById('cycleTitleText').textContent = `Ciclo: ${activeCycle.id}`;
             updateStats();
             updateDisciplinesList();
@@ -2865,31 +3074,47 @@ function updateStats() {
             let html = `<h4 style="color: #0d253f; font-weight: 600;">Estudos de ${new Date(dateStr + 'T12:00:00').toLocaleDateString('pt-BR')}</h4>`;
             let studiesFound = false;
 
+            const recordsForDay = []; // Array para coletar e ordenar todos os registros do dia
             Object.values(appData.cycles).forEach(cycle => {
                 if (cycle.studyHistory && cycle.studyHistory[dateStr]) {
-                    Object.entries(cycle.studyHistory[dateStr]).forEach(([discId, records]) => {
-                        if (Array.isArray(records)) {
-                            const discipline = cycle.disciplines.find(d => d.id == discId);
-                            if (discipline) {
-                                records.forEach((record, index) => {
-                                    html += `<div class="study-history-item"> 
-                                                <span>
-                                                    <strong>${discipline.name}</strong> (${cycle.id}): ${formatTime(record.time || 0)}
-                                                    ${record.subject ? `<br><small>Assunto: ${record.subject}</small>` : ''}
-                                                    ${record.tags && record.tags.length > 0 ? `<br><small>Tags: ${record.tags.join(', ')}</small>` : ''}
-                                                    ${record.stopPoint ? `<br><small>Parada: ${record.stopPoint}</small>` : ''} 
-                                                </span> 
-                                                <div style="display: flex; gap: 5px;">
-                                                    <button class="edit-btn secondary" title="Editar este registro" onclick="openEditStudyRecordModal('${dateStr}', '${cycle.id}', '${discId}', ${index})">Editar</button> <button class="history-delete-btn" title="Apagar este registro" onclick="deleteHistoryEntry('${dateStr}', '${cycle.id}', '${discId}', ${index})">X</button> 
-                                                </div>
-                                            </div>`;
-                                    studiesFound = true;
-                                    dailyTotalSeconds += (record.time || 0);
+                    Object.entries(cycle.studyHistory[dateStr]).forEach(([discId, recordsArray]) => {
+                        if (Array.isArray(recordsArray)) {
+                            recordsArray.forEach(record => {
+                                // Adiciona informações necessárias para exibição e edição/exclusão
+                                recordsForDay.push({
+                                    ...record,
+                                    cycleId: cycle.id,
+                                    disciplineId: discId, // Garante que o ID da disciplina está no registro
+                                    cycleName: cycle.id, // Adiciona o nome do ciclo
+                                    disciplineName: cycle.disciplines.find(d => String(d.id) === discId)?.name // Adiciona o nome da disciplina
                                 });
-                            }
+                            });
                         }
                     });
                 }
+            });
+
+            // Ordena os registros do dia pelo timestamp
+            recordsForDay.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+            recordsForDay.forEach((record) => { // Removido 'index' pois usaremos 'record.id' para editar/excluir
+                const recordTime = record.timestamp ? formatTimestampToHHMM(record.timestamp) : '';
+                const displayDisciplineName = record.disciplineName || 'Disciplina Desconhecida';
+                const displayCycleName = record.cycleName || 'Ciclo Desconhecido';
+
+                html += `<div class="study-history-item"> 
+                            <span>
+                                <strong>${displayDisciplineName}</strong> (${displayCycleName})${recordTime ? ` às ${recordTime}` : ''}: ${formatTime(record.time || 0)}
+                                ${record.subject ? `<br><small>Assunto: ${record.subject}</small>` : ''}
+                                ${record.tags && record.tags.length > 0 ? `<br><small>Tags: ${record.tags.join(', ')}</small>` : ''}
+                                ${record.stopPoint ? `<br><small>Parada: ${record.stopPoint}</small>` : ''} 
+                            </span> 
+                            <div style="display: flex; gap: 5px;">
+                                <button class="edit-btn secondary" title="Editar este registro" onclick="openEditStudyRecordModal('${dateStr}', '${record.cycleId}', '${record.disciplineId}', ${record.id})">Editar</button> <button class="history-delete-btn" title="Apagar este registro" onclick="deleteHistoryEntry('${dateStr}', '${record.cycleId}', '${record.disciplineId}', ${record.id})">X</button> 
+                            </div>
+                        </div>`;
+                studiesFound = true;
+                dailyTotalSeconds += (record.time || 0);
             });
 
             const summaryHtml = `<div class="daily-total" style="display: flex; justify-content: space-between; align-items: center;">
@@ -2906,38 +3131,59 @@ function updateStats() {
             infoEl.style.display = 'block';
         }
         
-       function deleteHistoryEntry(dateStr, cycleId, disciplineId, recordIndex) { // Adicionado recordIndex
+       // deleteHistoryEntry agora recebe o ID único do registro de estudo (studyId)
+       function deleteHistoryEntry(dateStr, cycleId, disciplineId, studyId) { 
             showConfirmModal('Apagar Registro', 'Tem certeza? O tempo total da disciplina será recalculado.', () => {
                 const cycle = appData.cycles[cycleId];
-                if (!cycle || !cycle.studyHistory || !cycle.studyHistory[dateStr] || !cycle.studyHistory[dateStr][disciplineId]) return;
+                if (!cycle || !cycle.studyHistory || !cycle.studyHistory[dateStr] || !cycle.studyHistory[dateStr][disciplineId]) {
+                    console.error("Registro não encontrado para exclusão. Data:", dateStr, "Ciclo:", cycleId, "Disciplina:", disciplineId, "Study ID:", studyId);
+                    return;
+                }
                 
-                const records = cycle.studyHistory[dateStr][disciplineId];
-                if (!Array.isArray(records) || recordIndex < 0 || recordIndex >= records.length) return;
+                let records = cycle.studyHistory[dateStr][disciplineId];
+                
+                // Encontra o índice do registro com base no studyId
+                const recordIndexToDelete = records.findIndex(record => record.id === studyId);
 
-                const secondsToDelete = records[recordIndex].time || 0; // Pega o tempo do registro específico
+                if (recordIndexToDelete === -1) {
+                    console.error("Registro com ID único não encontrado para exclusão:", studyId);
+                    return;
+                }
+
+                const secondsToDelete = records[recordIndexToDelete].time || 0; 
                 
                 // Remove o registro do array
-                records.splice(recordIndex, 1); 
+                records.splice(recordIndexToDelete, 1); 
 
                 // Atualiza o currentSeconds da disciplina
                 const discipline = cycle.disciplines.find(d => String(d.id) === disciplineId);
                 if (discipline) {
-                    discipline.currentSeconds = Math.max(0, discipline.currentSeconds - secondsToDelete);
+                    // Recalcula o tempo total da disciplina somando todos os registros restantes
+                    let totalTimeRemaining = 0;
+                    Object.values(cycle.studyHistory).forEach(dailyRecords => {
+                        if (dailyRecords[disciplineId]) {
+                            dailyRecords[disciplineId].forEach(rec => {
+                                totalTimeRemaining += rec.time || 0;
+                            });
+                        }
+                    });
+                    discipline.currentSeconds = totalTimeRemaining;
                 }
 
-                // Se não houver mais registros para a disciplina no dia, remove a entrada da disciplina
                 if (records.length === 0) {
                     delete cycle.studyHistory[dateStr][disciplineId];
                 }
                 
-                // Se não houver mais disciplinas estudadas no dia, remove a entrada da data
                 if (Object.keys(cycle.studyHistory[dateStr]).length === 0) {
                     delete cycle.studyHistory[dateStr];
                 }
 
-                saveData();
-                selectDate(dateStr); 
-                if (activeCycle && activeCycle.id === cycleId) updateDisplay();
+                saveData(); 
+                selectDate(dateStr); // Re-renderiza o histórico do dia
+                if (activeCycle && activeCycle.id === cycleId) {
+                    updateDisplay(); // Atualiza display da tela "Timer" se for o ciclo ativo
+                }
+                renderReportsView(); // Atualiza relatórios após exclusão
             });
         }
         
@@ -3000,7 +3246,6 @@ function updateStats() {
             const distributionByCycle = {};
             const breakdown = {};
 
-            // Garante que as datas de início e fim sejam normalizadas para comparação ISO
             const normalizedStartDateISO = getLocalDateString(startDate);
             const normalizedEndDateISO = getLocalDateString(endDate);
 
@@ -3056,7 +3301,8 @@ function updateStats() {
             for(const dateStr in durationByDay) {
                 let dayHasStudy = false;
                 for(const cycleId in durationByDay[dateStr]) {
-                    if (durationByDay[dateStr][cycleId] > 0) {
+                    // Verifica se o dia teve algum estudo para o ciclo atual (ou todos os ciclos se for 'all')
+                    if ((selectedCycle === 'all' || cycleId === selectedCycle) && durationByDay[dateStr][cycleId] > 0) {
                         dayHasStudy = true;
                         break;
                     }
@@ -3075,40 +3321,34 @@ function updateStats() {
             if (!ctx) return;
             const context = ctx.getContext('2d');
 
-            // Gerar labels para todos os dias no período, mesmo que não haja dados
             const allDatesInPeriod = [];
             let currentDate = new Date(reportStartDate);
             while (currentDate <= reportEndDate) {
                 allDatesInPeriod.push(getLocalDateString(currentDate));
                 currentDate.setDate(currentDate.getDate() + 1);
             }
-            allDatesInPeriod.sort(); // Garante a ordem cronológica
+            allDatesInPeriod.sort(); 
 
             const chartLabels = allDatesInPeriod.map(dateStr => {
-                const date = new Date(dateStr + 'T12:00:00'); // Garante que é um objeto Date válido
-                // Formato "Dia da Semana Abreviado Dia do Mês" (ex: Ter 29)
+                const date = new Date(dateStr + 'T12:00:00'); 
                 return date.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric' }); 
             });
 
-            // Coleta todos os IDs de ciclos únicos que apareceram nos dados
             const allCycleIds = new Set();
-            Object.values(data).forEach(dayData => {
-                Object.keys(dayData).forEach(cycleId => allCycleIds.add(cycleId));
-            });
+            Object.values(appData.cycles).forEach(cycle => allCycleIds.add(cycle.id));
 
             const datasets = Array.from(allCycleIds).map(cycleId => {
                 const cycle = appData.cycles[cycleId];
-                const cycleColor = cycle ? cycle.color : '#CCCCCC'; // Cor do ciclo
-                const datasetData = allDatesInPeriod.map(dateStr => { // Mapeia para TODAS as datas do período
-                    // Retorna o tempo de estudo para a disciplina naquele dia, ou 0 se não houver
+                const cycleColor = cycle ? cycle.color : '#CCCCCC'; 
+                const datasetData = allDatesInPeriod.map(dateStr => { 
                     return data[dateStr] && data[dateStr][cycleId] ? data[dateStr][cycleId] : 0;
                 });
                 return {
-                    label: cycle.id, // Nome do ciclo
+                    label: cycle.id, 
                     data: datasetData,
                     backgroundColor: cycleColor,
                     borderRadius: 4,
-                    stack: 'dailyStudies', // Importante para empilhar
+                    stack: 'dailyStudies', 
                 };
             });
             
@@ -3116,26 +3356,26 @@ function updateStats() {
             if (typeof Chart === 'undefined') { console.error("Chart.js não está definido."); return; }
             durationBarChart = new Chart(context, {
                 type: 'bar',
-                data: { labels: chartLabels, datasets: datasets }, // Use os datasets gerados
+                data: { labels: chartLabels, datasets: datasets }, 
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     scales: { 
                         x: { 
                             type: 'category', 
-                            stacked: true, // Habilita o empilhamento no eixo X
+                            stacked: true, 
                             grid: { display: false } 
                         }, 
                         y: { 
                             beginAtZero: true, 
-                            stacked: true, // Habilita o empilhamento no eixo Y
+                            stacked: true, 
                             ticks: { callback: (value) => formatTime(value).substring(0, 5) } 
                         } 
                     },
                     plugins: { 
-                        legend: { display: true, position: 'top' }, // Exibir legenda para ciclos
+                        legend: { display: true, position: 'top' }, 
                         tooltip: { 
-                            mode: 'index', // Mostrar todos os itens empilhados
-                            intersect: false, // Mostrar tooltip mesmo se não interseccionar diretamente
+                            mode: 'index', 
+                            intersect: false, 
                             callbacks: { 
                                 label: (ctx) => `${ctx.dataset.label}: ${formatTime(ctx.raw)}` 
                             } 
@@ -3167,25 +3407,35 @@ function updateStats() {
             const ctx = document.getElementById('distributionDonutChart');
             if (!ctx) return;
             const context = ctx.getContext('2d');
-            const labels = Object.keys(data);
-            const values = Object.values(data);
             
-            // Usar as cores dos Ciclos armazenadas
+            const labels = Object.keys(data).filter(cycleId => data[cycleId] > 0);
+            const values = labels.map(cycleId => data[cycleId]);
+            
             const backgroundColors = labels.map(cycleId => {
                 const cycle = appData.cycles[cycleId];
-                return cycle ? cycle.color : '#CCCCCC'; // Fallback color
+                return cycle ? cycle.color : '#CCCCCC'; 
             });
             
             const totalSecondsInChart = values.reduce((sum, value) => sum + value, 0);
             const formattedTotalTime = formatTime(totalSecondsInChart);
+            
             if (distributionDonutChart) distributionDonutChart.destroy();
             if (typeof Chart === 'undefined') { console.error("Chart.js não está definido."); return; }
+            
             distributionDonutChart = new Chart(context, {
                 type: 'doughnut',
                 data: { labels: labels, datasets: [{ data: values, backgroundColor: backgroundColors, borderColor: '#fff', borderWidth: 2 }] },
                 options: {
                     responsive: true, maintainAspectRatio: false, cutout: '70%',
-                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `${c.label}: ${formatTime(c.raw)} (${(c.raw / c.chart.getDatasetMeta(0).total * 100).toFixed(1)}%)` } }, doughnutText: { text: { total: formattedTotalTime, label: 'Total' } } }
+                    plugins: { 
+                        legend: { display: false }, 
+                        tooltip: { 
+                            callbacks: { 
+                                label: (c) => `${c.label}: ${formatTime(c.raw)} (${(c.raw / c.chart.getDatasetMeta(0).total * 100).toFixed(1)}%)` 
+                            } 
+                        }, 
+                        doughnutText: { text: { total: formattedTotalTime, label: 'Total' } } 
+                    }
                 },
                 plugins: [doughnutText]
             });
@@ -3194,18 +3444,23 @@ function updateStats() {
         function renderBreakdownTable(data, totalSeconds) {
             const tableBody = document.getElementById('breakdown-table-body');
             tableBody.innerHTML = '';
-            if (Object.keys(data).length === 0) {
+            
+            const cyclesWithStudy = Object.entries(data).filter(([, cycleData]) => cycleData.totalSeconds > 0);
+
+            if (cyclesWithStudy.length === 0) {
                 tableBody.innerHTML = '<p style="text-align:center; padding: 20px; color: #6c757d;">Nenhum dado para o período.</p>';
                 return;
             }
-            const sortedCycles = Object.entries(data).sort((a, b) => b[1].totalSeconds - a[1].totalSeconds);
+
+            const sortedCycles = cyclesWithStudy.sort((a, b) => b[1].totalSeconds - a[1].totalSeconds);
+
             for (const [cycleId, cycleData] of sortedCycles) {
                 const cycle = appData.cycles[cycleId];
-                if (!cycle) continue;
+                if (!cycle) continue; 
+
                 const percentage = totalSeconds > 0 ? ((cycleData.totalSeconds / totalSeconds) * 100).toFixed(1) : 0;
                 
-                // Usa a cor armazenada para o Ciclo
-                const cycleColor = cycle.color || '#CCCCCC'; // Fallback color
+                const cycleColor = cycle.color || '#CCCCCC'; 
                 
                 const cycleRow = document.createElement('div');
                 cycleRow.className = 'breakdown-row cycle-row';
