@@ -159,7 +159,7 @@
         .discipline-item { display: flex; align-items: center; gap: 15px; padding: 15px; margin: 10px 0; background: #fdfdff; border-radius: 10px; border: 1px solid #e9ecef; transition: all 0.3s; flex-wrap: wrap; border-left: 5px solid; }
         .discipline-item.completed { border-left-color: #28a745 !important; background-color: #f6fff8; }
         .discipline-name-group { flex: 1; display: flex; align-items: center; gap: 10px; font-weight: 500; min-width: 150px; }
-        .edit-btn { background: none; border: none; color: #6c757d; cursor: pointer; padding: 4px; border-radius: 50%; display: flex; align-items: center; justify: center; }
+        .edit-btn { background: none; border: none; color: #6c757d; cursor: pointer; padding: 4px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
         .edit-btn:hover { background-color: #e9ecef; color: #0d253f; }
         .timer-btn { background-color: #28a745; font-size: 14px; padding: 10px 16px; }
         .timer-btn.stop { background-color: #ff6f61; }
@@ -530,7 +530,6 @@
                 flex-direction: column; /* Stack buttons on very small screens */
             }
         }
-
 
         /* Media query para telas ainda menores (celulares, por exemplo) */
         @media (max-width: 600px) {
@@ -1422,21 +1421,29 @@
         let startTimerTagsAutocomplete;
 
 
-        function renderAllTags() {
+        function renderAllTags(filterTerm = '') { // Adicionado parâmetro filterTerm
             const allTagsListEl = document.getElementById('allTagsList');
             allTagsListEl.innerHTML = ''; // Limpa a lista existente
+            
+            const normalizedFilterTerm = removeEmojis(filterTerm).toLowerCase();
 
             if (allTags.size === 0) {
                 allTagsListEl.innerHTML = '<p style="color: #6c757d; font-size: 0.9em; margin: 0;">Nenhuma tag registrada ainda.</p>';
                 return;
             }
 
-            // Converte o Set para Array, ordena alfabeticamente pela versão normalizada e renderiza
+            // Converte o Set para Array, ordena alfabeticamente pela versão normalizada
             Array.from(allTags).sort((a, b) => removeEmojis(a).localeCompare(removeEmojis(b))).forEach(tag => {
+                const normalizedTag = removeEmojis(tag).toLowerCase();
+                // Filtra as tags exibidas no allTagsList com base no filterTerm
+                if (filterTerm && !normalizedTag.includes(normalizedFilterTerm)) {
+                    return; // Ignora tags que não correspondem ao filtro
+                }
+
                 const tagItem = document.createElement('span');
                 tagItem.className = 'tag-item';
                 // Compara a tag normalizada para definir o estado ativo
-                if (removeEmojis(tag).toLowerCase() === removeEmojis(activeTagFilter).toLowerCase()) {
+                if (normalizedTag === removeEmojis(activeTagFilter).toLowerCase()) {
                     tagItem.classList.add('active');
                 }
                 tagItem.textContent = tag;
@@ -1462,14 +1469,13 @@
 
         function filterTagsAndStudies() {
             const searchInput = removeEmojis(document.getElementById('tagSearchInput').value).trim().toLowerCase(); // Normaliza o input de busca
-            const tagResultsBody = document.getElementById('tagSearchResults');
+            const tagResultsBody = document.getElementById('tagResultsBody'); // Corrigido para 'tagResultsBody'
             tagResultsBody.innerHTML = '';
             
-            let studiesFound = false;
+            renderAllTags(searchInput); // Atualiza a lista de tags exibidas com base no input de busca
 
-            const allStudyRecords = []; // Armazena todos os registros de estudo para processamento
+            const allStudyRecords = []; 
 
-            // Coleta todos os registros de estudo de todos os ciclos
             Object.values(appData.cycles || {}).forEach(cycle => {
                 if (cycle.studyHistory) {
                     Object.entries(cycle.studyHistory).forEach(([dateStr, disciplineRecordsMap]) => {
@@ -1487,7 +1493,7 @@
                                             time: record.time || 0,
                                             subject: record.subject || '',
                                             tags: record.tags || [],
-                                            timestamp: record.timestamp || null // Pega o timestamp
+                                            timestamp: record.timestamp || null 
                                         });
                                     });
                                 }
@@ -1497,107 +1503,99 @@
                 }
             });
 
-            // Filtra e agrupa os resultados
+            // Pré-filtra todos os estudos pelo searchInput (se houver)
+            const preFilteredStudies = allStudyRecords.filter(study => {
+                if (!searchInput) return true; // Se não houver searchInput, todos os estudos são considerados
+
+                const searchLower = searchInput; 
+                const subjectLower = study.subject ? removeEmojis(study.subject).toLowerCase() : ''; 
+                const disciplineLower = study.disciplineName ? removeEmojis(study.disciplineName).toLowerCase() : ''; 
+                const cycleLower = study.cycleId ? removeEmojis(study.cycleId).toLowerCase() : ''; 
+                const tagsLower = study.tags.map(t => removeEmojis(t).toLowerCase()).join(' '); 
+
+                return subjectLower.includes(searchLower) || 
+                       disciplineLower.includes(searchLower) || 
+                       cycleLower.includes(searchLower) ||
+                       tagsLower.includes(searchLower);
+            });
+
             const filteredAndGrouped = {}; 
-            const uniqueTagsMatchingSearch = new Set(); // Para mostrar apenas as tags relevantes
+            const activeTagFilterNormalized = removeEmojis(activeTagFilter).toLowerCase();
 
-            allStudyRecords.forEach(study => {
-                let matchesSearchInput = true;
-                if (searchInput) {
-                    // Busca por assunto, disciplina, Ciclo, ou tags (todos normalizados)
-                    const searchLower = searchInput; 
-                    const subjectLower = study.subject ? removeEmojis(study.subject).toLowerCase() : ''; 
-                    const disciplineLower = study.disciplineName ? removeEmojis(study.disciplineName).toLowerCase() : ''; 
-                    const cycleLower = study.cycleId ? removeEmojis(study.cycleId).toLowerCase() : ''; 
-                    const tagsLower = study.tags.map(t => removeEmojis(t).toLowerCase()).join(' '); 
-
-                    if (!subjectLower.includes(searchLower) && 
-                        !disciplineLower.includes(searchLower) && 
-                        !cycleLower.includes(searchLower) &&
-                        !tagsLower.includes(searchLower)) {
-                        matchesSearchInput = false;
-                    }
-                }
-
-                if (matchesSearchInput) {
+            // Popula filteredAndGrouped com base nos filtros
+            preFilteredStudies.forEach(study => {
+                let studyHasMatchingTag = false;
+                if (study.tags && study.tags.length > 0) {
                     study.tags.forEach(tag => {
                         const tagLowerNormalized = removeEmojis(tag).toLowerCase(); 
-                        const activeTagFilterNormalized = removeEmojis(activeTagFilter).toLowerCase(); 
-
-                        if (!activeTagFilter || tagLowerNormalized === activeTagFilterNormalized || (searchInput && tagLowerNormalized.includes(searchInput))) {
-                             // Considera a tag se ela corresponde ao filtro ativo OU à busca textual
-                            if (!filteredAndGrouped[tag]) { // Agrupa pela tag ORIGINAL (com emoji)
+                        if (!activeTagFilter || tagLowerNormalized === activeTagFilterNormalized) {
+                            if (!filteredAndGrouped[tag]) { 
                                 filteredAndGrouped[tag] = [];
                             }
                             filteredAndGrouped[tag].push(study);
-                            if(activeTagFilter || searchInput) {
-                                uniqueTagsMatchingSearch.add(tag); // Adiciona apenas tags que são relevantes para a busca/filtro (originais)
-                            }
+                            studyHasMatchingTag = true;
                         }
                     });
+                }
 
-                    if (study.tags.length === 0 && matchesSearchInput && (searchInput && !activeTagFilter)) {
-                         if (!filteredAndGrouped['Sem Tags']) {
-                            filteredAndGrouped['Sem Tags'] = [];
-                         }
-                         filteredAndGrouped['Sem Tags'].push(study);
-                         uniqueTagsMatchingSearch.add('Sem Tags');
+                // Se não houver tags ou se as tags do estudo não corresponderem ao filtro de tags,
+                // e houver searchInput mas não activeTagFilter, adiciona a 'Sem Tags'.
+                // Ou se não houver nenhum filtro, adiciona tudo.
+                if (!studyHasMatchingTag && 
+                    ((!activeTagFilter && searchInput && preFilteredStudies.includes(study)) || 
+                     (!activeTagFilter && !searchInput))
+                ) {
+                    if (!filteredAndGrouped['Sem Tags']) {
+                        filteredAndGrouped['Sem Tags'] = [];
                     }
+                    filteredAndGrouped['Sem Tags'].push(study);
                 }
             });
 
-            // Ordena as tags agrupadas pela versão normalizada
             const sortedTags = Array.from(Object.keys(filteredAndGrouped)).sort((a,b) => removeEmojis(a).localeCompare(removeEmojis(b)));
             
             if (sortedTags.length === 0) {
-                tagResultsBody.innerHTML = '<p style="text-align:center; padding: 20px; color: #6c757d;">Nenhum resultado encontrado para o filtro atual.</p>';
-                return; // Adicionado para sair da função se não houver resultados
+                if (searchInput || activeTagFilter) {
+                     tagResultsBody.innerHTML = '<p style="text-align:center; padding: 20px; color: #6c757d;">Nenhum resultado encontrado para o filtro atual.</p>';
+                } else {
+                     tagResultsBody.innerHTML = '<p style="text-align:center; padding: 20px; color: #6c757d;">Nenhum resultado para exibir. Use a busca acima ou clique em uma tag.</p>';
+                }
+                return; 
             } 
             
-            if (sortedTags.length === 0) {
-                tagResultsBody.innerHTML = '<p style="text-align:center; padding: 20px; color: #6c757d;">Nenhum resultado encontrado para o filtro atual.</p>';
-            } else {
-                sortedTags.forEach(tag => {
-                    const tagStudies = filteredAndGrouped[tag].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // Ordena por data mais recente
-                    let totalTimeForTag = tagStudies.reduce((sum, s) => sum + s.time, 0);
+            sortedTags.forEach(tag => {
+                const tagStudies = filteredAndGrouped[tag].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()); 
+                let totalTimeForTag = tagStudies.reduce((sum, s) => sum + s.time, 0);
 
-                    const tagHeader = document.createElement('div');
-                    tagHeader.className = 'breakdown-row cycle-row';
-                    tagHeader.innerHTML = `
-                        <div class="cycle-name-cell" onclick="toggleCycleDetails(this.parentNode)">
-                            <span class="material-icons-outlined toggle-arrow">chevron_right</span>
-                            <span>${tag}</span> 
-                        </div>
-                        <span class="d-right">${formatTime(totalTimeForTag)}</span>
-                        <span></span> `;
-                    tagResultsBody.appendChild(tagHeader);
+                const tagHeader = document.createElement('div');
+                tagHeader.className = 'breakdown-row cycle-row';
+                tagHeader.innerHTML = `
+                    <div class="cycle-name-cell" onclick="toggleCycleDetails(this.parentNode)">
+                        <span class="material-icons-outlined toggle-arrow">chevron_right</span>
+                        <span>${tag}</span> 
+                    </div>
+                    <span class="d-right">${formatTime(totalTimeForTag)}</span>
+                    <span></span> `;
+                tagResultsBody.appendChild(tagHeader);
 
-                    const studiesWrapper = document.createElement('div');
-                        studiesWrapper.className = 'discipline-rows-wrapper'; 
-                        tagStudies.forEach(study => {
-                            const recordTime = study.timestamp ? formatTimestampToHHMM(study.timestamp) : '';
-                            studiesWrapper.innerHTML += `
-                                <div class="tag-study-item">
-                                    <div class="study-details">
-                                        <span class="main-info">
-                                            <span class="cycle-color-dot" style="background-color:${study.cycleColor};"></span> ${study.subject || 'Sem Assunto'}
-                                        </span>
-                                        <span class="sub-info">${study.disciplineName} (${study.cycleId}) - ${new Date(study.date + 'T12:00:00').toLocaleDateString('pt-BR')} ${recordTime ? `às ${recordTime}` : ''}</span>
-                                    </div>
-                                    <span class="d-right">${formatTime(study.time)}</span>
+                const studiesWrapper = document.createElement('div');
+                    studiesWrapper.className = 'discipline-rows-wrapper'; 
+                    tagStudies.forEach(study => {
+                        const recordTime = study.timestamp ? formatTimestampToHHMM(study.timestamp) : '';
+                        studiesWrapper.innerHTML += `
+                            <div class="tag-study-item">
+                                <div class="study-details">
+                                    <span class="main-info">
+                                        <span class="cycle-color-dot" style="background-color:${study.cycleColor};"></span> ${study.subject || 'Sem Assunto'}
+                                    </span>
+                                    <span class="sub-info">${study.disciplineName} (${study.cycleId}) - ${new Date(study.date + 'T12:00:00').toLocaleDateString('pt-BR')} ${recordTime ? `às ${recordTime}` : ''}</span>
                                 </div>
-                            `;
-                        });
-                        tagResultsBody.appendChild(studiesWrapper);
-                    studiesFound = true;
-                });
-            }
-
-            if (!studiesFound && sortedTags.length === 0 && !searchInput && !activeTagFilter) { // Se não houver filtros, mostrar mensagem inicial
-                tagResultsBody.innerHTML = '<p style="text-align:center; padding: 20px; color: #6c757d;">Nenhum resultado para exibir. Use a busca acima ou clique em uma tag.</p>';
-            } else if (!studiesFound) { // Se houver filtros, mas nenhum resultado
-                tagResultsBody.innerHTML = '<p style="text-align:center; padding: 20px; color: #6c757d;">Nenhum resultado encontrado para o filtro atual.</p>';
-            }
+                                <span class="d-right">${formatTime(study.time)}</span>
+                            </div>
+                        `;
+                    });
+                    tagResultsBody.appendChild(studiesWrapper);
+            });
         }
 
      
@@ -2776,6 +2774,8 @@ function saveAddTimeToDayEntry() {
                 renderReportsView(); 
             }
             if (viewName === 'tags') { 
+                activeTagFilter = ''; // Reseta o filtro de tags ao entrar na view
+                document.getElementById('tagSearchInput').value = ''; // Limpa a busca textual
                 renderAllTags();
                 filterTagsAndStudies(); // Carrega todos os estudos inicialmente ou com filtro padrão
             }
